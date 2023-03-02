@@ -1,0 +1,28 @@
+{
+  "name": "@cortex-factory/shift-schedule",
+  "version": "0.0.15",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git"
+  },
+  "keywords": [
+    "Cortex-UI"
+  ],
+  "author": "Punyarit",
+  "license": "H Lab Co., Ltd.",
+  "files": [
+    "dist/*",
+    "jsx/*"
+  ],
+  "dependencies": {
+    "@cortex-ui/core": "^0.0.142",
+    "@cortex-ui/fonts": "^1.0.0",
+    "@cortex-ui/icons": "^1.0.0",
+    "@lit-labs/react": "^1.1.1",
+    "@types/react": "^18.0.27",
+    "lit": "^2.6.1"
+  }
+}
