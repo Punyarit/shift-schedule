@@ -1,6 +1,6 @@
 {
   "name": "@cortex-factory/shift-schedule",
-  "version": "0.0.15",
+  "version": "0.0.30",
   "main": "index.js",
   "scripts": {
     "build": "tsc"
@@ -14,8 +14,7 @@
   "author": "Punyarit",
   "license": "H Lab Co., Ltd.",
   "files": [
-    "dist/*",
-    "jsx/*"
+    "build"
   ],
   "dependencies": {
     "@cortex-ui/core": "^0.0.142",

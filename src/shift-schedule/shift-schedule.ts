@@ -19,8 +19,9 @@ import {
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypesV2 } from '@cortex-ui/core/cx/types/colors.v2.type';
+import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 
-@customElement('shift-schedule')
+@customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
   private buttonGroupUI = 'flex items-center col-gap-24 px-24';
   private scheduleTitleUI = 'inline-flex';
@@ -42,10 +43,10 @@ export class ShiftSchedule extends LitElement {
   private iconTitle = 'round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
 
   @property({ type: Object })
-  private scheduleData?: SchedulingData;
+  public scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
 
   @property({ type: Array })
-  private requestTypes?: RequestType[];
+  public requestTypes?: RequestType[] | ScheduleRequestType[];
 
   @state()
   dateBetween?: DateBetweenData[];
@@ -72,8 +73,8 @@ export class ShiftSchedule extends LitElement {
   ): void {
     if (_changedProperties.has('scheduleData')) {
       this.dateBetween = this.getDateBetween(
-        new Date(this.scheduleData?.startDate!),
-        new Date(this.scheduleData?.endDate!)
+        new Date((this.scheduleData as SchedulingData)?.startDate!),
+        new Date((this.scheduleData as SchedulingData)?.endDate!)
       );
     }
 
@@ -88,10 +89,10 @@ export class ShiftSchedule extends LitElement {
 
   renderRequestButton() {
     return html`
-      ${this.requestTypes?.map((type) => {
+      ${(this.requestTypes as RequestType[])?.map((type) => {
         const { accentColor, iconSrc, iconBgColor } = requestTypeStyles[type.abbr];
         return html` <request-button
-          @mousedown="${() => this.selectRequest(type)}"
+          @mousedown="${() => this.selectRequest(type as RequestType)}"
           .currentType="${this.requestSelected}"
           .requestType="${type}"
           text="${type.name}"
@@ -188,80 +189,82 @@ export class ShiftSchedule extends LitElement {
               </c-box>
 
               <c-box inline-flex flex-col id="week-month-user" style="height: calc(100vh - 293px);">
-                ${this.scheduleData?.schedulePractitioner?.map((practitioner, indexUser) => {
-                  const {
-                    practitioner: {
-                      gender,
-                      nameFamily,
-                      nameGiven,
-                      practitionerLevel,
-                      practitionerRole,
-                    },
-                    schedulePractitionerRequest: request,
-                  } = practitioner;
-                  const borderBottom: string = indexUser === 0 ? this.userSelected : '';
+                ${(this.scheduleData as SchedulingData)?.schedulePractitioner?.map(
+                  (practitioner, indexUser) => {
+                    const {
+                      practitioner: {
+                        gender,
+                        nameFamily,
+                        nameGiven,
+                        practitionerLevel,
+                        practitionerRole,
+                      },
+                      schedulePractitionerRequest: request,
+                    } = practitioner;
+                    const borderBottom: string = indexUser === 0 ? this.userSelected : '';
 
-                  const requestData = this.convertRequestDatesToObject(
-                    request as SchedulePractitionerRequestEntity[]
-                  );
-                  return html`
-                    <c-box flex>
-                      <c-box
-                        ui="${this.userTitle} ${this.tableLineUI} ${this
-                          .titleSticky} ${borderBottom}">
-                        <c-box relative top-0 left-0>
-                          <img src="${this.userImgDefault || ''}" alt="" />
-                          <c-box ui="${this.genderBox}"> ${gender} </c-box>
+                    const requestData = this.convertRequestDatesToObject(
+                      request as SchedulePractitionerRequestEntity[]
+                    );
+                    return html`
+                      <c-box flex>
+                        <c-box
+                          ui="${this.userTitle} ${this.tableLineUI} ${this
+                            .titleSticky} ${borderBottom}">
+                          <c-box relative top-0 left-0>
+                            <img src="${this.userImgDefault || ''}" alt="" />
+                            <c-box ui="${this.genderBox}"> ${gender} </c-box>
+                          </c-box>
+
+                          <c-box>
+                            <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
+                            <c-box tx-12>${practitionerRole.name}, ${practitionerLevel.name}</c-box>
+                          </c-box>
                         </c-box>
 
-                        <c-box>
-                          <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                          <c-box tx-12>${practitionerRole.name}, ${practitionerLevel.name}</c-box>
-                        </c-box>
+                        ${this.dateBetween?.map((dateBet) => {
+                          return html`
+                            ${dateBet.dateBetween.map((week) => {
+                              return html`
+                                ${week.map((day) => {
+                                  const borderRight =
+                                    day.getDay() === 0 ? this.sundayBorderRightUI : '';
+
+                                  const dateString = this.convertDateToString(day);
+
+                                  return html` <c-box
+                                    ui="${this.tableLineUI} ${this
+                                      .requestBox} ${borderRight} ${borderBottom}">
+                                    <c-box w-full h-full bg-white>
+                                      <!-- if have request date then render request -->
+                                      ${requestData[dateString]
+                                        ? requestData[dateString].render?.()
+                                        : indexUser === 0
+                                        ? this.renderEmptyDate(day)
+                                        : html` <c-box p-4 border-box w-full h-full slot="host">
+                                            <c-box
+                                              bg-hover="primary-100"
+                                              w-full
+                                              h-full
+                                              round-8
+                                              flex
+                                              justify-center
+                                              items-center
+                                              cursor-pointer
+                                              icon-prefix-color-hover="primary-300"
+                                              icon-prefix-hover="plus-line"></c-box>
+                                          </c-box>`}
+                                    </c-box>
+                                  </c-box>`;
+                                })}
+                              `;
+                            })}
+                          `;
+                        })}
                       </c-box>
-
-                      ${this.dateBetween?.map((dateBet) => {
-                        return html`
-                          ${dateBet.dateBetween.map((week) => {
-                            return html`
-                              ${week.map((day) => {
-                                const borderRight =
-                                  day.getDay() === 0 ? this.sundayBorderRightUI : '';
-
-                                const dateString = this.convertDateToString(day);
-
-                                return html` <c-box
-                                  ui="${this.tableLineUI} ${this
-                                    .requestBox} ${borderRight} ${borderBottom}">
-                                  <c-box w-full h-full bg-white>
-                                    <!-- if have request date then render request -->
-                                    ${requestData[dateString]
-                                      ? requestData[dateString].render?.()
-                                      : indexUser === 0
-                                      ? this.renderEmptyDate(day)
-                                      : html` <c-box p-4 border-box w-full h-full slot="host">
-                                          <c-box
-                                            bg-hover="primary-100"
-                                            w-full
-                                            h-full
-                                            round-8
-                                            flex
-                                            justify-center
-                                            items-center
-                                            cursor-pointer
-                                            icon-prefix-color-hover="primary-300"
-                                            icon-prefix-hover="plus-line"></c-box>
-                                        </c-box>`}
-                                  </c-box>
-                                </c-box>`;
-                              })}
-                            `;
-                          })}
-                        `;
-                      })}
-                    </c-box>
-                  `;
-                })}
+                    `;
+                  }
+                )}
               </c-box>
             </c-box>
           </c-box>
@@ -759,5 +762,11 @@ export class ShiftSchedule extends LitElement {
 
   createRenderRoot() {
     return this;
+  }
+}
+
+declare global {
+  namespace CXShiftSchedule {
+    type Ref = typeof ShiftSchedule;
   }
 }
