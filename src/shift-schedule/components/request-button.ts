@@ -1,4 +1,4 @@
-import { ColorTypesV2 } from '@cortex-ui/core/cx/types/colors.v2.type';
+import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { RequestType } from '../schedule.types';
@@ -16,16 +16,16 @@ export class MyElement extends LitElement {
   icon!: CXIcon.Set['src'];
 
   @property({ type: String })
-  iconColor!: ColorTypesV2;
+  iconColor!: ColorTypes;
 
   @property({ type: String })
-  bgColor!: ColorTypesV2;
+  bgColor!: ColorTypes;
 
   @property({ type: String })
-  accentColor!: ColorTypesV2;
+  accentColor!: ColorTypes;
 
   @property({ type: String })
-  iconBgColor!: ColorTypesV2;
+  iconBgColor!: ColorTypes;
 
   @property({ type: Object })
   currentType?: RequestType;
@@ -60,7 +60,7 @@ export class MyElement extends LitElement {
             icon-prefix-size="24"
             icon-prefix-color="${this.iconColor}"></c-box>
         </c-box>
-        <c-box>${this.text}</c-box>
+        <c-box whitespace-pre>${this.text}</c-box>
       </c-box>
     `;
   }

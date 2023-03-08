@@ -38,7 +38,7 @@ let MyElement = class MyElement extends LitElement {
             icon-prefix-size="24"
             icon-prefix-color="${this.iconColor}"></c-box>
         </c-box>
-        <c-box>${this.text}</c-box>
+        <c-box whitespace-pre>${this.text}</c-box>
       </c-box>
     `;
     }

@@ -1,5 +1,4 @@
-import { TemplateResult } from 'lit';
-import { ColorTypesV2 } from '@cortex-ui/core/cx/types/colors.v2.type';
+import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { IconSrcTypes } from '@cortex-ui/core/cx/components/icon/types/icon.types';
 export interface Weather {
     data: SchedulingData;
@@ -81,16 +80,23 @@ export interface RequestType {
     name: string;
     abbr: 'sr' | 'sem' | 'off' | 'vac' | 'woff';
 }
-export type DayPart = 'morning' | 'afternoon' | 'evening';
+export type DayPart = 'm' | 'a' | 'n';
 export declare const requestTypeStyles: Record<RequestType['abbr'], {
     iconSrc: IconSrcTypes;
-    accentColor: ColorTypesV2;
-    iconBgColor: ColorTypesV2;
+    accentColor: ColorTypes;
+    iconBgColor: ColorTypes;
 }>;
 export type DateBetweenData = {
     currentMonth: string;
     dateBetween: Date[][];
 };
-export type ScheduleDataWithRender = SchedulePractitionerRequestEntity & {
-    render: (() => TemplateResult) | null;
+export type ScheduleDataWithRender = {
+    arrangedRequest: ArrangedRequest;
+    requestType: RequestType;
+};
+export type ArrangedRequest = Record<DayPart, string[]>;
+export type ShiftPlan = {
+    m: Record<number, string>;
+    a: Record<number, string>;
+    n: Record<number, string>;
 };

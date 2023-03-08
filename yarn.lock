@@ -2,22 +2,22 @@
 # yarn lockfile v1
 
 
-"@cortex-ui/core@^0.0.142":
-  version "0.0.142"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.142.tgz#6b378e9114b43b0bb1fc9328689f0462eec6270f"
-  integrity sha512-3AK5pYx/Oa/WZItUgEg+YgOC6aBMjV3TRpmWkUVi1gkJ4OJmMizLtI11lS3bfDRfOIWoYM87XvomK3oR3GFCNQ==
+"@cortex-ui/core@^0.0.162":
+  version "0.0.162"
+  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.162.tgz#05315fcd5950c1a66926a42e6b4ec962ce9878b3"
+  integrity sha512-loeoxC8mjW41Qv2GFVKv7SoBcu1nbjKxukukwcbZ2KI8nC4Rl9vcy7x2dIIKi66NdeoVoTC1qR9yIf0GSG/MWA==
   dependencies:
     "@types/react" "^18.0.27"
     lit "^2.6.1"
 
 "@cortex-ui/fonts@^1.0.0":
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/fonts/-/fonts-1.0.0.tgz#72c6749b6591c5698401114c9c88ffb639ba0021"
+  resolved "https://registry.npmjs.org/@cortex-ui/fonts/-/fonts-1.0.0.tgz"
   integrity sha512-ck+6Xg6aK0uL/Eu7oJovduECPgJQHE6xQM7GWARQqByKt4oi8wFZAM+ow0W8xqr8Zd7PnRyD940ea4VLelBxEA==
 
 "@cortex-ui/icons@^1.0.0":
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/icons/-/icons-1.0.0.tgz#f0d8d2327fc455858b04432bb13a62934bb7a7e4"
+  resolved "https://registry.npmjs.org/@cortex-ui/icons/-/icons-1.0.0.tgz"
   integrity sha512-sa+ZEUKmQv/Jdc8g/qI346v9uRRGnQqK8/6BF1nlzQpSK1nipWrbmgiUYc7cXwMmOTi8ecXTQk8f7J3yvRaqBg==
 
 "@lit-labs/react@^1.1.1":
