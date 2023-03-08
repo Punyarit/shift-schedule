@@ -29,6 +29,7 @@ export declare class ShiftSchedule extends LitElement {
     private tableWrapperUI;
     private iconTitleWrapper;
     private iconTitle;
+    role: 'manager' | 'user';
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
     requestTypes?: RequestType[] | ScheduleRequestType[];
     dateBetween?: DateBetweenData[];

@@ -41,6 +41,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.tableWrapperUI = 'inline-flex flex-col';
         this.iconTitleWrapper = 'inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
+        this.role = 'user';
         this.srState = [];
         this.shiftSrRequestCache = {};
         this.shiftSrRequestSaved = {};
@@ -68,7 +69,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             request: this.shiftSemRequestSaved,
                         },
                     }));
-                    this.dispatchEvent(new CustomEvent('request-saved', {
+                    this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
                                 type: this.requestSelected,
@@ -85,7 +86,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             request: this.shiftOffRequestSaved,
                         },
                     }));
-                    this.dispatchEvent(new CustomEvent('request-saved', {
+                    this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
                                 type: this.requestSelected,
@@ -102,7 +103,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             request: this.shiftVacRequestSaved,
                         },
                     }));
-                    this.dispatchEvent(new CustomEvent('request-saved', {
+                    this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
                                 type: this.requestSelected,
@@ -203,6 +204,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             <c-box ui="${this.buttonGroupUI}">
               <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
               ${this.renderRequestButton()}
+              <c-box inline h-40 w-1 bg-pinky-100></c-box>
               <c-box
                 @click="${this.clearRequest}"
                 cursor-pointer
@@ -353,19 +355,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                                 ? this.renderInitialRequest(requestInitial)
                                                 : indexUser === 0
                                                     ? this.renderEmptyDateForSelect(day)
-                                                    : html ` <c-box p-4 border-box w-full h-full slot="host">
-                                              <c-box
-                                                bg-hover="primary-100"
-                                                w-full
-                                                h-full
-                                                round-8
-                                                flex
-                                                justify-center
-                                                items-center
-                                                cursor-pointer
-                                                icon-prefix-color-hover="primary-300"
-                                                icon-prefix-hover="plus-line"></c-box>
-                                            </c-box>`}
+                                                    : undefined}
                                       </c-box>
                                     </c-box>`;
                     })}
@@ -757,7 +747,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 request: this.shiftSrRequestSaved,
             },
         }));
-        this.dispatchEvent(new CustomEvent('request-saved', {
+        this.dispatchEvent(new CustomEvent('save-request', {
             detail: {
                 [this.requestSelected?.abbr]: {
                     type: this.requestSelected,
@@ -791,7 +781,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 request: this.shiftWoffRequestSaved,
             },
         }));
-        this.dispatchEvent(new CustomEvent('request-saved', {
+        this.dispatchEvent(new CustomEvent('save-request', {
             detail: {
                 [this.requestSelected?.abbr]: {
                     type: this.requestSelected,
@@ -920,6 +910,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return this;
     }
 };
+__decorate([
+    property({ type: String }),
+    __metadata("design:type", String)
+], ShiftSchedule.prototype, "role", void 0);
 __decorate([
     property({ type: Object }),
     __metadata("design:type", Object)

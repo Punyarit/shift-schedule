@@ -48,6 +48,9 @@ export class ShiftSchedule extends LitElement {
     'inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
   private iconTitle = 'round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
 
+  @property({ type: String })
+  role: 'manager' | 'user' = 'user';
+
   @property({ type: Object })
   public scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
 
@@ -200,6 +203,7 @@ export class ShiftSchedule extends LitElement {
             <c-box ui="${this.buttonGroupUI}">
               <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
               ${this.renderRequestButton()}
+              <c-box inline h-40 w-1 bg-pinky-100></c-box>
               <c-box
                 @click="${this.clearRequest}"
                 cursor-pointer
@@ -367,19 +371,7 @@ export class ShiftSchedule extends LitElement {
                                           ? this.renderInitialRequest(requestInitial)
                                           : indexUser === 0
                                           ? this.renderEmptyDateForSelect(day)
-                                          : html` <c-box p-4 border-box w-full h-full slot="host">
-                                              <c-box
-                                                bg-hover="primary-100"
-                                                w-full
-                                                h-full
-                                                round-8
-                                                flex
-                                                justify-center
-                                                items-center
-                                                cursor-pointer
-                                                icon-prefix-color-hover="primary-300"
-                                                icon-prefix-hover="plus-line"></c-box>
-                                            </c-box>`}
+                                          : undefined}
                                       </c-box>
                                     </c-box>`;
                                   })}
@@ -564,7 +556,7 @@ export class ShiftSchedule extends LitElement {
           })
         );
         this.dispatchEvent(
-          new CustomEvent('request-saved', {
+          new CustomEvent('save-request', {
             detail: {
               [this.requestSelected.abbr]: {
                 type: this.requestSelected,
@@ -586,7 +578,7 @@ export class ShiftSchedule extends LitElement {
           })
         );
         this.dispatchEvent(
-          new CustomEvent('request-saved', {
+          new CustomEvent('save-request', {
             detail: {
               [this.requestSelected.abbr]: {
                 type: this.requestSelected,
@@ -608,7 +600,7 @@ export class ShiftSchedule extends LitElement {
           })
         );
         this.dispatchEvent(
-          new CustomEvent('request-saved', {
+          new CustomEvent('save-request', {
             detail: {
               [this.requestSelected.abbr]: {
                 type: this.requestSelected,
@@ -896,7 +888,7 @@ export class ShiftSchedule extends LitElement {
     );
 
     this.dispatchEvent(
-      new CustomEvent('request-saved', {
+      new CustomEvent('save-request', {
         detail: {
           [this.requestSelected?.abbr!]: {
             type: this.requestSelected,
@@ -941,7 +933,7 @@ export class ShiftSchedule extends LitElement {
       })
     );
     this.dispatchEvent(
-      new CustomEvent('request-saved', {
+      new CustomEvent('save-request', {
         detail: {
           [this.requestSelected?.abbr!]: {
             type: this.requestSelected,

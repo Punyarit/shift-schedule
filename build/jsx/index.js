@@ -7,6 +7,11 @@ export const CxShiftSchedule = createComponent({
     react: React,
     events: {
         onSaveRequest: 'save-request',
+        onSaveSr: 'save-sr',
+        onSaveSem: 'save-sem',
+        onSaveOff: 'save-off',
+        onSaveVac: 'save-vac',
+        onSaveWoff: 'save-woff',
     },
 });
 //# sourceMappingURL=index.js.map
