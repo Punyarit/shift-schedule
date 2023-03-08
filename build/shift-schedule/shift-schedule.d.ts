@@ -58,7 +58,6 @@ export declare class ShiftSchedule extends LitElement {
     };
     datepickerData?: DateRangeSelected;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
-    connectedCallback(): Promise<void>;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
     renderRequestButton(): import("lit-html").TemplateResult<1>;

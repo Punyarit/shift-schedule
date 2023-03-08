@@ -130,11 +130,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         };
     }
-    async connectedCallback() {
-        super.connectedCallback();
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    }
     willUpdate(_changedProperties) {
         if (_changedProperties.has('scheduleData')) {
             this.dateBetween = this.getDateBetween(new Date(this.scheduleData?.startDate), new Date(this.scheduleData?.endDate));

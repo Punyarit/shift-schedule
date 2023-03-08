@@ -114,12 +114,6 @@ export class ShiftSchedule extends LitElement {
 
   public tableWrapperRef = createRef<HTMLDivElement>();
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  }
-
   protected willUpdate(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
