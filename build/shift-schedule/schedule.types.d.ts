@@ -95,8 +95,12 @@ export type ScheduleDataWithRender = {
     requestType: RequestType;
 };
 export type ArrangedRequest = Record<DayPart, string[]>;
-export type ShiftPlan = {
+export type SrShiftPlan = {
     m: Record<number, string>;
     a: Record<number, string>;
     n: Record<number, string>;
+};
+export type DatePickerShiftPlan = {
+    date?: Date;
+    remark?: string;
 };

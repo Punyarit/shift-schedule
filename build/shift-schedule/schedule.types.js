@@ -10,7 +10,7 @@ export const requestTypeStyles = {
         iconBgColor: 'modern-green-100',
     },
     off: {
-        iconSrc: 'pause-circle-line',
+        iconSrc: 'favorite-line',
         accentColor: 'alarm-orange-500',
         iconBgColor: 'alarm-orange-200',
     },
@@ -20,7 +20,7 @@ export const requestTypeStyles = {
         iconBgColor: 'warning-200',
     },
     woff: {
-        iconSrc: 'favorite-line',
+        iconSrc: 'pause-circle-line',
         accentColor: 'gray-500',
         iconBgColor: 'gray-100',
     },

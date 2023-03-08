@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, ShiftPlan } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -39,11 +39,21 @@ export declare class ShiftSchedule extends LitElement {
     private shiftSrRequestCache;
     userImgDefault?: string;
     shiftSrRequestSaved: {
-        [key: string]: ShiftPlan;
+        [key: string]: SrShiftPlan;
     };
     shiftSemRequestSaved: {
-        date: DateRangeSelected;
-        remark: string;
+        [key: string]: DatePickerShiftPlan;
+    };
+    shiftOffRequestSaved: {
+        [key: string]: DatePickerShiftPlan;
+    };
+    shiftVacRequestSaved: {
+        [key: string]: DatePickerShiftPlan;
+    };
+    shiftWoffRequestSaved: {
+        [key: string]: {
+            date: Date;
+        };
     };
     datepickerData?: DateRangeSelected;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
@@ -53,14 +63,21 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
+    private clearRequest;
     render(): import("lit-html").TemplateResult<1>;
-    renderSrShiftPlanSaved(plans: ShiftPlan): import("lit-html").TemplateResult<1>;
-    renderSemShiftPlanSaved(): import("lit-html").TemplateResult<1>;
-    renderShiftRequest(request: ScheduleDataWithRender): import("lit-html").TemplateResult<1> | undefined;
+    renderWoffSaved(): import("lit-html").TemplateResult<1>;
+    renderSrShiftPlanSaved(plans: SrShiftPlan): import("lit-html").TemplateResult<1>;
+    renderShiftPlanSaved(data: {
+        date?: Date;
+        remark?: string;
+    }, type: RequestType['abbr']): import("lit-html").TemplateResult<1>;
+    renderInitialRequest(request: ScheduleDataWithRender): import("lit-html").TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
     saveWithDateData: () => void;
-    renderDatepickerBox(): import("lit-html").TemplateResult<1>;
-    renderEmptyDateWithPopover(date: Date): import("lit-html").TemplateResult<1> | undefined;
+    renderDatepickerBox(data: {
+        title: string;
+    }): import("lit-html").TemplateResult<1>;
+    renderEmptyDateForSelect(date: Date): import("lit-html").TemplateResult<1> | undefined;
     renderRequestSr(mockdata: any, dayPart: DayPart): import("lit-html").TemplateResult<1>;
     addSrShiftRequest(requestPlan: {
         plan: number;
@@ -71,8 +88,9 @@ export declare class ShiftSchedule extends LitElement {
     cancelSrRequestPlan(): void;
     saveSrRequestPlan(date: Date): void;
     closePopover(): void;
-    selectDateRequest(date: Date): void;
-    renderEmptyBox(date: Date, type?: string): import("lit-html").TemplateResult<1>;
+    selectDateRequest(date: Date, type?: RequestType['abbr']): void;
+    saveWoffRequest(date: Date): void;
+    renderEmptyBox(date: Date, type?: RequestType['abbr']): import("lit-html").TemplateResult<1>;
     firstUpdated(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;
@@ -80,7 +98,7 @@ export declare class ShiftSchedule extends LitElement {
     setColorRequestType(requestTime: DayPart): ColorTypes;
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
-    updated(): void;
+    updated(changedProp: Map<string, unknown>): void;
     getDateBetween(startDate: Date, endDate: Date): DateBetweenData[];
     createRenderRoot(): this;
 }

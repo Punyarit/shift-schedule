@@ -105,7 +105,7 @@ export const requestTypeStyles: Record<
     iconBgColor: 'modern-green-100',
   },
   off: {
-    iconSrc: 'pause-circle-line',
+    iconSrc: 'favorite-line',
     accentColor: 'alarm-orange-500',
     iconBgColor: 'alarm-orange-200',
   },
@@ -115,7 +115,7 @@ export const requestTypeStyles: Record<
     iconBgColor: 'warning-200',
   },
   woff: {
-    iconSrc: 'favorite-line',
+    iconSrc: 'pause-circle-line',
     accentColor: 'gray-500',
     iconBgColor: 'gray-100',
   },
@@ -129,8 +129,13 @@ export type ScheduleDataWithRender = {
 
 export type ArrangedRequest = Record<DayPart, string[]>;
 
-export type ShiftPlan = {
+export type SrShiftPlan = {
   m: Record<number, string>;
   a: Record<number, string>;
   n: Record<number, string>;
+};
+
+export type DatePickerShiftPlan = {
+  date?: Date;
+  remark?: string;
 };
