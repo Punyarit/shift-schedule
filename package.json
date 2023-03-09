@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@cortex-ui/core": "^0.0.166",
+    "@cortex-ui/core": "^0.0.167",
     "@cortex-ui/fonts": "^1.0.0",
     "@cortex-ui/icons": "^1.0.0",
     "@lit-labs/react": "^1.1.1",

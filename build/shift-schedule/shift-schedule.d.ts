@@ -63,6 +63,7 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
+    connectedCallback(): Promise<void>;
     private clearRequest;
     render(): import("lit-html").TemplateResult<1>;
     renderWoffSaved(): import("lit-html").TemplateResult<1>;

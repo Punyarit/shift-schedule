@@ -169,6 +169,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.maxHeightOfUserTable = Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
+    async connectedCallback() {
+        super.connectedCallback();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    }
     clearRequest() {
         this.shiftSrRequestSaved = {};
         this.shiftSemRequestSaved = {};
@@ -545,8 +550,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <cx-popover
             .set="${{
                     arrowpoint: true,
-                    focusout: 'none',
+                    focusout: 'close',
                     mouseleave: 'none',
+                    transform: 'center',
                 }}">
             ${this.renderEmptyBox(date)} ${this.renderSrPopover(date)}
           </cx-popover>
@@ -554,7 +560,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             case 'sem':
                 return html `
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' }}">
+            .set="${{
+                    arrowpoint: true,
+                    focusout: 'close',
+                    mouseleave: 'none',
+                    transform: 'center',
+                }}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">
@@ -567,7 +578,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             case 'off':
                 return html `
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' }}">
+            .set="${{
+                    arrowpoint: true,
+                    focusout: 'close',
+                    mouseleave: 'none',
+                    transform: 'center',
+                }}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">
@@ -580,7 +596,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             case 'vac':
                 return html `
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' }}">
+            .set="${{ arrowpoint: true, focusout: 'close', mouseleave: 'none' }}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">

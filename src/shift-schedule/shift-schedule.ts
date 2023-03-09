@@ -164,6 +164,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
+  async connectedCallback() {
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  }
+
   private clearRequest() {
     this.shiftSrRequestSaved = {};
     this.shiftSemRequestSaved = {};
@@ -669,8 +675,9 @@ export class ShiftSchedule extends LitElement {
           <cx-popover
             .set="${{
               arrowpoint: true,
-              focusout: 'none',
+              focusout: 'close',
               mouseleave: 'none',
+              transform: 'center',
             } as CXPopover.Set}">
             ${this.renderEmptyBox(date)} ${this.renderSrPopover(date)}
           </cx-popover>
@@ -679,7 +686,12 @@ export class ShiftSchedule extends LitElement {
       case 'sem':
         return html`
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' } as CXPopover.Set}">
+            .set="${{
+              arrowpoint: true,
+              focusout: 'close',
+              mouseleave: 'none',
+              transform: 'center',
+            } as CXPopover.Set}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">
@@ -693,7 +705,12 @@ export class ShiftSchedule extends LitElement {
       case 'off':
         return html`
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' } as CXPopover.Set}">
+            .set="${{
+              arrowpoint: true,
+              focusout: 'close',
+              mouseleave: 'none',
+              transform: 'center',
+            } as CXPopover.Set}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">
@@ -707,7 +724,7 @@ export class ShiftSchedule extends LitElement {
       case 'vac':
         return html`
           <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'none', mouseleave: 'none' } as CXPopover.Set}">
+            .set="${{ arrowpoint: true, focusout: 'close', mouseleave: 'none' } as CXPopover.Set}">
             ${this.renderEmptyBox(date)}
 
             <c-box slot="popover">
