@@ -5,9 +5,9 @@ import { RequestType } from '../schedule.types';
 @customElement('request-button')
 export class MyElement extends LitElement {
   private btnWrapper =
-    'cursor-pointer flex items-center col-gap-12 round-24 border-2 border-primary-100 border-solid pr-24';
+    'btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-primary-100 border-solid pr-24';
 
-  private btnContent = 'round-full flex items-center justify-center';
+  private btnContent = 'btnContent: round-full flex items-center justify-center';
 
   @property({ type: String })
   text!: string;

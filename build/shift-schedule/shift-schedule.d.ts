@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan, SchedulePractitionerEntity } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -29,7 +29,8 @@ export declare class ShiftSchedule extends LitElement {
     private tableWrapperUI;
     private iconTitleWrapper;
     private iconTitle;
-    role: 'manager' | 'user';
+    viewerRole: 'manager' | 'staff';
+    currentUserIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
     requestTypes?: RequestType[] | ScheduleRequestType[];
     dateBetween?: DateBetweenData[];
@@ -54,6 +55,7 @@ export declare class ShiftSchedule extends LitElement {
     shiftWoffRequestSaved: {
         [key: string]: {
             date: Date;
+            practitioner: SchedulePractitionerEntity;
         };
     };
     datepickerData?: DateRangeSelected;
@@ -65,33 +67,42 @@ export declare class ShiftSchedule extends LitElement {
     private calcHeightOfUserTable;
     connectedCallback(): Promise<void>;
     private clearRequest;
+    isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
-    renderWoffSaved(): import("lit-html").TemplateResult<1>;
-    renderSrShiftPlanSaved(plans: SrShiftPlan): import("lit-html").TemplateResult<1>;
+    sentRemoveEvent(): void;
+    removeWoffSaved(dateString?: string): void;
+    renderWoffSaved(dateString?: string): import("lit-html").TemplateResult<1>;
+    removeSrPlan(dayPart: DayPart, dateString: string): void;
+    renderSrShiftPlanSaved(planRequest: SrShiftPlan, dateString: string): import("lit-html").TemplateResult<1>;
+    removeShiftPlanDatePicker(data: {
+        date?: Date;
+        remark?: string;
+    }, type: RequestType['abbr']): void;
     renderShiftPlanSaved(data: {
         date?: Date;
         remark?: string;
     }, type: RequestType['abbr']): import("lit-html").TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender): import("lit-html").TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
-    saveWithDateData: () => void;
+    saveWithDateData: (practitioner: SchedulePractitionerEntity) => void;
     renderDatepickerBox(data: {
         title: string;
+        practitioner: SchedulePractitionerEntity;
     }): import("lit-html").TemplateResult<1>;
-    renderEmptyDateForSelect(date: Date): import("lit-html").TemplateResult<1> | undefined;
+    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1> | undefined;
     renderRequestSr(mockdata: any, dayPart: DayPart): import("lit-html").TemplateResult<1>;
     addSrShiftRequest(requestPlan: {
         plan: number;
         time: string;
     }, dayPart: DayPart): void;
-    renderSrPopover(date: Date): import("lit-html").TemplateResult<1>;
+    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     clearShiftRequestCache(): void;
     cancelSrRequestPlan(): void;
-    saveSrRequestPlan(date: Date): void;
+    saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity): void;
     closePopover(): void;
-    selectDateRequest(date: Date, type?: RequestType['abbr']): void;
-    saveWoffRequest(date: Date): void;
-    renderEmptyBox(date: Date, type?: RequestType['abbr']): import("lit-html").TemplateResult<1>;
+    selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
+    saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
+    renderEmptyBox(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     firstUpdated(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;

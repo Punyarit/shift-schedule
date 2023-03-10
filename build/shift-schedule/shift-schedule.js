@@ -24,24 +24,25 @@ import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 let ShiftSchedule = class ShiftSchedule extends LitElement {
     constructor() {
         super(...arguments);
-        this.buttonGroupUI = 'flex items-center col-gap-24 px-24';
-        this.scheduleTitleUI = 'inline-flex';
-        this.tableLineUI = 'border-1 border-solid border-primary-100 border-box';
-        this.titleLeftTopUI = 'pl-12 flex flex-col pt-42 border-box';
-        this.monthUI = 'flex items-center ';
-        this.genderBox = `absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
-        this.requestBox = 'min-w-90 inline-flex flex-col';
-        this.userTitle = 'flex col-gap-6 p-12 border-box';
-        this.weekDayUI = 'py-6 min-w-90 pl-12 border-box';
-        this.weekDayWRapperUI = 'flex';
-        this.monthEachUI = ' tx-12 pl-12 py-6 border-right-solid';
-        this.sundayBorderRightUI = 'border-right-2 border-right-primary-500';
-        this.titleSticky = 'sticky top-0 left-0 bg-white';
-        this.userSelected = 'border-bottom-2 border-bottom-solid border-bottom-primary-500';
-        this.tableWrapperUI = 'inline-flex flex-col';
-        this.iconTitleWrapper = 'inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
-        this.iconTitle = 'round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
-        this.role = 'user';
+        this.buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
+        this.scheduleTitleUI = 'scheduleTitleUI: inline-flex';
+        this.tableLineUI = 'tableLineUI: border-1 border-solid border-primary-100 border-box';
+        this.titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
+        this.monthUI = 'monthUI: flex items-center';
+        this.genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
+        this.requestBox = 'requestBox: min-w-90 inline-flex flex-col';
+        this.userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
+        this.weekDayUI = 'weekDayUI: py-6 min-w-90 pl-12 border-box';
+        this.weekDayWRapperUI = 'weekDayWRapperUI: flex';
+        this.monthEachUI = 'monthEachUI: tx-12 pl-12 py-6 border-right-solid';
+        this.sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
+        this.titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
+        this.userSelected = 'userSelected: border-bottom-2 border-bottom-solid border-bottom-primary-500';
+        this.tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
+        this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
+        this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
+        this.viewerRole = 'staff';
+        this.currentUserIndex = 0;
         this.srState = [];
         this.shiftSrRequestCache = {};
         this.shiftSrRequestSaved = {};
@@ -50,7 +51,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.shiftVacRequestSaved = {};
         this.shiftWoffRequestSaved = {};
         this.tableWrapperRef = createRef();
-        this.saveWithDateData = () => {
+        this.isRemoveMode = false;
+        this.saveWithDateData = (practitioner) => {
             const remarkInput = this.querySelector('#remarkRef');
             const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
             const dataDate = {};
@@ -65,6 +67,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.shiftSemRequestSaved = { ...this.shiftSemRequestSaved, ...dataDate };
                     this.dispatchEvent(new CustomEvent('save-sem', {
                         detail: {
+                            practitioner,
                             type: this.requestSelected,
                             request: this.shiftSemRequestSaved,
                         },
@@ -72,6 +75,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
+                                practitioner,
                                 type: this.requestSelected,
                                 request: this.shiftSemRequestSaved,
                             },
@@ -82,6 +86,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.shiftOffRequestSaved = { ...this.shiftOffRequestSaved, ...dataDate };
                     this.dispatchEvent(new CustomEvent('save-off', {
                         detail: {
+                            practitioner,
                             type: this.requestSelected,
                             request: this.shiftOffRequestSaved,
                         },
@@ -89,6 +94,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
+                                practitioner,
                                 type: this.requestSelected,
                                 request: this.shiftOffRequestSaved,
                             },
@@ -99,6 +105,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.shiftVacRequestSaved = { ...this.shiftVacRequestSaved, ...dataDate };
                     this.dispatchEvent(new CustomEvent('save-vac', {
                         detail: {
+                            practitioner,
                             type: this.requestSelected,
                             request: this.shiftVacRequestSaved,
                         },
@@ -106,6 +113,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.dispatchEvent(new CustomEvent('save-request', {
                         detail: {
                             [this.requestSelected.abbr]: {
+                                practitioner,
                                 type: this.requestSelected,
                                 request: this.shiftVacRequestSaved,
                             },
@@ -158,7 +166,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     selectRequest(type) {
+        this.isRemoveMode = false;
         this.requestSelected = type;
+        this.dispatchEvent(new CustomEvent('select-request', {
+            detail: {
+                requestSelected: this.requestSelected,
+            },
+        }));
     }
     calcHeightOfUserTable() {
         const theme = this.querySelector('cx-theme');
@@ -175,20 +189,24 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     clearRequest() {
-        this.shiftSrRequestSaved = {};
-        this.shiftSemRequestSaved = {};
-        this.shiftOffRequestSaved = {};
-        this.shiftVacRequestSaved = {};
-        this.shiftWoffRequestSaved = {};
-        this.dispatchEvent(new CustomEvent('clear-request', {
-            detail: {
-                sr: {},
-                sem: {},
-                off: {},
-                vac: {},
-                woff: {},
-            },
-        }));
+        this.requestSelected = undefined;
+        this.isRemoveMode = true;
+        // this.shiftSrRequestSaved = {};
+        // this.shiftSemRequestSaved = {};
+        // this.shiftOffRequestSaved = {};
+        // this.shiftVacRequestSaved = {};
+        // this.shiftWoffRequestSaved = {};
+        // this.dispatchEvent(
+        //   new CustomEvent('clear-request', {
+        //     detail: {
+        //       sr: {},
+        //       sem: {},
+        //       off: {},
+        //       vac: {},
+        //       woff: {},
+        //     },
+        //   })
+        // );
     }
     render() {
         return html `
@@ -196,8 +214,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         input::placeholder {
           font-family: Sarabun-Regular;
         }
+
+        c-box[input-box].remark-input {
+          width: var(--size-274) !important;
+        }
       </style>
       <cx-theme>
+        <c-box absolute top-0>${this.viewerRole}</c-box>
         <cx-modal .set="${{ multiplePopover: true }}"></cx-modal>
         <c-box style="height:100vh" overflow-hidden>
           <c-box bg-white p-24 flex flex-col row-gap-24>
@@ -216,18 +239,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 w-96
                 border-solid
                 border-1
-                border-pinky-100>
-                <c-box flex-center icon-prefix="close-circle-line" w-44 h-44 round-full bg-pinky-50>
+                border-pinky-100
+                bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
+                <c-box
+                  flex-center
+                  icon-prefix="close-circle-line"
+                  icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                  w-44
+                  h-44
+                  round-full
+                  bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
                 </c-box>
-                <c-box>ลบ</c-box>
+                <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
               </c-box>
             </c-box>
 
             <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
-              <c-box ui="${this.tableWrapperUI} ${this.tableLineUI}">
+              <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
                 <c-box ui="${this.scheduleTitleUI}">
                   <!-- FIXME: should titleSticky below -->
-                  <c-box UI="${this.tableLineUI} ${this.titleLeftTopUI} " min-w="260">
+                  <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
                     <c-box semiBold tx-16>รายชื่อเจ้าหน้าที่</c-box>
                     <c-box tx-14
                       >ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box
@@ -238,7 +269,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     ${this.dateBetween?.map((dateBet) => {
             return html `
                         <c-box>
-                          <c-box ui="${this.monthUI} ${this.tableLineUI}" pl-12 border-box>
+                          <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
                             <c-box
                               icon-prefix="favorite-line"
                               icon-suffix="favorite-line"
@@ -256,7 +287,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 return html `
                                 <c-box flex flex-col>
                                   <c-box
-                                    ui="${this.monthEachUI} ${this.sundayBorderRightUI} ${this
+                                    ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                     .tableLineUI}">
                                     ${this.dateFormat(dateBet.currentMonth, {
                     month: 'long',
@@ -268,7 +299,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                     ${weekday.map((date) => {
                     const isSunday = date.getDay() === 0 ? this.sundayBorderRightUI : '';
                     return html ` <c-box
-                                        ui="${isSunday} ${this.tableLineUI} ${this.weekDayUI}">
+                                        ui="${isSunday}, ${this.tableLineUI}, ${this.weekDayUI}">
                                         <c-box tx-12>
                                           ${this.dateFormat(date, {
                         weekday: 'short',
@@ -307,8 +338,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         <c-box flex>
                           <c-box
                             min-w="260"
-                            ui="${this.userTitle} ${this.tableLineUI} ${this
-                .titleSticky} ${borderBottom}">
+                            ui="${borderBottom}, ${this.userTitle}, ${this.tableLineUI}, ${this
+                .titleSticky}">
                             <c-box relative top-0 left-0>
                               <img src="${this.userImgDefault || ''}" alt="" />
                               <c-box ui="${this.genderBox}"> ${gender} </c-box>
@@ -337,12 +368,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const vacSaved = this.shiftVacRequestSaved[dateString];
                         const woffSaved = this.shiftWoffRequestSaved[dateString];
                         return html ` <c-box
-                                      ui="${this.tableLineUI} ${this
-                            .requestBox} ${borderRight} ${borderBottom}">
+                                      ui="${borderBottom}, ${this.tableLineUI}, ${this
+                            .requestBox}, ${borderRight}">
                                       <c-box w-full h-full bg-white>
                                         <!-- if have request date then render request -->
                                         ${srSaved && indexUser === 0
-                            ? this.renderSrShiftPlanSaved(srSaved)
+                            ? this.renderSrShiftPlanSaved(srSaved, dateString)
                             : semSaved && indexUser === 0
                                 ? this.renderShiftPlanSaved(semSaved, 'sem')
                                 : offSaved && indexUser === 0
@@ -350,11 +381,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                     : vacSaved && indexUser === 0
                                         ? this.renderShiftPlanSaved(vacSaved, 'vac')
                                         : woffSaved && indexUser === 0
-                                            ? this.renderWoffSaved()
+                                            ? this.renderWoffSaved(dateString)
                                             : requestInitial && indexUser === 0
                                                 ? this.renderInitialRequest(requestInitial)
                                                 : indexUser === 0
-                                                    ? this.renderEmptyDateForSelect(day)
+                                                    ? this.renderEmptyDateForSelect(day, practitioner)
                                                     : undefined}
                                       </c-box>
                                     </c-box>`;
@@ -374,7 +405,24 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </cx-theme>
     `;
     }
-    renderWoffSaved() {
+    sentRemoveEvent() {
+        this.dispatchEvent(new CustomEvent('remove-request', {
+            detail: {
+                sr: this.shiftSrRequestCache,
+                sem: this.shiftSemRequestSaved,
+                off: this.shiftOffRequestSaved,
+                vac: this.shiftVacRequestSaved,
+                woff: this.shiftWoffRequestSaved,
+            },
+        }));
+    }
+    removeWoffSaved(dateString) {
+        if (this.isRemoveMode) {
+            delete this.shiftWoffRequestSaved[dateString];
+            this.requestUpdate();
+        }
+    }
+    renderWoffSaved(dateString) {
         return html `<c-box h-full w-full p-4 border-box>
       <c-box
         bg-bluestate-200
@@ -384,20 +432,33 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         flex
         justify-center
         round-6
+        @click="${() => this.removeWoffSaved(dateString)}"
         items-center></c-box>
     </c-box>`;
     }
-    renderSrShiftPlanSaved(plans) {
-        const planEntries = Object.entries(plans);
+    removeSrPlan(dayPart, dateString) {
+        if (this.isRemoveMode) {
+            this.shiftSrRequestSaved[dateString];
+            delete this.shiftSrRequestSaved[dateString][dayPart];
+            if (Object.keys(this.shiftSrRequestSaved[dateString]).length === 0) {
+                delete this.shiftSrRequestSaved[dateString];
+            }
+            this.requestUpdate();
+        }
+    }
+    renderSrShiftPlanSaved(planRequest, dateString) {
+        const planEntries = Object.entries(planRequest);
         return html `
       ${planEntries.map(([dayPart, plans]) => {
             return html `
           <c-box p-4 border-box flex flex-col row-gap-4>
             <c-box
+              class="srDayPart"
               p-4
               border-box
               round-6
               h-44
+              @click="${() => this.removeSrPlan(dayPart, dateString)}"
               bg-color="${this.setColorRequestType(dayPart)}">
               <c-box>
                 <c-box icon-prefix="favorite-line" flex flex-col>
@@ -412,16 +473,35 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         })}
     `;
     }
+    removeShiftPlanDatePicker(data, type) {
+        if (this.isRemoveMode) {
+            const dateString = this.convertDateToString(data.date);
+            if (type === 'sem') {
+                delete this.shiftSemRequestSaved[dateString];
+                this.requestUpdate();
+            }
+            if (type === 'off') {
+                delete this.shiftOffRequestSaved[dateString];
+                this.requestUpdate();
+            }
+            if (type === 'vac') {
+                delete this.shiftVacRequestSaved[dateString];
+                this.requestUpdate();
+            }
+        }
+    }
     renderShiftPlanSaved(data, type) {
         return html `<c-box p-4 border-box h-full w-full>
       <c-box
+        class="shift-plan-datepicker"
         bg-modern-green-100
         bg-color="${requestTypeStyles[type].iconBgColor}"
         h-full
         w-full
         round-6
         p-6
-        border-box>
+        border-box
+        @click="${() => this.removeShiftPlanDatePicker(data, type)}">
         ${data.remark
             ? html `<c-box
               flex
@@ -495,7 +575,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.datepickerData = e.detail.date;
     }
     renderDatepickerBox(data) {
-        return html ` <c-box content>
+        return html ` <c-box content w>
       <!-- title -->
       <c-box>
         <c-box ui="${this.iconTitleWrapper}">
@@ -515,7 +595,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
               >ยกเลิก</cx-button
             >
             <cx-button
-              @click="${this.saveWithDateData}"
+              @click="${() => this.saveWithDateData(data.practitioner)}"
               .var="${{ width: 'size-0' }}"
               >บันทึก</cx-button
             >
@@ -534,16 +614,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
 
       <c-box mt-12>หมายเหตุ</c-box>
-      <c-box mt-6 input-box="primary-500">
+      <c-box class="remark-input" mt-6 input-box="primary-200">
         <input
           id="remarkRef"
           type="text"
-          style="border:none;outline:none"
+          style="border:none;outline:none;width:200px"
           placeholder="หมายเหตุเพิ่มเติม" />
       </c-box>
     </c-box>`;
     }
-    renderEmptyDateForSelect(date) {
+    renderEmptyDateForSelect(date, practitioner) {
         switch (this.requestSelected?.abbr) {
             case 'sr':
                 return html `
@@ -554,7 +634,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     mouseleave: 'none',
                     transform: 'center',
                 }}">
-            ${this.renderEmptyBox(date)} ${this.renderSrPopover(date)}
+            ${this.renderEmptyBox(date)} ${this.renderSrPopover(date, practitioner)}
           </cx-popover>
         `;
             case 'sem':
@@ -571,6 +651,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             <c-box slot="popover">
               ${this.renderDatepickerBox({
                     title: 'ขออบรม, สัมนา, ไปราชการ',
+                    practitioner,
                 })}
             </c-box>
           </cx-popover>
@@ -589,6 +670,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             <c-box slot="popover">
               ${this.renderDatepickerBox({
                     title: 'ขอลาหยุด',
+                    practitioner,
                 })}
             </c-box>
           </cx-popover>
@@ -602,12 +684,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             <c-box slot="popover">
               ${this.renderDatepickerBox({
                     title: 'ขอลาพักร้อน',
+                    practitioner,
                 })}
             </c-box>
           </cx-popover>
         `;
             case 'woff':
-                return html ` ${this.renderEmptyBox(date, 'woff')} `;
+                return html ` ${this.renderEmptyBox(date, 'woff', practitioner)} `;
             default:
                 return undefined;
         }
@@ -674,7 +757,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.shiftSrRequestCache[dayPart][requestPlan.plan] = requestPlan.time;
         }
     }
-    renderSrPopover(date) {
+    renderSrPopover(date, practitioner) {
         // FIXME: w8 for api data
         const mockdata = [
             {
@@ -721,7 +804,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 >
                 <cx-button
                   .var="${{ width: 'size-0' }}"
-                  @click="${() => this.saveSrRequestPlan(date)}"
+                  @click="${() => this.saveSrRequestPlan(date, practitioner)}"
                   >บันทึก</cx-button
                 >
               </c-box>
@@ -749,22 +832,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     cancelSrRequestPlan() {
         this.closePopover();
     }
-    saveSrRequestPlan(date) {
+    saveSrRequestPlan(date, practitioner) {
         this.shiftSrRequestSaved[this.convertDateToString(date)] = this.shiftSrRequestCache;
         this.requestUpdate();
-        this.dispatchEvent(new CustomEvent('save-sr', {
-            detail: {
-                type: this.requestSelected,
-                request: this.shiftSrRequestSaved,
-            },
-        }));
+        const detail = {
+            practitioner,
+            type: this.requestSelected,
+            request: this.shiftSrRequestSaved,
+        };
+        this.dispatchEvent(new CustomEvent('save-sr', { detail }));
         this.dispatchEvent(new CustomEvent('save-request', {
-            detail: {
-                [this.requestSelected?.abbr]: {
-                    type: this.requestSelected,
-                    request: this.shiftSrRequestSaved,
-                },
-            },
+            detail: { [this.requestSelected?.abbr]: detail },
         }));
         this.selectedDate = undefined;
         this.closePopover();
@@ -773,21 +851,23 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.clearShiftRequestCache();
         ModalCaller.popover().clear();
     }
-    selectDateRequest(date, type) {
+    selectDateRequest(date, type, practitioner) {
         this.selectedDate = date;
         if (type === 'woff') {
-            this.saveWoffRequest(date);
+            this.saveWoffRequest(date, practitioner);
         }
     }
-    saveWoffRequest(date) {
+    saveWoffRequest(date, practitioner) {
         this.shiftWoffRequestSaved = {
             ...this.shiftWoffRequestSaved,
             [this.convertDateToString(date)]: {
                 date,
+                practitioner,
             },
         };
         this.dispatchEvent(new CustomEvent('save-woff', {
             detail: {
+                practitioner,
                 type: this.requestSelected,
                 request: this.shiftWoffRequestSaved,
             },
@@ -795,6 +875,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.dispatchEvent(new CustomEvent('save-request', {
             detail: {
                 [this.requestSelected?.abbr]: {
+                    practitioner,
                     type: this.requestSelected,
                     request: this.shiftWoffRequestSaved,
                 },
@@ -802,7 +883,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }));
         this.selectedDate = undefined;
     }
-    renderEmptyBox(date, type) {
+    renderEmptyBox(date, type, practitioner) {
         const isSameDate = this.selectedDate === date;
         return html `
       <c-box
@@ -811,7 +892,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         w-full
         h-full
         slot="host"
-        @click="${() => this.selectDateRequest(date, type)}">
+        @click="${() => this.selectDateRequest(date, type, practitioner)}">
         <c-box
           bg-hover="primary-100"
           bg-active="primary-200"
@@ -887,6 +968,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             lastTableIndexUser.style.borderRight = 'var(--size-1) solid var(--primary-100)';
         });
         this.calcHeightOfUserTable();
+        // sr
+        const srDayParts = this.querySelectorAll('.srDayPart');
+        const shiftPlandatepicker = this.querySelectorAll('.shift-plan-datepicker');
+        if (this.isRemoveMode) {
+            srDayParts.forEach((ele) => {
+                ele?.setAttribute('cursor-pointer', '');
+                // ele.
+            });
+            shiftPlandatepicker.forEach((ele) => {
+                ele?.setAttribute('cursor-pointer', '');
+            });
+        }
+        else {
+            srDayParts.forEach((ele) => {
+                ele?.removeAttribute('cursor-pointer');
+            });
+            shiftPlandatepicker.forEach((ele) => {
+                ele?.removeAttribute('cursor-pointer');
+            });
+        }
     }
     getDateBetween(startDate, endDate) {
         const result = [];
@@ -924,7 +1025,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], ShiftSchedule.prototype, "role", void 0);
+], ShiftSchedule.prototype, "viewerRole", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Object)
+], ShiftSchedule.prototype, "currentUserIndex", void 0);
 __decorate([
     property({ type: Object }),
     __metadata("design:type", Object)
@@ -981,6 +1086,10 @@ __decorate([
     state(),
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "datepickerData", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Object)
+], ShiftSchedule.prototype, "isRemoveMode", void 0);
 ShiftSchedule = __decorate([
     customElement('cx-shift-schedule')
 ], ShiftSchedule);
