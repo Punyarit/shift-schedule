@@ -65,12 +65,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
             switch (this.requestSelected?.abbr) {
                 case 'sem':
-                    if (!this.shiftSemRequestSaved[practitioner.practitionerId]) {
-                        this.shiftSemRequestSaved[practitioner.practitionerId] = {};
+                    if (!this.shiftSemRequestSaved[practitioner.id]) {
+                        this.shiftSemRequestSaved[practitioner.id] = {};
+                        this.shiftSemRequestSaved[practitioner.id].request = {};
                     }
-                    this.shiftSemRequestSaved[practitioner.practitionerId] = {
-                        ...this.shiftSemRequestSaved[practitioner.practitionerId],
-                        ...dataDate,
+                    this.shiftSemRequestSaved[practitioner.id] = {
+                        request: {
+                            ...dataDate,
+                        },
+                        practitioner,
                     };
                     this.dispatchEvent(new CustomEvent('save-sem', {
                         detail: this.shiftSemRequestSaved,
@@ -82,12 +85,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     }));
                     break;
                 case 'off':
-                    if (!this.shiftOffRequestSaved[practitioner.practitionerId]) {
-                        this.shiftOffRequestSaved[practitioner.practitionerId] = {};
+                    if (!this.shiftOffRequestSaved[practitioner.id]) {
+                        this.shiftOffRequestSaved[practitioner.id] = {};
+                        this.shiftOffRequestSaved[practitioner.id].request = {};
                     }
-                    this.shiftOffRequestSaved[practitioner.practitionerId] = {
-                        ...this.shiftOffRequestSaved[practitioner.practitionerId],
-                        ...dataDate,
+                    this.shiftOffRequestSaved[practitioner.id] = {
+                        request: {
+                            ...dataDate,
+                        },
+                        practitioner,
                     };
                     this.dispatchEvent(new CustomEvent('save-off', {
                         detail: this.shiftOffRequestSaved,
@@ -103,12 +109,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     }));
                     break;
                 case 'vac':
-                    if (!this.shiftVacRequestSaved[practitioner.practitionerId]) {
-                        this.shiftVacRequestSaved[practitioner.practitionerId] = {};
+                    if (!this.shiftVacRequestSaved[practitioner.id]) {
+                        this.shiftVacRequestSaved[practitioner.id] = {};
+                        this.shiftVacRequestSaved[practitioner.id].request = {};
                     }
-                    this.shiftVacRequestSaved[practitioner.practitionerId] = {
-                        ...this.shiftVacRequestSaved[practitioner.practitionerId],
-                        ...dataDate,
+                    this.shiftVacRequestSaved[practitioner.id] = {
+                        request: {
+                            ...dataDate,
+                        },
+                        practitioner,
                     };
                     this.dispatchEvent(new CustomEvent('save-vac', {
                         detail: this.shiftVacRequestSaved,
@@ -348,15 +357,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         day.setHours(0, 0, 0, 0);
                         const borderRight = day.getDay() === 0 ? this.sundayBorderRightUI : '';
                         const dateString = this.convertDateToString(day);
-                        const srSaved = this.shiftSrRequestSaved[practitioner.practitionerId];
-                        const semSaved = this.shiftSemRequestSaved[practitioner.practitionerId];
-                        const offSaved = this.shiftOffRequestSaved[practitioner.practitionerId];
-                        const vacSaved = this.shiftVacRequestSaved[practitioner.practitionerId];
+                        const srSaved = this.shiftSrRequestSaved[practitioner.id];
+                        const semSaved = this.shiftSemRequestSaved[practitioner.id];
+                        const offSaved = this.shiftOffRequestSaved[practitioner.id];
+                        const vacSaved = this.shiftVacRequestSaved[practitioner.id];
                         const requestInitial = requestData[dateString];
-                        const woffSaved = this.shiftWoffRequestSaved?.[practitioner.practitionerId]
-                            ?.request;
+                        const woffSaved = this.shiftWoffRequestSaved?.[practitioner.id]?.request;
                         const userTargetIndex = this.viewerRole === 'manager' ? this.currentUserIndex : 0;
-                        console.log(srSaved, 'srSaved');
                         return html ` <c-box
                                       @mouseover="${() => this.ManagerHoverUser(indexUser)}"
                                       ui="${borderBottom}, ${this.tableLineUI}, ${this
@@ -364,14 +371,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                       <c-box w-full h-full bg-white>
                                         <!-- if have request date then render request -->
                                         <!-- when saving -->
-                                        ${srSaved && srSaved?.[dateString]
+                                        ${srSaved && srSaved?.request?.[dateString]
                             ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner)
-                            : semSaved?.[dateString]
-                                ? this.renderShiftPlanSaved(semSaved?.[dateString], 'sem', practitioner)
-                                : offSaved?.[dateString]
-                                    ? this.renderShiftPlanSaved(offSaved?.[dateString], 'off', practitioner)
-                                    : vacSaved?.[dateString]
-                                        ? this.renderShiftPlanSaved(vacSaved?.[dateString], 'vac', practitioner)
+                            : semSaved?.request?.[dateString]
+                                ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner)
+                                : offSaved?.request?.[dateString]
+                                    ? this.renderShiftPlanSaved(offSaved?.request?.[dateString], 'off', practitioner)
+                                    : vacSaved?.request?.[dateString]
+                                        ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner)
                                         : woffSaved?.[dateString]
                                             ? this.renderWoffSaved(dateString, practitioner)
                                             : requestInitial
@@ -407,7 +414,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             detail: {
                 requestType: this.removeRequestSelected,
                 requests: {
-                    sr: this.shiftSrRequestCache,
+                    sr: this.shiftSrRequestSaved,
                     sem: this.shiftSemRequestSaved,
                     off: this.shiftOffRequestSaved,
                     vac: this.shiftVacRequestSaved,
@@ -441,9 +448,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     removeSrPlan(dayPart, dateString, practitioner) {
         if (this.isRemoveMode) {
-            delete this.shiftSrRequestSaved[practitioner.practitionerId][dateString][dayPart];
-            if (Object.keys(this.shiftSrRequestSaved[practitioner.practitionerId][dateString]).length === 0) {
-                delete this.shiftSrRequestSaved[practitioner.practitionerId][dateString];
+            delete this.shiftSrRequestSaved[practitioner.id].request[dateString].shiftPlan[dayPart];
+            if (Object.keys(this.shiftSrRequestSaved[practitioner.id].request[dateString].shiftPlan)
+                .length === 0) {
+                delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
             }
             this.removeRequestSelected = this.findRequestType('sr');
             this.sentRemoveEvent();
@@ -451,8 +459,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     renderSrShiftPlanSaved(planRequest, dateString, practitioner) {
-        const planEntries = Object.entries(planRequest?.[dateString]);
-        console.log('shift-schedule.js |planEntries| = ', planEntries);
+        const planEntries = Object.entries(planRequest?.request[dateString].shiftPlan);
         return html `
       ${planEntries.map(([dayPart, plans]) => {
             return html `
@@ -483,19 +490,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             console.log('shift-schedule.js |data| = ', data);
             const dateString = this.convertDateToString(data.date);
             if (type === 'sem') {
-                delete this.shiftSemRequestSaved[practitioner.practitionerId][dateString];
+                delete this.shiftSemRequestSaved[practitioner.id].request[dateString];
                 this.removeRequestSelected = this.findRequestType('sem');
                 this.sentRemoveEvent();
                 this.requestUpdate();
             }
             if (type === 'off') {
-                delete this.shiftOffRequestSaved[practitioner.practitionerId][dateString];
+                delete this.shiftOffRequestSaved[practitioner.id].request[dateString];
                 this.removeRequestSelected = this.findRequestType('off');
                 this.sentRemoveEvent();
                 this.requestUpdate();
             }
             if (type === 'vac') {
-                delete this.shiftVacRequestSaved[practitioner.practitionerId][dateString];
+                delete this.shiftVacRequestSaved[practitioner.id].request[dateString];
                 this.removeRequestSelected = this.findRequestType('vac');
                 this.sentRemoveEvent();
                 this.requestUpdate();
@@ -848,13 +855,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.closePopover();
     }
     saveSrRequestPlan(date, practitioner) {
-        if (!this.shiftSrRequestSaved[practitioner.practitionerId]) {
-            this.shiftSrRequestSaved[practitioner.practitionerId] = {};
+        if (!this.shiftSrRequestSaved[practitioner.id]) {
+            this.shiftSrRequestSaved[practitioner.id] = {};
+            this.shiftSrRequestSaved[practitioner.id].request = {};
+            this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] = {};
         }
-        this.shiftSrRequestSaved[practitioner.practitionerId][this.convertDateToString(date)] =
+        this.shiftSrRequestSaved[practitioner.id].practitioner = practitioner;
+        this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)].shiftPlan =
             this.shiftSrRequestCache;
         this.requestUpdate();
-        console.log('shift-schedule.js |this.shiftSrRequestSaved| = ', this.shiftSrRequestSaved);
         this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
         this.dispatchEvent(new CustomEvent('save-request', {
             detail: { [this.requestSelected?.abbr]: this.shiftSrRequestSaved },
@@ -873,29 +882,21 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     saveWoffRequest(date, practitioner) {
-        if (!this.shiftWoffRequestSaved?.[practitioner.practitionerId]) {
-            this.shiftWoffRequestSaved[practitioner.practitionerId] = {};
-            this.shiftWoffRequestSaved[practitioner.practitionerId].request = {};
+        if (!this.shiftWoffRequestSaved?.[practitioner.id]) {
+            this.shiftWoffRequestSaved[practitioner.id] = {};
+            this.shiftWoffRequestSaved[practitioner.id].request = {};
         }
-        this.shiftWoffRequestSaved[practitioner.practitionerId].request[this.convertDateToString(date)] = { date };
-        this.shiftWoffRequestSaved[practitioner.practitionerId] = {
-            ...this.shiftWoffRequestSaved[practitioner.practitionerId],
+        this.shiftWoffRequestSaved[practitioner.id].request[this.convertDateToString(date)] = { date };
+        this.shiftWoffRequestSaved[practitioner.id] = {
+            ...this.shiftWoffRequestSaved[practitioner.id],
             practitioner,
         };
         this.dispatchEvent(new CustomEvent('save-woff', {
-            detail: {
-                practitioner,
-                type: this.requestSelected,
-                request: this.shiftWoffRequestSaved,
-            },
+            detail: this.shiftWoffRequestSaved,
         }));
         this.dispatchEvent(new CustomEvent('save-request', {
             detail: {
-                [this.requestSelected?.abbr]: {
-                    practitioner,
-                    type: this.requestSelected,
-                    request: this.shiftWoffRequestSaved,
-                },
+                [this.requestSelected?.abbr]: this.shiftWoffRequestSaved,
             },
         }));
         this.selectedDate = undefined;

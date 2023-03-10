@@ -43,29 +43,43 @@ export declare class ShiftSchedule extends LitElement {
     userImgDefault?: string;
     shiftSrRequestSaved: {
         [id: string]: {
-            [date: string]: SrShiftPlan;
+            practitioner: SchedulePractitionerEntity;
+            request: {
+                [date: string]: {
+                    shiftPlan: SrShiftPlan;
+                };
+            };
         };
     };
     shiftSemRequestSaved: {
         [id: string]: {
-            [date: string]: DatePickerShiftPlan;
+            practitioner: SchedulePractitionerEntity;
+            request: {
+                [date: string]: DatePickerShiftPlan;
+            };
         };
     };
     shiftOffRequestSaved: {
         [id: string]: {
-            [date: string]: DatePickerShiftPlan;
+            practitioner: SchedulePractitionerEntity;
+            request: {
+                [date: string]: DatePickerShiftPlan;
+            };
         };
     };
     shiftVacRequestSaved: {
         [id: string]: {
-            [date: string]: DatePickerShiftPlan;
+            practitioner: SchedulePractitionerEntity;
+            request: {
+                [date: string]: DatePickerShiftPlan;
+            };
         };
     };
     shiftWoffRequestSaved: {
         [id: string]: {
             practitioner: SchedulePractitionerEntity;
             request: {
-                [key: string]: {
+                [date: string]: {
                     date: Date;
                 };
             };
@@ -90,7 +104,12 @@ export declare class ShiftSchedule extends LitElement {
     renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity): void;
     renderSrShiftPlanSaved(planRequest: {
-        [date: string]: SrShiftPlan;
+        practitioner: SchedulePractitionerEntity;
+        request: {
+            [date: string]: {
+                shiftPlan: SrShiftPlan;
+            };
+        };
     }, dateString: string, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     removeShiftPlanDatePicker(data: {
         date?: Date;
