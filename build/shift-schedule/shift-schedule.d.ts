@@ -42,21 +42,33 @@ export declare class ShiftSchedule extends LitElement {
     private shiftSrRequestCache;
     userImgDefault?: string;
     shiftSrRequestSaved: {
-        [key: string]: SrShiftPlan;
+        [id: string]: {
+            [date: string]: SrShiftPlan;
+        };
     };
     shiftSemRequestSaved: {
-        [key: string]: DatePickerShiftPlan;
+        [id: string]: {
+            [date: string]: DatePickerShiftPlan;
+        };
     };
     shiftOffRequestSaved: {
-        [key: string]: DatePickerShiftPlan;
+        [id: string]: {
+            [date: string]: DatePickerShiftPlan;
+        };
     };
     shiftVacRequestSaved: {
-        [key: string]: DatePickerShiftPlan;
+        [id: string]: {
+            [date: string]: DatePickerShiftPlan;
+        };
     };
     shiftWoffRequestSaved: {
-        [key: string]: {
-            date: Date;
+        [id: string]: {
             practitioner: SchedulePractitionerEntity;
+            request: {
+                [key: string]: {
+                    date: Date;
+                };
+            };
         };
     };
     maxHeight?: number;
@@ -69,25 +81,27 @@ export declare class ShiftSchedule extends LitElement {
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
     connectedCallback(): Promise<void>;
-    private clearRequest;
+    private setRemoveMode;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
     ManagerHoverUser(indexUser: number): void;
     sentRemoveEvent(): void;
-    removeWoffSaved(dateString?: string): void;
-    renderWoffSaved(dateString?: string): import("lit-html").TemplateResult<1>;
-    removeSrPlan(dayPart: DayPart, dateString: string): void;
-    renderSrShiftPlanSaved(planRequest: SrShiftPlan, dateString: string): import("lit-html").TemplateResult<1>;
+    removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity): void;
+    renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity): void;
+    renderSrShiftPlanSaved(planRequest: {
+        [date: string]: SrShiftPlan;
+    }, dateString: string, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     removeShiftPlanDatePicker(data: {
         date?: Date;
         remark?: string;
-    }, type: RequestType['abbr']): void;
+    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): void;
     findRequestType(abbr: string): RequestType;
     renderShiftPlanSaved(data: {
         date?: Date;
         remark?: string;
-    }, type: RequestType['abbr']): import("lit-html").TemplateResult<1>;
-    renderInitialRequest(request: ScheduleDataWithRender): import("lit-html").TemplateResult<1> | undefined;
+    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
     saveWithDateData: (practitioner: SchedulePractitionerEntity) => void;
     renderDatepickerBox(data: {
