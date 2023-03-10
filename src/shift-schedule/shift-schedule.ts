@@ -52,7 +52,11 @@ export class ShiftSchedule extends LitElement {
     'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
 
   @property({ type: String })
-  viewerRole: 'manager' | 'staff' = 'staff';
+  viewerRole: 'manager' | 'staff' = 'manager';
+
+  @property({ type: String })
+  practitionerId?: string
+  // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
 
   @state()
   currentUserIndex = 0;
@@ -116,8 +120,13 @@ export class ShiftSchedule extends LitElement {
     };
   };
 
+  @property({ type: String })
+  maxHeight?: number;
+
   @state()
   datepickerData?: DateRangeSelected;
+
+  private removeRequestSelected?: RequestType;
 
   public tableWrapperRef = createRef<HTMLDivElement>();
 
@@ -175,7 +184,8 @@ export class ShiftSchedule extends LitElement {
     setTimeout(() => {
       const heightOfTheme = theme?.getBoundingClientRect();
       const userTableTop = userTable?.getBoundingClientRect();
-      this.maxHeightOfUserTable = Math.floor(heightOfTheme?.height! - userTableTop?.top!);
+      this.maxHeightOfUserTable =
+        this.maxHeight ?? Math.floor(heightOfTheme?.height! - userTableTop?.top!);
     }, 250);
   }
 
@@ -345,13 +355,16 @@ export class ShiftSchedule extends LitElement {
                         },
                         schedulePractitionerRequest: request,
                       } = practitioner;
-                      const borderBottom: string = indexUser === 0 ? this.userSelected : '';
+                      const borderBottom: string =
+                        indexUser === (this.viewerRole === 'manager' ? this.currentUserIndex : 0)
+                          ? this.userSelected
+                          : '';
                       const requestData = this.convertRequestDatesToObject(
                         request as SchedulePractitionerRequestEntity[]
                       );
-
+                      const targetUser = practitioner?.practitionerId === this.practitionerId;
                       return html`
-                        <c-box flex>
+                        <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                           <c-box
                             min-w="260"
                             ui="${borderBottom}, ${this.userTitle}, ${this.tableLineUI}, ${this
@@ -387,6 +400,7 @@ export class ShiftSchedule extends LitElement {
                                     const vacSaved = this.shiftVacRequestSaved[dateString];
                                     const woffSaved = this.shiftWoffRequestSaved[dateString];
                                     return html` <c-box
+                                      @mouseover="${() => this.ManagerHoverUser(indexUser)}"
                                       ui="${borderBottom}, ${this.tableLineUI}, ${this
                                         .requestBox}, ${borderRight}">
                                       <c-box w-full h-full bg-white>
@@ -426,15 +440,24 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
+  ManagerHoverUser(indexUser: number) {
+    if (this.viewerRole === 'manager') {
+      this.currentUserIndex = indexUser;
+    }
+  }
+
   sentRemoveEvent() {
     this.dispatchEvent(
       new CustomEvent('remove-request', {
         detail: {
-          sr: this.shiftSrRequestCache,
-          sem: this.shiftSemRequestSaved,
-          off: this.shiftOffRequestSaved,
-          vac: this.shiftVacRequestSaved,
-          woff: this.shiftWoffRequestSaved,
+          requestType: this.removeRequestSelected,
+          requests: {
+            sr: this.shiftSrRequestCache,
+            sem: this.shiftSemRequestSaved,
+            off: this.shiftOffRequestSaved,
+            vac: this.shiftVacRequestSaved,
+            woff: this.shiftWoffRequestSaved,
+          },
         },
       })
     );
@@ -442,7 +465,9 @@ export class ShiftSchedule extends LitElement {
 
   removeWoffSaved(dateString?: string) {
     if (this.isRemoveMode) {
+      this.removeRequestSelected = this.findRequestType('woff');
       delete this.shiftWoffRequestSaved[dateString!];
+      this.sentRemoveEvent();
       this.requestUpdate();
     }
   }
@@ -468,6 +493,8 @@ export class ShiftSchedule extends LitElement {
       if (Object.keys(this.shiftSrRequestSaved[dateString]).length === 0) {
         delete this.shiftSrRequestSaved[dateString];
       }
+      this.removeRequestSelected = this.findRequestType('sr');
+      this.sentRemoveEvent();
       this.requestUpdate();
     }
   }
@@ -508,19 +535,30 @@ export class ShiftSchedule extends LitElement {
 
       if (type === 'sem') {
         delete this.shiftSemRequestSaved[dateString];
+        this.removeRequestSelected = this.findRequestType('sem');
+        this.sentRemoveEvent();
+
         this.requestUpdate();
       }
 
       if (type === 'off') {
         delete this.shiftOffRequestSaved[dateString];
+        this.removeRequestSelected = this.findRequestType('off');
+        this.sentRemoveEvent();
         this.requestUpdate();
       }
 
       if (type === 'vac') {
         delete this.shiftVacRequestSaved[dateString];
+        this.removeRequestSelected = this.findRequestType('vac');
+        this.sentRemoveEvent();
         this.requestUpdate();
       }
     }
+  }
+
+  findRequestType(abbr: string) {
+    return this.requestTypes?.find((res) => res.abbr === abbr) as RequestType;
   }
   renderShiftPlanSaved(data: { date?: Date; remark?: string }, type: RequestType['abbr']) {
     return html`<c-box p-4 border-box h-full w-full>

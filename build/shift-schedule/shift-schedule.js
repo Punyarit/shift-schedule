@@ -41,7 +41,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
-        this.viewerRole = 'staff';
+        this.viewerRole = 'manager';
+        // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
         this.srState = [];
         this.shiftSrRequestCache = {};
@@ -180,7 +181,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         setTimeout(() => {
             const heightOfTheme = theme?.getBoundingClientRect();
             const userTableTop = userTable?.getBoundingClientRect();
-            this.maxHeightOfUserTable = Math.floor(heightOfTheme?.height - userTableTop?.top);
+            this.maxHeightOfUserTable =
+                this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
     async connectedCallback() {
@@ -332,10 +334,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   style="height:${this.maxHeightOfUserTable}px">
                   ${this.scheduleData?.schedulePractitioner?.map((practitioner, indexUser) => {
             const { practitioner: { gender, nameFamily, nameGiven, practitionerLevel, practitionerRole, }, schedulePractitionerRequest: request, } = practitioner;
-            const borderBottom = indexUser === 0 ? this.userSelected : '';
+            const borderBottom = indexUser === (this.viewerRole === 'manager' ? this.currentUserIndex : 0)
+                ? this.userSelected
+                : '';
             const requestData = this.convertRequestDatesToObject(request);
+            const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
-                        <c-box flex>
+                        <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                           <c-box
                             min-w="260"
                             ui="${borderBottom}, ${this.userTitle}, ${this.tableLineUI}, ${this
@@ -368,6 +373,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const vacSaved = this.shiftVacRequestSaved[dateString];
                         const woffSaved = this.shiftWoffRequestSaved[dateString];
                         return html ` <c-box
+                                      @mouseover="${() => this.ManagerHoverUser(indexUser)}"
                                       ui="${borderBottom}, ${this.tableLineUI}, ${this
                             .requestBox}, ${borderRight}">
                                       <c-box w-full h-full bg-white>
@@ -405,20 +411,30 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </cx-theme>
     `;
     }
+    ManagerHoverUser(indexUser) {
+        if (this.viewerRole === 'manager') {
+            this.currentUserIndex = indexUser;
+        }
+    }
     sentRemoveEvent() {
         this.dispatchEvent(new CustomEvent('remove-request', {
             detail: {
-                sr: this.shiftSrRequestCache,
-                sem: this.shiftSemRequestSaved,
-                off: this.shiftOffRequestSaved,
-                vac: this.shiftVacRequestSaved,
-                woff: this.shiftWoffRequestSaved,
+                requestType: this.removeRequestSelected,
+                requests: {
+                    sr: this.shiftSrRequestCache,
+                    sem: this.shiftSemRequestSaved,
+                    off: this.shiftOffRequestSaved,
+                    vac: this.shiftVacRequestSaved,
+                    woff: this.shiftWoffRequestSaved,
+                },
             },
         }));
     }
     removeWoffSaved(dateString) {
         if (this.isRemoveMode) {
+            this.removeRequestSelected = this.findRequestType('woff');
             delete this.shiftWoffRequestSaved[dateString];
+            this.sentRemoveEvent();
             this.requestUpdate();
         }
     }
@@ -443,6 +459,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             if (Object.keys(this.shiftSrRequestSaved[dateString]).length === 0) {
                 delete this.shiftSrRequestSaved[dateString];
             }
+            this.removeRequestSelected = this.findRequestType('sr');
+            this.sentRemoveEvent();
             this.requestUpdate();
         }
     }
@@ -478,17 +496,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const dateString = this.convertDateToString(data.date);
             if (type === 'sem') {
                 delete this.shiftSemRequestSaved[dateString];
+                this.removeRequestSelected = this.findRequestType('sem');
+                this.sentRemoveEvent();
                 this.requestUpdate();
             }
             if (type === 'off') {
                 delete this.shiftOffRequestSaved[dateString];
+                this.removeRequestSelected = this.findRequestType('off');
+                this.sentRemoveEvent();
                 this.requestUpdate();
             }
             if (type === 'vac') {
                 delete this.shiftVacRequestSaved[dateString];
+                this.removeRequestSelected = this.findRequestType('vac');
+                this.sentRemoveEvent();
                 this.requestUpdate();
             }
         }
+    }
+    findRequestType(abbr) {
+        return this.requestTypes?.find((res) => res.abbr === abbr);
     }
     renderShiftPlanSaved(data, type) {
         return html `<c-box p-4 border-box h-full w-full>
@@ -1027,6 +1054,10 @@ __decorate([
     __metadata("design:type", String)
 ], ShiftSchedule.prototype, "viewerRole", void 0);
 __decorate([
+    property({ type: String }),
+    __metadata("design:type", String)
+], ShiftSchedule.prototype, "practitionerId", void 0);
+__decorate([
     state(),
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "currentUserIndex", void 0);
@@ -1082,6 +1113,10 @@ __decorate([
     state(),
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "shiftWoffRequestSaved", void 0);
+__decorate([
+    property({ type: String }),
+    __metadata("design:type", Number)
+], ShiftSchedule.prototype, "maxHeight", void 0);
 __decorate([
     state(),
     __metadata("design:type", Object)

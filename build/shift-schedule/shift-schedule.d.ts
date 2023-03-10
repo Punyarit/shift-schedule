@@ -30,6 +30,7 @@ export declare class ShiftSchedule extends LitElement {
     private iconTitleWrapper;
     private iconTitle;
     viewerRole: 'manager' | 'staff';
+    practitionerId?: string;
     currentUserIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
     requestTypes?: RequestType[] | ScheduleRequestType[];
@@ -58,7 +59,9 @@ export declare class ShiftSchedule extends LitElement {
             practitioner: SchedulePractitionerEntity;
         };
     };
+    maxHeight?: number;
     datepickerData?: DateRangeSelected;
+    private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
@@ -69,6 +72,7 @@ export declare class ShiftSchedule extends LitElement {
     private clearRequest;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
+    ManagerHoverUser(indexUser: number): void;
     sentRemoveEvent(): void;
     removeWoffSaved(dateString?: string): void;
     renderWoffSaved(dateString?: string): import("lit-html").TemplateResult<1>;
@@ -78,6 +82,7 @@ export declare class ShiftSchedule extends LitElement {
         date?: Date;
         remark?: string;
     }, type: RequestType['abbr']): void;
+    findRequestType(abbr: string): RequestType;
     renderShiftPlanSaved(data: {
         date?: Date;
         remark?: string;
