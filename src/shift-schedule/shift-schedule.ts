@@ -56,6 +56,9 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
+  mode: 'view' | 'edit' = 'view';
+
+  @property({ type: String })
   practitionerId?: string;
   // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
 
@@ -71,7 +74,7 @@ export class ShiftSchedule extends LitElement {
   @state()
   dateBetween?: DateBetweenData[];
 
-  @state()
+  @property()
   requestSelected?: RequestType;
 
   @state()
@@ -246,35 +249,37 @@ export class ShiftSchedule extends LitElement {
         <cx-modal .set="${{ multiplePopover: true } as CXModal.Set}"></cx-modal>
         <c-box style="height:100vh" overflow-hidden>
           <c-box bg-white p-24 flex flex-col row-gap-24>
-            <c-box ui="${this.buttonGroupUI}">
-              <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
-              ${this.renderRequestButton()}
-              <c-box inline h-40 w-1 bg-pinky-100></c-box>
-              <c-box
-                @click="${this.setRemoveMode}"
-                cursor-pointer
-                shadow-hover="shadow-3"
-                inline-flex
-                items-center
-                col-gap-12
-                round-44
-                w-96
-                border-solid
-                border-1
-                border-pinky-100
-                bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
-                <c-box
-                  flex-center
-                  icon-prefix="close-circle-line"
-                  icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
-                  w-44
-                  h-44
-                  round-full
-                  bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
-                </c-box>
-                <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
-              </c-box>
-            </c-box>
+            ${this.mode === 'edit'
+              ? html` <c-box ui="${this.buttonGroupUI}">
+                  <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
+                  ${this.renderRequestButton()}
+                  <c-box inline h-40 w-1 bg-pinky-100></c-box>
+                  <c-box
+                    @click="${this.setRemoveMode}"
+                    cursor-pointer
+                    shadow-hover="shadow-3"
+                    inline-flex
+                    items-center
+                    col-gap-12
+                    round-44
+                    w-96
+                    border-solid
+                    border-1
+                    border-pinky-100
+                    bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
+                    <c-box
+                      flex-center
+                      icon-prefix="close-circle-line"
+                      icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                      w-44
+                      h-44
+                      round-full
+                      bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
+                    </c-box>
+                    <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
+                  </c-box>
+                </c-box>`
+              : undefined}
 
             <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
               <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
@@ -1423,6 +1428,10 @@ export class ShiftSchedule extends LitElement {
     setTimeout(() => {
       this.setTableEgdeLine();
     }, 250);
+  }
+
+  resetRequestSelect() {
+    this.requestSelected = undefined;
   }
 
   convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {

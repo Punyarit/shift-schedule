@@ -42,6 +42,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.viewerRole = 'staff';
+        this.mode = 'view';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
         this.srState = [];
@@ -220,35 +221,37 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <cx-modal .set="${{ multiplePopover: true }}"></cx-modal>
         <c-box style="height:100vh" overflow-hidden>
           <c-box bg-white p-24 flex flex-col row-gap-24>
-            <c-box ui="${this.buttonGroupUI}">
-              <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
-              ${this.renderRequestButton()}
-              <c-box inline h-40 w-1 bg-pinky-100></c-box>
-              <c-box
-                @click="${this.setRemoveMode}"
-                cursor-pointer
-                shadow-hover="shadow-3"
-                inline-flex
-                items-center
-                col-gap-12
-                round-44
-                w-96
-                border-solid
-                border-1
-                border-pinky-100
-                bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
-                <c-box
-                  flex-center
-                  icon-prefix="close-circle-line"
-                  icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
-                  w-44
-                  h-44
-                  round-full
-                  bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
-                </c-box>
-                <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
-              </c-box>
-            </c-box>
+            ${this.mode === 'edit'
+            ? html ` <c-box ui="${this.buttonGroupUI}">
+                  <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
+                  ${this.renderRequestButton()}
+                  <c-box inline h-40 w-1 bg-pinky-100></c-box>
+                  <c-box
+                    @click="${this.setRemoveMode}"
+                    cursor-pointer
+                    shadow-hover="shadow-3"
+                    inline-flex
+                    items-center
+                    col-gap-12
+                    round-44
+                    w-96
+                    border-solid
+                    border-1
+                    border-pinky-100
+                    bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
+                    <c-box
+                      flex-center
+                      icon-prefix="close-circle-line"
+                      icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                      w-44
+                      h-44
+                      round-full
+                      bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
+                    </c-box>
+                    <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
+                  </c-box>
+                </c-box>`
+            : undefined}
 
             <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
               <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
@@ -1069,6 +1072,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.setTableEgdeLine();
         }, 250);
     }
+    resetRequestSelect() {
+        this.requestSelected = undefined;
+    }
     convertRequestDatesToObject(requests) {
         const result = {};
         if (requests.length) {
@@ -1202,6 +1208,10 @@ __decorate([
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
+], ShiftSchedule.prototype, "mode", void 0);
+__decorate([
+    property({ type: String }),
+    __metadata("design:type", String)
 ], ShiftSchedule.prototype, "practitionerId", void 0);
 __decorate([
     state(),
@@ -1220,7 +1230,7 @@ __decorate([
     __metadata("design:type", Array)
 ], ShiftSchedule.prototype, "dateBetween", void 0);
 __decorate([
-    state(),
+    property(),
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "requestSelected", void 0);
 __decorate([

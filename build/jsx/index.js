@@ -14,6 +14,7 @@ export const CxShiftSchedule = createComponent({
         onSaveWoff: 'save-woff',
         onRemoveREquest: 'remove-request',
         onSelectRequest: 'select-request',
+        onRemoveOrigin: 'remove-origin',
     },
 });
 //# sourceMappingURL=index.js.map

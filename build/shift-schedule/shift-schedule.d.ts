@@ -30,6 +30,7 @@ export declare class ShiftSchedule extends LitElement {
     private iconTitleWrapper;
     private iconTitle;
     viewerRole: 'manager' | 'staff';
+    mode: 'view' | 'edit';
     practitionerId?: string;
     currentUserIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
@@ -148,6 +149,7 @@ export declare class ShiftSchedule extends LitElement {
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
     renderEmptyBox(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     firstUpdated(): void;
+    resetRequestSelect(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;
     };
