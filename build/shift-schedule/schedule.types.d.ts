@@ -91,16 +91,16 @@ export type DateBetweenData = {
     dateBetween: Date[][];
 };
 export type ScheduleDataWithRender = {
-    arrangedRequest: ArrangedRequest;
+    arrangedRequest?: ArrangedRequest;
     requestType: RequestType;
 };
 export type ArrangedRequest = Record<DayPart, string[]>;
 export type SrShiftPlan = {
-    m: Record<number, string>;
-    a: Record<number, string>;
-    n: Record<number, string>;
+    m: Record<number, ScheduleShiftsEntity>;
+    a: Record<number, ScheduleShiftsEntity>;
+    n: Record<number, ScheduleShiftsEntity>;
 };
 export type DatePickerShiftPlan = {
-    date?: Date;
+    dateString?: string;
     remark?: string;
 };

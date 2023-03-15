@@ -21,6 +21,7 @@ import {
   DatePickerShiftPlan,
   SrShiftPlan,
   SchedulePractitionerEntity,
+  ScheduleShiftsEntity,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
@@ -52,7 +53,7 @@ export class ShiftSchedule extends LitElement {
     'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
 
   @property({ type: String })
-  viewerRole: 'manager' | 'staff' = 'manager';
+  viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
   practitionerId?: string;
@@ -215,11 +216,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  }
+  // async connectedCallback() {
+  //   super.connectedCallback();
+  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  // }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -241,7 +243,6 @@ export class ShiftSchedule extends LitElement {
         }
       </style>
       <cx-theme>
-        <c-box absolute top-0>${this.viewerRole}</c-box>
         <cx-modal .set="${{ multiplePopover: true } as CXModal.Set}"></cx-modal>
         <c-box style="height:100vh" overflow-hidden>
           <c-box bg-white p-24 flex flex-col row-gap-24>
@@ -297,8 +298,7 @@ export class ShiftSchedule extends LitElement {
                               tx-12
                               py-6>
                               ${this.dateFormat(dateBet.currentMonth, {
-                                month: 'long',
-                                year: 'numeric',
+                                month: 'short',
                               })}
                             </c-box>
                           </c-box>
@@ -311,7 +311,7 @@ export class ShiftSchedule extends LitElement {
                                     ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                                       .tableLineUI}">
                                     ${this.dateFormat(dateBet.currentMonth, {
-                                      month: 'long',
+                                      month: 'short',
                                       year: 'numeric',
                                     })}
                                   </c-box>
@@ -449,7 +449,11 @@ export class ShiftSchedule extends LitElement {
                                           : woffSaved?.[dateString]
                                           ? this.renderWoffSaved(dateString, practitioner)
                                           : requestInitial
-                                          ? this.renderInitialRequest(requestInitial, practitioner)
+                                          ? this.renderInitialRequest(
+                                              requestInitial,
+                                              practitioner,
+                                              day
+                                            )
                                           : indexUser === userTargetIndex
                                           ? this.renderEmptyDateForSelect(day, practitioner)
                                           : undefined}
@@ -496,15 +500,61 @@ export class ShiftSchedule extends LitElement {
     );
   }
 
-  removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity) {
+  removeWoffSaved(
+    dateString?: string,
+    practitioner?: SchedulePractitionerEntity,
+    data?: { initial: boolean }
+  ) {
     if (this.isRemoveMode) {
-      this.removeRequestSelected = this.findRequestType('woff');
-      delete this.shiftWoffRequestSaved?.[practitioner?.id!]?.request?.[dateString!];
-      this.sentRemoveEvent();
-      this.requestUpdate();
+      if (data?.initial) {
+        const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
+          (res) => res.practitionerId === practitioner?.practitionerId
+        );
+
+        if (typeof practitionerIndex === 'number') {
+          const requestIndex = this.scheduleData?.schedulePractitioner?.[
+            practitionerIndex
+          ].schedulePractitionerRequest?.findIndex((res) => {
+            return (res as SchedulePractitionerRequestEntity)?.requestDate === dateString;
+          });
+
+          if (typeof requestIndex === 'number') {
+            const dataSlice = {
+              queryIndex: {
+                requestIndex,
+                practitionerIndex,
+              },
+              schedulePractitioner: this.scheduleData?.schedulePractitioner?.[practitionerIndex],
+              schedulePractitionerRequest:
+                this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+                  .schedulePractitionerRequest?.[requestIndex],
+            };
+
+            this.dispatchEvent(
+              new CustomEvent('remove-origin', {
+                detail: dataSlice,
+              })
+            );
+
+            delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+              .schedulePractitionerRequest?.[requestIndex];
+
+            this.requestUpdate();
+          }
+        }
+      } else {
+        this.removeRequestSelected = this.findRequestType('woff');
+        delete this.shiftWoffRequestSaved?.[practitioner?.id!]?.request?.[dateString!];
+        this.sentRemoveEvent();
+        this.requestUpdate();
+      }
     }
   }
-  renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity) {
+  renderWoffSaved(
+    dateString?: string,
+    practitioner?: SchedulePractitionerEntity,
+    data?: { initial: boolean }
+  ) {
     return html`<c-box h-full w-full p-4 border-box>
       <c-box
         class="woff-saved"
@@ -515,7 +565,7 @@ export class ShiftSchedule extends LitElement {
         flex
         justify-center
         round-6
-        @click="${() => this.removeWoffSaved(dateString, practitioner)}"
+        @click="${() => this.removeWoffSaved(dateString, practitioner, data)}"
         items-center></c-box>
     </c-box>`;
   }
@@ -528,6 +578,10 @@ export class ShiftSchedule extends LitElement {
           .length === 0
       ) {
         delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
+      }
+
+      if (Object.keys(this.shiftSrRequestSaved[practitioner.id].request).length === 0) {
+        delete this.shiftSrRequestSaved[practitioner.id];
       }
       this.removeRequestSelected = this.findRequestType('sr');
       this.sentRemoveEvent();
@@ -576,35 +630,70 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
-  removeShiftPlanDatePicker(
-    data: { date?: Date; remark?: string },
+  removeShiftDatePicker(
+    data: { dateString?: string; remark?: string; initial?: boolean },
     type: RequestType['abbr'],
     practitioner: SchedulePractitionerEntity
   ) {
-    if (this.isRemoveMode) {
-      console.log('shift-schedule.js |data| = ', data);
-      const dateString = this.convertDateToString(data.date!);
+    if (data?.initial && this.isRemoveMode) {
+      const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
+        (res) => res.practitionerId === practitioner.practitionerId
+      );
 
-      if (type === 'sem') {
-        delete this.shiftSemRequestSaved[practitioner.id].request[dateString];
-        this.removeRequestSelected = this.findRequestType('sem');
-        this.sentRemoveEvent();
+      if (typeof practitionerIndex === 'number') {
+        const requestIndex = this.scheduleData?.schedulePractitioner?.[
+          practitionerIndex
+        ].schedulePractitionerRequest?.findIndex(
+          (res) => (res as SchedulePractitionerRequestEntity)?.requestDate === data.dateString
+        );
 
-        this.requestUpdate();
+        if (typeof requestIndex === 'number') {
+          const dataSlice = {
+            queryIndex: {
+              practitionerIndex,
+              requestIndex,
+            },
+            schedulePractitioner: this.scheduleData?.schedulePractitioner?.[practitionerIndex],
+            schedulePractitionerRequest:
+              this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+                ?.schedulePractitionerRequest?.[requestIndex!],
+          };
+
+          this.dispatchEvent(
+            new CustomEvent('remove-origin', {
+              detail: dataSlice,
+            })
+          );
+
+          delete this.scheduleData?.schedulePractitioner?.[practitionerIndex!]
+            ?.schedulePractitionerRequest?.[requestIndex!];
+
+          this.requestUpdate();
+        }
       }
+    } else {
+      if (this.isRemoveMode) {
+        if (type === 'sem') {
+          delete this.shiftSemRequestSaved[practitioner.id].request[data.dateString!];
+          this.removeRequestSelected = this.findRequestType('sem');
+          this.sentRemoveEvent();
 
-      if (type === 'off') {
-        delete this.shiftOffRequestSaved[practitioner.id].request[dateString];
-        this.removeRequestSelected = this.findRequestType('off');
-        this.sentRemoveEvent();
-        this.requestUpdate();
-      }
+          this.requestUpdate();
+        }
 
-      if (type === 'vac') {
-        delete this.shiftVacRequestSaved[practitioner.id].request[dateString];
-        this.removeRequestSelected = this.findRequestType('vac');
-        this.sentRemoveEvent();
-        this.requestUpdate();
+        if (type === 'off') {
+          delete this.shiftOffRequestSaved[practitioner.id].request[data.dateString!];
+          this.removeRequestSelected = this.findRequestType('off');
+          this.sentRemoveEvent();
+          this.requestUpdate();
+        }
+
+        if (type === 'vac') {
+          delete this.shiftVacRequestSaved[practitioner.id].request[data.dateString!];
+          this.removeRequestSelected = this.findRequestType('vac');
+          this.sentRemoveEvent();
+          this.requestUpdate();
+        }
       }
     }
   }
@@ -613,7 +702,7 @@ export class ShiftSchedule extends LitElement {
     return this.requestTypes?.find((res) => res.abbr === abbr) as RequestType;
   }
   renderShiftPlanSaved(
-    data: { date?: Date; remark?: string },
+    data: { dateString?: string; remark?: string; initial?: boolean },
     type: RequestType['abbr'],
     practitioner: SchedulePractitionerEntity
   ) {
@@ -627,7 +716,7 @@ export class ShiftSchedule extends LitElement {
         round-6
         p-6
         border-box
-        @click="${() => this.removeShiftPlanDatePicker(data, type, practitioner)}">
+        @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
         ${data.remark
           ? html`<c-box
               flex
@@ -648,24 +737,73 @@ export class ShiftSchedule extends LitElement {
     </c-box>`;
   }
 
-  renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity) {
+  deleteInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
+    const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
+      (res) => res.practitionerId === practitioner.practitionerId
+    );
+
+    if (typeof practitionerIndex === 'number') {
+      const requestIndex = this.scheduleData?.schedulePractitioner?.[
+        practitionerIndex
+      ].schedulePractitionerRequest?.findIndex(
+        (res) =>
+          (res as SchedulePractitionerRequestEntity)?.requestDate === dateString &&
+          (res as SchedulePractitionerRequestEntity)?.requestShift.split('')[0] === dayPart
+      );
+
+      if (typeof requestIndex === 'number') {
+        const dataSlice = {
+          queryIndex: {
+            practitionerIndex,
+            requestIndex,
+          },
+          schedulePractitioner: this.scheduleData?.schedulePractitioner?.[practitionerIndex],
+          schedulePractitionerRequest:
+            this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+              .schedulePractitionerRequest?.[requestIndex],
+        };
+        this.dispatchEvent(
+          new CustomEvent('remove-origin', {
+            detail: dataSlice,
+          })
+        );
+
+        delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+          .schedulePractitionerRequest?.[requestIndex];
+
+        this.requestUpdate();
+      }
+    }
+  }
+
+  renderInitialRequest(
+    request: ScheduleDataWithRender,
+    practitioner: SchedulePractitionerEntity,
+    date: Date
+  ) {
+    const dateString = this.convertDateToString(date);
+
     switch (request.requestType.abbr) {
       case 'sr':
         return html`
-          ${Object.entries(request.arrangedRequest).map(([dayPart, plans]) => {
+          ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
             return html`
               <c-box p-4 border-box flex flex-col row-gap-4>
                 <c-box
+                  @click="${() => this.deleteInitialSr(practitioner, dateString, dayPart)}"
                   p-4
                   border-box
                   round-6
                   h-44
                   bg-color="${this.setColorRequestType(dayPart as DayPart)}">
-                  <c-box>
-                    <c-box icon-prefix="favorite-line" flex flex-col>
-                      <c-box>${plans.map((plan) => html`<c-box inline>${plan}</c-box> `)}</c-box>
+                  <div
+                    style="cursor:${this.isRemoveMode ? 'pointer' : ''}; width:100%; height:100%">
+                    <c-box>
+                      <c-box icon-prefix="favorite-line" flex flex-col>
+                        <c-box>${plans.map((plan) => html`<c-box inline>${plan}</c-box> `)}</c-box>
+                      </c-box>
                     </c-box>
-                  </c-box>
+                  </div>
                 </c-box>
               </c-box>
             `;
@@ -673,12 +811,14 @@ export class ShiftSchedule extends LitElement {
         `;
 
       case 'woff':
-        return html`${this.renderWoffSaved()}`;
+        return html`${this.renderWoffSaved(dateString, practitioner, { initial: true })}`;
 
       case 'off':
         return html`${this.renderShiftPlanSaved(
           {
+            dateString,
             remark: '',
+            initial: true,
           },
           'off',
           practitioner
@@ -687,25 +827,25 @@ export class ShiftSchedule extends LitElement {
       case 'vac':
         return html`${this.renderShiftPlanSaved(
           {
+            dateString,
             remark: '',
+            initial: true,
           },
           'vac',
           practitioner
         )}`;
 
       case 'sem':
-        return html` <c-box h-full w-full p-4 border-box>
-          <c-box
-            h-full
-            round-6
-            bg-modern-green-100
-            icon-prefix="favorite-line"
-            icon-prefix-color="modern-green-500"
-            flex
-            justify-center
-            items-center>
-          </c-box>
-        </c-box>`;
+        return html`${this.renderShiftPlanSaved(
+          {
+            dateString,
+            remark: '',
+            initial: true,
+          },
+          'sem',
+          practitioner
+        )}`;
+
       default:
         break;
     }
@@ -713,6 +853,45 @@ export class ShiftSchedule extends LitElement {
 
   saveDatepicker(e: CXDatePicker.SelectDate) {
     this.datepickerData = e.detail.date as DateRangeSelected;
+  }
+
+  deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]) {
+    switch (this.requestSelected?.abbr!) {
+      case 'sem':
+        for (const date of dateBetween) {
+          const dateString = this.convertDateToString(date);
+          delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+        }
+        break;
+
+      case 'vac':
+        for (const date of dateBetween) {
+          const dateString = this.convertDateToString(date);
+          delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+        }
+        break;
+
+      case 'off':
+        for (const date of dateBetween) {
+          const dateString = this.convertDateToString(date);
+          delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+          delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    this.requestUpdate();
   }
 
   saveWithDateData = (practitioner: SchedulePractitionerEntity) => {
@@ -725,7 +904,7 @@ export class ShiftSchedule extends LitElement {
     const dataDate = {} as { [key: string]: DatePickerShiftPlan };
     for (const date of dateBetween) {
       dataDate[this.convertDateToString(date)] = {
-        date: date,
+        dateString: this.convertDateToString(date),
         remark: remarkInput?.value,
       };
     }
@@ -744,6 +923,7 @@ export class ShiftSchedule extends LitElement {
           practitioner,
         };
 
+        this.deleteInitialDatePicker(practitioner.id, dateBetween);
         this.dispatchEvent(
           new CustomEvent('save-sem', {
             detail: this.shiftSemRequestSaved,
@@ -770,7 +950,7 @@ export class ShiftSchedule extends LitElement {
           },
           practitioner,
         };
-
+        this.deleteInitialDatePicker(practitioner.id, dateBetween);
         this.dispatchEvent(
           new CustomEvent('save-off', {
             detail: this.shiftOffRequestSaved,
@@ -802,6 +982,7 @@ export class ShiftSchedule extends LitElement {
           practitioner,
         };
 
+        this.deleteInitialDatePicker(practitioner.id, dateBetween);
         this.dispatchEvent(
           new CustomEvent('save-vac', {
             detail: this.shiftVacRequestSaved,
@@ -823,7 +1004,11 @@ export class ShiftSchedule extends LitElement {
     ModalCaller.popover().clear();
   };
 
-  renderDatepickerBox(data: { title: string; practitioner: SchedulePractitionerEntity }) {
+  renderDatepickerBox(data: {
+    title: string;
+    practitioner: SchedulePractitionerEntity;
+    date: Date;
+  }) {
     return html` <c-box content w>
       <!-- title -->
       <c-box>
@@ -857,8 +1042,11 @@ export class ShiftSchedule extends LitElement {
         <cx-datepicker
           @select-date="${this.saveDatepicker}"
           .set="${{
+            date: data.date,
             daterange: true,
             inputStyle: 'short',
+            min: new Date(this.scheduleData?.startDate!),
+            max: new Date(this.scheduleData?.endDate!),
           } as CXDatePicker.Set}"></cx-datepicker>
       </c-box>
 
@@ -903,6 +1091,7 @@ export class ShiftSchedule extends LitElement {
               ${this.renderDatepickerBox({
                 title: 'ขออบรม, สัมนา, ไปราชการ',
                 practitioner,
+                date,
               })}
             </c-box>
           </cx-popover>
@@ -923,6 +1112,7 @@ export class ShiftSchedule extends LitElement {
               ${this.renderDatepickerBox({
                 title: 'ขอลาหยุด',
                 practitioner,
+                date,
               })}
             </c-box>
           </cx-popover>
@@ -938,6 +1128,7 @@ export class ShiftSchedule extends LitElement {
               ${this.renderDatepickerBox({
                 title: 'ขอลาพักร้อน',
                 practitioner,
+                date,
               })}
             </c-box>
           </cx-popover>
@@ -952,7 +1143,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   // FIXME: any type w8 for api data
-  renderRequestSr(mockdata: any, dayPart: DayPart) {
+  renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart) {
     const srData = {
       a: {
         text: 'กลางวัน',
@@ -964,59 +1155,7 @@ export class ShiftSchedule extends LitElement {
         text: 'เช้า',
       },
     };
-    return html` <c-box flex col-gap-24>
-      <c-box flex col-gap-6 items-center h-fit mt-2 min-w-80>
-        <c-box
-          bg-color="primary-100"
-          p-2
-          round-full
-          icon-prefix-color="primary-500"
-          icon-prefix="circle-line"></c-box>
-        <c-box>${srData[dayPart].text}</c-box>
-      </c-box>
-      <c-box>
-        <c-box flex col-gap-6>
-          ${mockdata.map((requestPlan: any) => {
-            return html` <c-box flex items-center flex-col>
-              <c-box
-                @click="${() => this.addSrShiftRequest(requestPlan, dayPart)}"
-                bg-hover="primary-100"
-                bg-toggle="primary-100"
-                bg-active="primary-200"
-                cursor-pointer
-                w-80
-                h-30
-                bg-color="primary-50"
-                round-8
-                flex
-                justify-center
-                items-center
-                >${requestPlan.plan}</c-box
-              >
-              <c-box tx-12>${requestPlan.time}</c-box>
-            </c-box>`;
-          })}
-        </c-box>
-      </c-box>
-    </c-box>`;
-  }
 
-  addSrShiftRequest(requestPlan: { plan: number; time: string }, dayPart: DayPart) {
-    // 📌 long hand =  if (!this.shiftRequest[dayPart]) this.shiftRequest[dayPart] = {};
-    this.shiftSrRequestCache[dayPart] ||= {};
-
-    if (this.shiftSrRequestCache[dayPart][requestPlan.plan]) {
-      delete this.shiftSrRequestCache[dayPart][requestPlan.plan];
-
-      if (Object.keys(this.shiftSrRequestCache[dayPart]).length === 0) {
-        delete this.shiftSrRequestCache[dayPart];
-      }
-    } else {
-      this.shiftSrRequestCache[dayPart][requestPlan.plan] = requestPlan.time;
-    }
-  }
-
-  renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity) {
     // FIXME: w8 for api data
     const mockdata = [
       {
@@ -1040,6 +1179,78 @@ export class ShiftSchedule extends LitElement {
         time: '16:00-18:00',
       },
     ];
+
+    return html` <c-box flex col-gap-24>
+      <c-box flex col-gap-6 items-center h-fit mt-2 min-w-80>
+        <c-box
+          bg-color="primary-100"
+          p-2
+          round-full
+          icon-prefix-color="primary-500"
+          icon-prefix="circle-line"></c-box>
+        <c-box>${srData[dayPart].text}</c-box>
+      </c-box>
+      <c-box>
+        <c-box flex col-gap-6>
+          ${shifts.map((requestPlan) => {
+            return html` <c-box flex items-center flex-col>
+              <c-box
+                @click="${() => this.addSrShiftRequest(requestPlan)}"
+                bg-hover="primary-100"
+                bg-toggle="primary-100"
+                bg-active="primary-200"
+                cursor-pointer
+                w-80
+                h-30
+                bg-color="primary-50"
+                round-8
+                flex
+                justify-center
+                items-center
+                >${requestPlan.shiftName.split('')[1]}</c-box
+              >
+              <c-box tx-12>${requestPlan.startTime} - ${requestPlan.endTime}</c-box>
+            </c-box>`;
+          })}
+        </c-box>
+      </c-box>
+    </c-box>`;
+  }
+
+  addSrShiftRequest(requestPlan: ScheduleShiftsEntity) {
+    const [dayPart, plan] = requestPlan.shiftName.split('') as ['m' | 'a' | 'n', string];
+    // 📌 long hand =  if (!this.shiftRequest[dayPart]) this.shiftRequest[dayPart] = {};
+    this.shiftSrRequestCache[dayPart] ||= {};
+
+    if (this.shiftSrRequestCache[dayPart][+plan]) {
+      delete this.shiftSrRequestCache[dayPart][+plan];
+
+      if (Object.keys(this.shiftSrRequestCache[dayPart]).length === 0) {
+        delete this.shiftSrRequestCache[dayPart];
+      }
+    } else {
+      this.shiftSrRequestCache[dayPart][+plan] = requestPlan;
+    }
+  }
+
+  groupShiftsByLetter(arr: any) {
+    const result = {} as any;
+    for (const shift of arr) {
+      const letter = shift.shiftName.charAt(0);
+      if (!result[letter]) {
+        result[letter] = [];
+      }
+      result[letter].push(shift);
+    }
+    return result;
+  }
+
+  renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity) {
+    const shiftGroup = this.groupShiftsByLetter(this.scheduleData?.scheduleShifts) as Record<
+      'a' | 'm' | 'n',
+      ScheduleShiftsEntity[]
+    >;
+
     return html`
       <c-box slot="popover">
         <c-box content>
@@ -1073,13 +1284,13 @@ export class ShiftSchedule extends LitElement {
           <!-- selected request -->
           <c-box mt-12 flex flex-col row-gap-24>
             <!-- morning -->
-            ${this.renderRequestSr(mockdata, 'm')}
+            ${this.renderRequestSr(shiftGroup.m, 'm')}
 
             <!-- afternoon -->
-            ${this.renderRequestSr(mockdata, 'a')}
+            ${this.renderRequestSr(shiftGroup.a, 'a')}
 
             <!-- evening -->
-            ${this.renderRequestSr(mockdata, 'n')}
+            ${this.renderRequestSr(shiftGroup.n, 'n')}
           </c-box>
         </c-box>
       </c-box>
@@ -1217,31 +1428,47 @@ export class ShiftSchedule extends LitElement {
   convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
     [key: string]: ScheduleDataWithRender;
   } {
-    // console.log('572: shift-schedule.js |requests| = ', requests);
     const result: {
       [key: string]: ScheduleDataWithRender;
     } = {};
 
-    requests.forEach((item) => {
-      const { requestDate, requestShift, requestType } = item;
-      const [dayPart, requestPart] = requestShift.split('') as [DayPart, string];
+    if (requests.length) {
+      requests?.forEach((item) => {
+        const { requestDate, requestShift, requestType } = item;
 
-      if (!result[requestDate]) {
-        result[requestDate] = { arrangedRequest: {} as ArrangedRequest, requestType };
-      }
+        switch (item.requestType.abbr) {
+          case 'vac':
+          case 'sem':
+          case 'off':
+          case 'woff':
+            if (!result[requestDate]) {
+              result[requestDate] = { requestType };
+            }
+            // assign other properties to the result object
+            result[requestDate] = { ...result[requestDate] };
+            break;
 
-      if (!result[requestDate].arrangedRequest[dayPart]) {
-        result[requestDate].arrangedRequest[dayPart] = [];
-      }
+          case 'sr':
+            const [dayPart, requestPart] = requestShift?.split('') as [DayPart, string];
+            if (!result[requestDate]) {
+              result[requestDate] = { arrangedRequest: {} as ArrangedRequest, requestType };
+            }
+            if (!result[requestDate]!.arrangedRequest![dayPart]) {
+              result[requestDate]!.arrangedRequest![dayPart] = [];
+            }
 
-      result[requestDate].arrangedRequest[dayPart].push(requestPart);
+            result[requestDate]!.arrangedRequest![dayPart].push(requestPart);
 
-      // assign other properties to the result object
-      result[requestDate] = { ...result[requestDate] };
+            // assign other properties to the result object
+            result[requestDate] = { ...result[requestDate] };
+            break;
 
-      // result[item.requestDate].requestRenderer = () =>
-      //   this.renderFactoryRequestType(result[item.requestDate]);
-    });
+          default:
+            break;
+        }
+      });
+    }
+
     return result;
   }
 

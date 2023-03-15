@@ -13,7 +13,8 @@ export const CxShiftSchedule = createComponent({
     onSaveOff: 'save-off',
     onSaveVac: 'save-vac',
     onSaveWoff: 'save-woff',
-    onClearRequest: 'clear-request',
+    onRemoveREquest: 'remove-request',
+    onSelectRequest: 'select-request',
   },
 });
 

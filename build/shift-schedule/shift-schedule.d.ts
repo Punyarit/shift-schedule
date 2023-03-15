@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan, SchedulePractitionerEntity } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -94,14 +94,17 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
-    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
     ManagerHoverUser(indexUser: number): void;
     sentRemoveEvent(): void;
-    removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity): void;
-    renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
+        initial: boolean;
+    }): void;
+    renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
+        initial: boolean;
+    }): import("lit-html").TemplateResult<1>;
     removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity): void;
     renderSrShiftPlanSaved(planRequest: {
         practitioner: SchedulePractitionerEntity;
@@ -111,28 +114,31 @@ export declare class ShiftSchedule extends LitElement {
             };
         };
     }, dateString: string, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
-    removeShiftPlanDatePicker(data: {
-        date?: Date;
+    removeShiftDatePicker(data: {
+        dateString?: string;
         remark?: string;
+        initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): void;
     findRequestType(abbr: string): RequestType;
     renderShiftPlanSaved(data: {
-        date?: Date;
+        dateString?: string;
         remark?: string;
+        initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
-    renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1> | undefined;
+    deleteInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
+    renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date): import("lit-html").TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
+    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]): void;
     saveWithDateData: (practitioner: SchedulePractitionerEntity) => void;
     renderDatepickerBox(data: {
         title: string;
         practitioner: SchedulePractitionerEntity;
+        date: Date;
     }): import("lit-html").TemplateResult<1>;
     renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1> | undefined;
-    renderRequestSr(mockdata: any, dayPart: DayPart): import("lit-html").TemplateResult<1>;
-    addSrShiftRequest(requestPlan: {
-        plan: number;
-        time: string;
-    }, dayPart: DayPart): void;
+    renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart): import("lit-html").TemplateResult<1>;
+    addSrShiftRequest(requestPlan: ScheduleShiftsEntity): void;
+    groupShiftsByLetter(arr: any): any;
     renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     clearShiftRequestCache(): void;
     cancelSrRequestPlan(): void;
