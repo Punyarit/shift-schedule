@@ -153,7 +153,7 @@ export declare class ShiftSchedule extends LitElement {
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
-    renderEmptyBox(date: Date, state: 'display' | 'popover', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
