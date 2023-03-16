@@ -64,6 +64,7 @@ export interface SchedulePractitionerRequestEntity {
     requestShift: string;
     organizationId?: null;
     requestType: RequestType;
+    remark?: string;
 }
 export interface Practitioner {
     nameGiven: string;
@@ -90,9 +91,8 @@ export type DateBetweenData = {
     currentMonth: string;
     dateBetween: Date[][];
 };
-export type ScheduleDataWithRender = {
+export type ScheduleDataWithRender = SchedulePractitionerRequestEntity & {
     arrangedRequest?: ArrangedRequest;
-    requestType: RequestType;
 };
 export type ArrangedRequest = Record<DayPart, string[]>;
 export type SrShiftPlan = {

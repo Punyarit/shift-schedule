@@ -839,36 +839,16 @@ export class ShiftSchedule extends LitElement {
       case 'woff':
         return html`${this.renderWoffSaved(dateString, practitioner, { initial: true })}`;
 
+      case 'sem':
+      case 'vac':
       case 'off':
         return html`${this.renderShiftPlanSaved(
           {
             dateString,
-            remark: '',
+            remark: request.remark,
             initial: true,
           },
-          'off',
-          practitioner
-        )}`;
-
-      case 'vac':
-        return html`${this.renderShiftPlanSaved(
-          {
-            dateString,
-            remark: '',
-            initial: true,
-          },
-          'vac',
-          practitioner
-        )}`;
-
-      case 'sem':
-        return html`${this.renderShiftPlanSaved(
-          {
-            dateString,
-            remark: '',
-            initial: true,
-          },
-          'sem',
+          request.requestType.abbr,
           practitioner
         )}`;
 
@@ -1182,30 +1162,6 @@ export class ShiftSchedule extends LitElement {
       },
     };
 
-    // FIXME: w8 for api data
-    const mockdata = [
-      {
-        plan: 1,
-        time: '08:00-10:00',
-      },
-      {
-        plan: 2,
-        time: '10:00-12:00',
-      },
-      {
-        plan: 3,
-        time: '12:00-14:00',
-      },
-      {
-        plan: 4,
-        time: '14:00-16:00',
-      },
-      {
-        plan: 5,
-        time: '16:00-18:00',
-      },
-    ];
-
     return html` <c-box flex col-gap-24>
       <c-box flex col-gap-6 items-center h-fit mt-2 min-w-80>
         <c-box
@@ -1498,7 +1454,7 @@ export class ShiftSchedule extends LitElement {
 
     if (requests.length) {
       requests?.forEach((item) => {
-        const { requestDate, requestShift, requestType } = item;
+        const { requestDate, requestShift } = item;
 
         switch (item.requestType.abbr) {
           case 'vac':
@@ -1506,7 +1462,7 @@ export class ShiftSchedule extends LitElement {
           case 'off':
           case 'woff':
             if (!result[requestDate]) {
-              result[requestDate] = { requestType };
+              result[requestDate] = { ...item };
             }
             // assign other properties to the result object
             result[requestDate] = { ...result[requestDate] };
@@ -1515,7 +1471,7 @@ export class ShiftSchedule extends LitElement {
           case 'sr':
             const [dayPart, requestPart] = requestShift?.split('') as [DayPart, string];
             if (!result[requestDate]) {
-              result[requestDate] = { arrangedRequest: {} as ArrangedRequest, requestType };
+              result[requestDate] = { arrangedRequest: {} as ArrangedRequest, ...item };
             }
             if (!result[requestDate]!.arrangedRequest![dayPart]) {
               result[requestDate]!.arrangedRequest![dayPart] = [];
