@@ -892,7 +892,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 items-center
                 >${requestPlan.shiftName.split('')[1]}</c-box
               >
-              <c-box tx-12>${requestPlan.startTime} - ${requestPlan.endTime}</c-box>
+              <c-box tx-12
+                >${requestPlan.startTime.slice(0, -3)} - ${requestPlan.endTime.slice(0, -3)}</c-box
+              >
             </c-box>`;
         })}
         </c-box>
