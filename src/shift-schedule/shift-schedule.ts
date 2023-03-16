@@ -31,7 +31,7 @@ import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
-
+import '@lit-labs/virtualizer';
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
   private buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
@@ -59,7 +59,7 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
-  mode: 'view' | 'edit' = 'edit';
+  mode: 'view' | 'edit' = 'view';
 
   @property({ type: String })
   practitionerId?: string;
@@ -224,12 +224,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  }
+  // async connectedCallback() {
+  //   super.connectedCallback();
+  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  // }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -244,6 +244,10 @@ export class ShiftSchedule extends LitElement {
       <style>
         input::placeholder {
           font-family: Sarabun-Regular;
+        }
+
+        c-box[_ui='targetUser'] {
+          transition: all 0.25s ease;
         }
 
         c-box[input-box].remark-input {
@@ -362,8 +366,12 @@ export class ShiftSchedule extends LitElement {
                   overflow-y-auto
                   overflow-x-hidden
                   style="height:${this.maxHeightOfUserTable!}px">
-                  ${(this.scheduleData as SchedulingData)?.schedulePractitioner?.map(
-                    (practitioner, indexUser) => {
+                  <lit-virtualizer
+                    .items=${(this.scheduleData as SchedulingData)?.schedulePractitioner!}
+                    .renderItem="${(
+                      practitioner: SchedulePractitionerEntity,
+                      indexUser: number
+                    ) => {
                       const {
                         practitioner: {
                           gender,
@@ -480,8 +488,8 @@ export class ShiftSchedule extends LitElement {
                           })}
                         </c-box>
                       `;
-                    }
-                  )}
+                    }}">
+                  </lit-virtualizer>
                 </c-box>
               </c-box>
             </c-box>

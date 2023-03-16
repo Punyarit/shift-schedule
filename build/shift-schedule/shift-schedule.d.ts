@@ -11,6 +11,7 @@ import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, Schedule
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
+import '@lit-labs/virtualizer';
 export declare class ShiftSchedule extends LitElement {
     private buttonGroupUI;
     private scheduleTitleUI;
@@ -97,7 +98,6 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
-    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;

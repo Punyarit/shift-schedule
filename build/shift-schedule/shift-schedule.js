@@ -22,6 +22,7 @@ import './components/request-button';
 import { requestTypeStyles, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
+import '@lit-labs/virtualizer';
 let ShiftSchedule = class ShiftSchedule extends LitElement {
     constructor() {
         super(...arguments);
@@ -43,7 +44,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.viewerRole = 'staff';
-        this.mode = 'edit';
+        this.mode = 'view';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
         this.removeOriginCache = [];
@@ -201,12 +202,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    async connectedCallback() {
-        super.connectedCallback();
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    }
+    // async connectedCallback() {
+    //   super.connectedCallback();
+    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    // }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;
@@ -216,6 +217,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <style>
         input::placeholder {
           font-family: Sarabun-Regular;
+        }
+
+        c-box[_ui='targetUser'] {
+          transition: all 0.25s ease;
         }
 
         c-box[input-box].remark-input {
@@ -333,7 +338,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   overflow-y-auto
                   overflow-x-hidden
                   style="height:${this.maxHeightOfUserTable}px">
-                  ${this.scheduleData?.schedulePractitioner?.map((practitioner, indexUser) => {
+                  <lit-virtualizer
+                    .items=${this.scheduleData?.schedulePractitioner}
+                    .renderItem="${(practitioner, indexUser) => {
             const { practitioner: { gender, nameFamily, nameGiven, practitionerLevel, practitionerRole, }, schedulePractitionerRequest: request, } = practitioner;
             const borderBottom = indexUser === (this.viewerRole === 'manager' ? this.currentUserIndex : 0)
                 ? this.userSelected
@@ -405,7 +412,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             })}
                         </c-box>
                       `;
-        })}
+        }}">
+                  </lit-virtualizer>
                 </c-box>
               </c-box>
             </c-box>
