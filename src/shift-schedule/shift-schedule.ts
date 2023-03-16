@@ -58,7 +58,7 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
-  mode: 'view' | 'edit' = 'view';
+  mode: 'view' | 'edit' = 'edit';
 
   @property({ type: String })
   practitionerId?: string;
@@ -223,12 +223,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
-  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  // }
+  async connectedCallback() {
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -1150,6 +1150,7 @@ export class ShiftSchedule extends LitElement {
 
   // FIXME: any type w8 for api data
   renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart) {
+    console.log('shift-schedule.js |shifts| = ', shifts);
     const srData = {
       a: {
         text: 'กลางวัน',
@@ -1266,13 +1267,10 @@ export class ShiftSchedule extends LitElement {
           <!-- selected request -->
           <c-box mt-12 flex flex-col row-gap-24>
             <!-- morning -->
-            ${this.renderRequestSr(shiftGroup.m, 'm')}
-
-            <!-- afternoon -->
-            ${this.renderRequestSr(shiftGroup.a, 'a')}
-
-            <!-- evening -->
-            ${this.renderRequestSr(shiftGroup.n, 'n')}
+            ${(['m', 'a', 'n'] as const).map(
+              (res) =>
+                html`${shiftGroup[res] ? this.renderRequestSr(shiftGroup[res], res) : undefined}`
+            )}
           </c-box>
         </c-box>
       </c-box>

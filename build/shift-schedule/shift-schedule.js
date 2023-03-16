@@ -42,7 +42,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.viewerRole = 'staff';
-        this.mode = 'view';
+        this.mode = 'edit';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
         this.removeOriginCache = [];
@@ -197,12 +197,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    // async connectedCallback() {
-    //   super.connectedCallback();
-    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    // }
+    async connectedCallback() {
+        super.connectedCallback();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;
@@ -851,6 +851,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     // FIXME: any type w8 for api data
     renderRequestSr(shifts, dayPart) {
+        console.log('shift-schedule.js |shifts| = ', shifts);
         const srData = {
             a: {
                 text: 'กลางวัน',
@@ -958,13 +959,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <!-- selected request -->
           <c-box mt-12 flex flex-col row-gap-24>
             <!-- morning -->
-            ${this.renderRequestSr(shiftGroup.m, 'm')}
-
-            <!-- afternoon -->
-            ${this.renderRequestSr(shiftGroup.a, 'a')}
-
-            <!-- evening -->
-            ${this.renderRequestSr(shiftGroup.n, 'n')}
+            ${['m', 'a', 'n'].map((res) => html `${shiftGroup[res] ? this.renderRequestSr(shiftGroup[res], res) : undefined}`)}
           </c-box>
         </c-box>
       </c-box>
