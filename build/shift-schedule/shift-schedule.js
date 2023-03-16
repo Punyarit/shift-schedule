@@ -42,9 +42,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.viewerRole = 'staff';
-        this.mode = 'view';
+        this.mode = 'edit';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
+        this.removeOriginCache = [];
         this.srState = [];
         this.shiftSrRequestCache = {};
         this.shiftSrRequestSaved = {};
@@ -196,12 +197,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    // async connectedCallback() {
-    //   super.connectedCallback();
-    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    // }
+    async connectedCallback() {
+        super.connectedCallback();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;
@@ -446,6 +447,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             schedulePractitionerRequest: this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                                 .schedulePractitionerRequest?.[requestIndex],
                         };
+                        this.removeOriginCache.push(dataSlice);
                         this.dispatchEvent(new CustomEvent('remove-origin', {
                             detail: dataSlice,
                         }));
@@ -535,6 +537,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         schedulePractitionerRequest: this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                             ?.schedulePractitionerRequest?.[requestIndex],
                     };
+                    this.removeOriginCache.push(dataSlice);
                     this.dispatchEvent(new CustomEvent('remove-origin', {
                         detail: dataSlice,
                     }));
@@ -616,6 +619,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     schedulePractitionerRequest: this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                         .schedulePractitionerRequest?.[requestIndex],
                 };
+                this.removeOriginCache.push(dataSlice);
                 this.dispatchEvent(new CustomEvent('remove-origin', {
                     detail: dataSlice,
                 }));
@@ -889,7 +893,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
       <c-box>
         <c-box flex col-gap-6>
-          ${shifts.map((requestPlan) => {
+          ${shifts?.map((requestPlan) => {
             return html ` <c-box flex items-center flex-col>
               <c-box
                 @click="${() => this.addSrShiftRequest(requestPlan)}"
@@ -1074,6 +1078,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     resetRequestSelect() {
         this.requestSelected = undefined;
+        this.isRemoveMode = false;
+        this.shiftOffRequestSaved = {};
+        this.shiftSemRequestSaved = {};
+        this.shiftSrRequestSaved = {};
+        this.shiftVacRequestSaved = {};
+        this.shiftWoffRequestSaved = {};
+        console.log('shift-schedule.js |this.removeOriginCache| = ', this.removeOriginCache);
     }
     convertRequestDatesToObject(requests) {
         const result = {};

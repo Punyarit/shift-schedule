@@ -34,6 +34,7 @@ export declare class ShiftSchedule extends LitElement {
     practitionerId?: string;
     currentUserIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
+    private removeOriginCache;
     requestTypes?: RequestType[] | ScheduleRequestType[];
     dateBetween?: DateBetweenData[];
     requestSelected?: RequestType;
@@ -95,6 +96,7 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
+    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
@@ -162,6 +164,6 @@ export declare class ShiftSchedule extends LitElement {
 }
 declare global {
     namespace CXShiftSchedule {
-        type Ref = typeof ShiftSchedule;
+        type Ref = ShiftSchedule;
     }
 }

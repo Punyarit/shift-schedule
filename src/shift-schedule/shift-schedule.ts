@@ -56,7 +56,7 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
-  mode: 'view' | 'edit' = 'view';
+  mode: 'view' | 'edit' = 'edit';
 
   @property({ type: String })
   practitionerId?: string;
@@ -67,6 +67,8 @@ export class ShiftSchedule extends LitElement {
 
   @property({ type: Object })
   public scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
+
+  private removeOriginCache = [] as Array<any>;
 
   @property({ type: Array })
   public requestTypes?: RequestType[] | ScheduleRequestType[];
@@ -219,12 +221,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
-  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  // }
+  async connectedCallback() {
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -535,6 +537,8 @@ export class ShiftSchedule extends LitElement {
                   .schedulePractitionerRequest?.[requestIndex],
             };
 
+            this.removeOriginCache.push(dataSlice);
+
             this.dispatchEvent(
               new CustomEvent('remove-origin', {
                 detail: dataSlice,
@@ -663,7 +667,7 @@ export class ShiftSchedule extends LitElement {
               this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                 ?.schedulePractitionerRequest?.[requestIndex!],
           };
-
+          this.removeOriginCache.push(dataSlice);
           this.dispatchEvent(
             new CustomEvent('remove-origin', {
               detail: dataSlice,
@@ -767,6 +771,7 @@ export class ShiftSchedule extends LitElement {
             this.scheduleData?.schedulePractitioner?.[practitionerIndex]
               .schedulePractitionerRequest?.[requestIndex],
         };
+        this.removeOriginCache.push(dataSlice);
         this.dispatchEvent(
           new CustomEvent('remove-origin', {
             detail: dataSlice,
@@ -1197,7 +1202,7 @@ export class ShiftSchedule extends LitElement {
       </c-box>
       <c-box>
         <c-box flex col-gap-6>
-          ${shifts.map((requestPlan) => {
+          ${shifts?.map((requestPlan) => {
             return html` <c-box flex items-center flex-col>
               <c-box
                 @click="${() => this.addSrShiftRequest(requestPlan)}"
@@ -1432,6 +1437,14 @@ export class ShiftSchedule extends LitElement {
 
   resetRequestSelect() {
     this.requestSelected = undefined;
+    this.isRemoveMode = false;
+    this.shiftOffRequestSaved = {};
+    this.shiftSemRequestSaved = {};
+    this.shiftSrRequestSaved = {};
+    this.shiftVacRequestSaved = {};
+    this.shiftWoffRequestSaved = {};
+
+    console.log('shift-schedule.js |this.removeOriginCache| = ', this.removeOriginCache);
   }
 
   convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
@@ -1598,6 +1611,6 @@ export class ShiftSchedule extends LitElement {
 
 declare global {
   namespace CXShiftSchedule {
-    type Ref = typeof ShiftSchedule;
+    type Ref = ShiftSchedule;
   }
 }
