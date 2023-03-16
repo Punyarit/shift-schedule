@@ -96,7 +96,6 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
-    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     render(): import("lit-html").TemplateResult<1>;
@@ -128,7 +127,7 @@ export declare class ShiftSchedule extends LitElement {
         remark?: string;
         initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
-    deleteInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
+    removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date): import("lit-html").TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]): void;

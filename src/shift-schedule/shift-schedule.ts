@@ -22,6 +22,8 @@ import {
   SrShiftPlan,
   SchedulePractitionerEntity,
   ScheduleShiftsEntity,
+  QueryRemoveOrigin,
+  ScheduleRequestIndex,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
@@ -56,7 +58,7 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
-  mode: 'view' | 'edit' = 'edit';
+  mode: 'view' | 'edit' = 'view';
 
   @property({ type: String })
   practitionerId?: string;
@@ -68,7 +70,7 @@ export class ShiftSchedule extends LitElement {
   @property({ type: Object })
   public scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
 
-  private removeOriginCache = [] as Array<any>;
+  private removeOriginCache = [] as Array<QueryRemoveOrigin>;
 
   @property({ type: Array })
   public requestTypes?: RequestType[] | ScheduleRequestType[];
@@ -221,12 +223,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  }
+  // async connectedCallback() {
+  //   super.connectedCallback();
+  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  // }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -535,13 +537,13 @@ export class ShiftSchedule extends LitElement {
               schedulePractitionerRequest:
                 this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                   .schedulePractitionerRequest?.[requestIndex],
-            };
+            } as QueryRemoveOrigin;
 
             this.removeOriginCache.push(dataSlice);
 
             this.dispatchEvent(
               new CustomEvent('remove-origin', {
-                detail: dataSlice,
+                detail: { ...dataSlice, result: this.removeOriginCache },
               })
             );
 
@@ -666,11 +668,11 @@ export class ShiftSchedule extends LitElement {
             schedulePractitionerRequest:
               this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                 ?.schedulePractitionerRequest?.[requestIndex!],
-          };
+          } as QueryRemoveOrigin;
           this.removeOriginCache.push(dataSlice);
           this.dispatchEvent(
             new CustomEvent('remove-origin', {
-              detail: dataSlice,
+              detail: { ...dataSlice, result: this.removeOriginCache },
             })
           );
 
@@ -746,40 +748,54 @@ export class ShiftSchedule extends LitElement {
     </c-box>`;
   }
 
-  deleteInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
+  removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.practitionerId === practitioner.practitionerId
     );
 
     if (typeof practitionerIndex === 'number') {
-      const requestIndex = this.scheduleData?.schedulePractitioner?.[
-        practitionerIndex
-      ].schedulePractitionerRequest?.findIndex(
-        (res) =>
-          (res as SchedulePractitionerRequestEntity)?.requestDate === dateString &&
-          (res as SchedulePractitionerRequestEntity)?.requestShift.split('')[0] === dayPart
-      );
+      const shiftPlans = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+        .schedulePractitionerRequest as SchedulePractitionerRequestEntity[];
 
-      if (typeof requestIndex === 'number') {
+      let requestIndex = [];
+      let requestResult = {} as any;
+      for (let index = 0; index < shiftPlans.length; index++) {
+        if (
+          shiftPlans[index]?.requestShift?.split('')?.[0] === dayPart &&
+          shiftPlans[index]?.requestDate === dateString
+        ) {
+          requestIndex.push(index);
+          requestResult[index] = shiftPlans[index];
+        }
+      }
+
+      const resultShiftSr = {
+        requestIndex,
+        requestResult,
+      };
+
+      if (resultShiftSr.requestIndex.length) {
         const dataSlice = {
           queryIndex: {
             practitionerIndex,
-            requestIndex,
+            requestIndex: resultShiftSr.requestIndex,
           },
+          schedulePractitionerRequest: resultShiftSr.requestResult,
           schedulePractitioner: this.scheduleData?.schedulePractitioner?.[practitionerIndex],
-          schedulePractitionerRequest:
-            this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-              .schedulePractitionerRequest?.[requestIndex],
-        };
+        } as QueryRemoveOrigin;
+
         this.removeOriginCache.push(dataSlice);
+
+        for (const srIndex of resultShiftSr.requestIndex) {
+          delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+            .schedulePractitionerRequest?.[srIndex];
+        }
+
         this.dispatchEvent(
           new CustomEvent('remove-origin', {
-            detail: dataSlice,
+            detail: { ...dataSlice, result: this.removeOriginCache },
           })
         );
-
-        delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-          .schedulePractitionerRequest?.[requestIndex];
 
         this.requestUpdate();
       }
@@ -800,7 +816,7 @@ export class ShiftSchedule extends LitElement {
             return html`
               <c-box p-4 border-box flex flex-col row-gap-4>
                 <c-box
-                  @click="${() => this.deleteInitialSr(practitioner, dateString, dayPart)}"
+                  @click="${() => this.removeInitialSr(practitioner, dateString, dayPart)}"
                   p-4
                   border-box
                   round-6
@@ -1444,7 +1460,33 @@ export class ShiftSchedule extends LitElement {
     this.shiftVacRequestSaved = {};
     this.shiftWoffRequestSaved = {};
 
-    console.log('shift-schedule.js |this.removeOriginCache| = ', this.removeOriginCache);
+    for (let index = 0; index < this.removeOriginCache.length; index++) {
+      const cache = this.removeOriginCache[index];
+
+      if (cache) {
+        const requestPLan =
+          this.scheduleData?.schedulePractitioner?.[cache.queryIndex.practitionerIndex]
+            .schedulePractitionerRequest;
+
+        if (!requestPLan) return;
+
+        // woff, sem, off, vac
+        if (typeof cache.queryIndex.requestIndex === 'number') {
+          if (requestPLan) {
+            requestPLan[cache.queryIndex.requestIndex] = cache.schedulePractitionerRequest;
+          }
+        } else {
+          // sr
+          (cache.queryIndex.requestIndex as number[]).forEach((resIndex) => {
+            requestPLan[resIndex] = (cache.schedulePractitionerRequest as ScheduleRequestIndex)[
+              resIndex
+            ];
+          });
+        }
+
+        this.requestUpdate();
+      }
+    }
   }
 
   convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {

@@ -42,7 +42,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.viewerRole = 'staff';
-        this.mode = 'edit';
+        this.mode = 'view';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.currentUserIndex = 0;
         this.removeOriginCache = [];
@@ -197,12 +197,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    async connectedCallback() {
-        super.connectedCallback();
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    }
+    // async connectedCallback() {
+    //   super.connectedCallback();
+    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    // }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;
@@ -449,7 +449,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         };
                         this.removeOriginCache.push(dataSlice);
                         this.dispatchEvent(new CustomEvent('remove-origin', {
-                            detail: dataSlice,
+                            detail: { ...dataSlice, result: this.removeOriginCache },
                         }));
                         delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                             .schedulePractitionerRequest?.[requestIndex];
@@ -539,7 +539,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     };
                     this.removeOriginCache.push(dataSlice);
                     this.dispatchEvent(new CustomEvent('remove-origin', {
-                        detail: dataSlice,
+                        detail: { ...dataSlice, result: this.removeOriginCache },
                     }));
                     delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                         ?.schedulePractitionerRequest?.[requestIndex];
@@ -604,27 +604,41 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     </c-box>`;
     }
-    deleteInitialSr(practitioner, dateString, dayPart) {
+    removeInitialSr(practitioner, dateString, dayPart) {
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitioner.practitionerId);
         if (typeof practitionerIndex === 'number') {
-            const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => res?.requestDate === dateString &&
-                res?.requestShift.split('')[0] === dayPart);
-            if (typeof requestIndex === 'number') {
+            const shiftPlans = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+                .schedulePractitionerRequest;
+            let requestIndex = [];
+            let requestResult = {};
+            for (let index = 0; index < shiftPlans.length; index++) {
+                if (shiftPlans[index]?.requestShift?.split('')?.[0] === dayPart &&
+                    shiftPlans[index]?.requestDate === dateString) {
+                    requestIndex.push(index);
+                    requestResult[index] = shiftPlans[index];
+                }
+            }
+            const resultShiftSr = {
+                requestIndex,
+                requestResult,
+            };
+            if (resultShiftSr.requestIndex.length) {
                 const dataSlice = {
                     queryIndex: {
                         practitionerIndex,
-                        requestIndex,
+                        requestIndex: resultShiftSr.requestIndex,
                     },
+                    schedulePractitionerRequest: resultShiftSr.requestResult,
                     schedulePractitioner: this.scheduleData?.schedulePractitioner?.[practitionerIndex],
-                    schedulePractitionerRequest: this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-                        .schedulePractitionerRequest?.[requestIndex],
                 };
                 this.removeOriginCache.push(dataSlice);
+                for (const srIndex of resultShiftSr.requestIndex) {
+                    delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+                        .schedulePractitionerRequest?.[srIndex];
+                }
                 this.dispatchEvent(new CustomEvent('remove-origin', {
-                    detail: dataSlice,
+                    detail: { ...dataSlice, result: this.removeOriginCache },
                 }));
-                delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-                    .schedulePractitionerRequest?.[requestIndex];
                 this.requestUpdate();
             }
         }
@@ -638,7 +652,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     return html `
               <c-box p-4 border-box flex flex-col row-gap-4>
                 <c-box
-                  @click="${() => this.deleteInitialSr(practitioner, dateString, dayPart)}"
+                  @click="${() => this.removeInitialSr(practitioner, dateString, dayPart)}"
                   p-4
                   border-box
                   round-6
@@ -1084,7 +1098,28 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.shiftSrRequestSaved = {};
         this.shiftVacRequestSaved = {};
         this.shiftWoffRequestSaved = {};
-        console.log('shift-schedule.js |this.removeOriginCache| = ', this.removeOriginCache);
+        for (let index = 0; index < this.removeOriginCache.length; index++) {
+            const cache = this.removeOriginCache[index];
+            if (cache) {
+                const requestPLan = this.scheduleData?.schedulePractitioner?.[cache.queryIndex.practitionerIndex]
+                    .schedulePractitionerRequest;
+                if (!requestPLan)
+                    return;
+                // woff, sem, off, vac
+                if (typeof cache.queryIndex.requestIndex === 'number') {
+                    if (requestPLan) {
+                        requestPLan[cache.queryIndex.requestIndex] = cache.schedulePractitionerRequest;
+                    }
+                }
+                else {
+                    // sr
+                    cache.queryIndex.requestIndex.forEach((resIndex) => {
+                        requestPLan[resIndex] = cache.schedulePractitionerRequest[resIndex];
+                    });
+                }
+                this.requestUpdate();
+            }
+        }
     }
     convertRequestDatesToObject(requests) {
         const result = {};

@@ -139,3 +139,13 @@ export type DatePickerShiftPlan = {
   dateString?: string;
   remark?: string;
 };
+export type QueryRemoveOrigin = {
+  queryIndex: {
+    practitionerIndex: number;
+    requestIndex: number | number[];
+  };
+  schedulePractitioner: SchedulePractitionerEntity;
+  schedulePractitionerRequest: SchedulePractitionerRequestEntity | ScheduleRequestIndex;
+};
+
+export type ScheduleRequestIndex = { [index: number]: SchedulePractitionerRequestEntity };
