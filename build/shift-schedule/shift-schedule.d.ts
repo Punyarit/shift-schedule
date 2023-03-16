@@ -91,6 +91,7 @@ export declare class ShiftSchedule extends LitElement {
     datepickerData?: DateRangeSelected;
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
+    private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
     renderRequestButton(): import("lit-html").TemplateResult<1>;
@@ -138,18 +139,21 @@ export declare class ShiftSchedule extends LitElement {
         practitioner: SchedulePractitionerEntity;
         date: Date;
     }): import("lit-html").TemplateResult<1>;
-    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1> | undefined;
+    appendPopover(type: RequestType['abbr'], data: {
+        date: Date;
+        practitioner: SchedulePractitionerEntity;
+        dateString: string;
+    }): void;
+    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): import("lit-html").TemplateResult<1> | undefined;
     renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart): import("lit-html").TemplateResult<1>;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity): void;
     groupShiftsByLetter(arr: any): any;
     renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
-    clearShiftRequestCache(): void;
-    cancelSrRequestPlan(): void;
     saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity): void;
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
-    renderEmptyBox(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    renderEmptyBox(date: Date, state: 'display' | 'popover', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {

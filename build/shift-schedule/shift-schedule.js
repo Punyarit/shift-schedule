@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { LitElement, html } from 'lit';
+import { LitElement, html, render } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDateBetweenArrayDate } from '@cortex-ui/core/cx/helpers/functions/date/date-methods';
 import '@cortex-ui/core/cx/c-box';
@@ -17,6 +17,7 @@ import '@cortex-ui/core/cx/icon';
 import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
+import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import './components/request-button';
 import { requestTypeStyles, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
@@ -390,7 +391,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                             : requestInitial
                                                 ? this.renderInitialRequest(requestInitial, practitioner, day)
                                                 : indexUser === userTargetIndex
-                                                    ? this.renderEmptyDateForSelect(day, practitioner)
+                                                    ? this.renderEmptyDateForSelect(day, practitioner, dateString)
                                                     : undefined}
                                       </c-box>
                                     </c-box>`;
@@ -774,84 +775,139 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     </c-box>`;
     }
-    renderEmptyDateForSelect(date, practitioner) {
+    appendPopover(type, data) {
+        const boxTarget = this.querySelector(`#shift-cell-${data.dateString}`);
+        if (boxTarget) {
+            switch (type) {
+                case 'sr':
+                    const firstElement = boxTarget.firstElementChild;
+                    if (firstElement?.tagName !== 'CX-POPOVER') {
+                        firstElement?.remove();
+                    }
+                    if (firstElement?.tagName === 'CX-POPOVER') {
+                        return;
+                    }
+                    const popover = html `
+            <cx-popover
+              .set="${{
+                        arrowpoint: true,
+                        focusout: 'none',
+                        mouseleave: 'none',
+                        transform: 'center',
+                    }}">
+              ${this.renderEmptyBox(data.date, 'popover')}
+              ${this.renderSrPopover(data.date, data.practitioner)}
+            </cx-popover>
+          `;
+                    // const a = render(popover, boxTarget);
+                    render(popover, boxTarget);
+                    requestAnimationFrame(() => {
+                        this.currentPopoverRef = this.querySelector('cx-popover');
+                        // @ts-ignore
+                        this.currentPopoverRef.setOpenPopover();
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    renderEmptyDateForSelect(date, practitioner, dateString) {
         switch (this.requestSelected?.abbr) {
             case 'sr':
                 return html `
-          <cx-popover
-            .set="${{
-                    arrowpoint: true,
-                    focusout: 'close',
-                    mouseleave: 'none',
-                    transform: 'center',
-                }}">
-            ${this.renderEmptyBox(date)} ${this.renderSrPopover(date, practitioner)}
-          </cx-popover>
+          <c-box
+            id="shift-cell-${dateString}"
+            w-full
+            h-full
+            @click="${() => this.appendPopover(this.requestSelected?.abbr, {
+                    date,
+                    practitioner,
+                    dateString,
+                })}">
+            ${this.renderEmptyBox(date, 'display')}
+          </c-box>
         `;
             case 'sem':
-                return html `
-          <cx-popover
-            .set="${{
-                    arrowpoint: true,
-                    focusout: 'close',
-                    mouseleave: 'none',
-                    transform: 'center',
-                }}">
-            ${this.renderEmptyBox(date)}
-
-            <c-box slot="popover">
-              ${this.renderDatepickerBox({
-                    title: 'ขออบรม, สัมนา, ไปราชการ',
-                    practitioner,
-                    date,
-                })}
-            </c-box>
-          </cx-popover>
-        `;
+                return html ` ${this.renderEmptyBox(date, 'display')} `;
             case 'off':
-                return html `
-          <cx-popover
-            .set="${{
-                    arrowpoint: true,
-                    focusout: 'close',
-                    mouseleave: 'none',
-                    transform: 'center',
-                }}">
-            ${this.renderEmptyBox(date)}
-
-            <c-box slot="popover">
-              ${this.renderDatepickerBox({
-                    title: 'ขอลาหยุด',
-                    practitioner,
-                    date,
-                })}
-            </c-box>
-          </cx-popover>
-        `;
+                return html ` ${this.renderEmptyBox(date, 'display')} `;
             case 'vac':
-                return html `
-          <cx-popover
-            .set="${{ arrowpoint: true, focusout: 'close', mouseleave: 'none' }}">
-            ${this.renderEmptyBox(date)}
-
-            <c-box slot="popover">
-              ${this.renderDatepickerBox({
-                    title: 'ขอลาพักร้อน',
-                    practitioner,
-                    date,
-                })}
-            </c-box>
-          </cx-popover>
-        `;
+                return html ` ${this.renderEmptyBox(date, 'display')} `;
             case 'woff':
-                return html ` ${this.renderEmptyBox(date, 'woff', practitioner)} `;
+                return html ` ${this.renderEmptyBox(date, 'display', 'woff', practitioner)} `;
+            // case 'sr':
+            //   return html`
+            //     <cx-popover
+            //       .set="${{
+            //         arrowpoint: true,
+            //         focusout: 'close',
+            //         mouseleave: 'none',
+            //         transform: 'center',
+            //       } as CXPopover.Set}">
+            //       ${this.renderEmptyBox(date)} ${this.renderSrPopover(date, practitioner)}
+            //     </cx-popover>
+            //   `;
+            // case 'sem':
+            //   return html`
+            //     <cx-popover
+            //       .set="${{
+            //         arrowpoint: true,
+            //         focusout: 'close',
+            //         mouseleave: 'none',
+            //         transform: 'center',
+            //       } as CXPopover.Set}">
+            //       ${this.renderEmptyBox(date)}
+            //       <c-box slot="popover">
+            //         ${this.renderDatepickerBox({
+            //           title: 'ขออบรม, สัมนา, ไปราชการ',
+            //           practitioner,
+            //           date,
+            //         })}
+            //       </c-box>
+            //     </cx-popover>
+            //   `;
+            // case 'off':
+            //   return html`
+            //     <cx-popover
+            //       .set="${{
+            //         arrowpoint: true,
+            //         focusout: 'close',
+            //         mouseleave: 'none',
+            //         transform: 'center',
+            //       } as CXPopover.Set}">
+            //       ${this.renderEmptyBox(date)}
+            //       <c-box slot="popover">
+            //         ${this.renderDatepickerBox({
+            //           title: 'ขอลาหยุด',
+            //           practitioner,
+            //           date,
+            //         })}
+            //       </c-box>
+            //     </cx-popover>
+            //   `;
+            // case 'vac':
+            //   return html`
+            //     <cx-popover
+            //       .set="${{ arrowpoint: true, focusout: 'close', mouseleave: 'none' } as CXPopover.Set}">
+            //       ${this.renderEmptyBox(date)}
+            //       <c-box slot="popover">
+            //         ${this.renderDatepickerBox({
+            //           title: 'ขอลาพักร้อน',
+            //           practitioner,
+            //           date,
+            //         })}
+            //       </c-box>
+            //     </cx-popover>
+            //   `;
+            // case 'woff':
+            //   return html` ${this.renderEmptyBox(date, 'woff', practitioner)} `;
             default:
                 return undefined;
         }
     }
     // FIXME: any type w8 for api data
     renderRequestSr(shifts, dayPart) {
-        console.log('shift-schedule.js |shifts| = ', shifts);
         const srData = {
             a: {
                 text: 'กลางวัน',
@@ -946,7 +1002,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 <cx-button
                   .var="${{ width: 'size-0' }}"
                   .set="${{ type: 'secondary' }}"
-                  @click="${this.cancelSrRequestPlan}"
+                  @click="${this.closePopover}"
                   >ยกเลิก</cx-button
                 >
                 <cx-button
@@ -967,13 +1023,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     `;
     }
-    clearShiftRequestCache() {
-        this.shiftSrRequestCache = {};
-    }
-    cancelSrRequestPlan() {
-        this.closePopover();
-    }
     saveSrRequestPlan(date, practitioner) {
+        if (!Object.keys(this.shiftSrRequestCache).length) {
+            const popoverContent = ModalSingleton.modalRef.querySelector("c-box[slot='popover']");
+            popoverContent?.firstElementChild?.classList.toggle('shake-efx');
+            const timer = setTimeout(() => {
+                popoverContent?.firstElementChild?.classList.toggle('shake-efx');
+                clearTimeout(timer);
+            }, 600);
+            return;
+        }
         if (!this.shiftSrRequestSaved[practitioner.id]) {
             this.shiftSrRequestSaved[practitioner.id] = {};
             this.shiftSrRequestSaved[practitioner.id].request = {};
@@ -991,7 +1050,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.closePopover();
     }
     closePopover() {
-        this.clearShiftRequestCache();
+        this.shiftSrRequestCache = {};
         ModalCaller.popover().clear();
     }
     selectDateRequest(date, type, practitioner) {
@@ -1020,7 +1079,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }));
         this.selectedDate = undefined;
     }
-    renderEmptyBox(date, type, practitioner) {
+    renderEmptyBox(date, state, type, practitioner) {
         const isSameDate = this.selectedDate === date;
         return html `
       <c-box
@@ -1029,7 +1088,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         w-full
         h-full
         slot="host"
-        @click="${() => this.selectDateRequest(date, type, practitioner)}">
+        @click="${state === 'popover'
+            ? () => this.selectDateRequest(date, type, practitioner)
+            : null}">
         <c-box
           bg-hover="primary-100"
           bg-active="primary-200"
