@@ -164,6 +164,7 @@ export class ShiftSchedule extends LitElement {
   private removeRequestSelected?: RequestType;
 
   public tableWrapperRef = createRef<HTMLDivElement>();
+  public dividerRef = createRef<HTMLDivElement>();
   private currentPopoverRef?: CXPopover.Ref;
   protected willUpdate(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
@@ -224,12 +225,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
-  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  // }
+  async connectedCallback() {
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -238,6 +239,9 @@ export class ShiftSchedule extends LitElement {
 
   @state()
   isRemoveMode = false;
+
+  @state()
+  dividerTop = 0;
 
   render() {
     return html`
@@ -250,14 +254,23 @@ export class ShiftSchedule extends LitElement {
           transition: all 0.25s ease;
         }
 
+        .cbox-divider {
+          transition: all 0.125s ease;
+          width: 100%;
+          height: 2px;
+          background-color: var(--primary-500);
+          z-index: 1;
+        }
+
         c-box[input-box].remark-input {
           width: var(--size-274) !important;
         }
       </style>
       <cx-theme>
         <cx-modal .set="${{ multiplePopover: true } as CXModal.Set}"></cx-modal>
-        <c-box style="height:100vh" overflow-hidden>
-          <c-box bg-white p-24 flex flex-col row-gap-24>
+        <c-box style="height:100vh" relative overflow-hidden>
+          <c-box class="cbox-divider" fixed ${ref(this.dividerRef)}></c-box>
+          <c-box bg-white flex flex-col row-gap-24>
             ${this.mode === 'edit'
               ? html` <c-box ui="${this.buttonGroupUI}">
                   <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
@@ -382,10 +395,7 @@ export class ShiftSchedule extends LitElement {
                         },
                         schedulePractitionerRequest: request,
                       } = practitioner;
-                      const borderBottom: string =
-                        indexUser === (this.viewerRole === 'manager' ? this.currentUserIndex : 0)
-                          ? this.userSelected
-                          : '';
+
                       const requestData = this.convertRequestDatesToObject(
                         request as SchedulePractitionerRequestEntity[]
                       );
@@ -394,8 +404,10 @@ export class ShiftSchedule extends LitElement {
                         <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                           <c-box
                             min-w="260"
-                            ui="${borderBottom}, ${this.userTitle}, ${this.tableLineUI}, ${this
-                              .titleSticky}">
+                            style="${this.viewerRole === 'staff' && indexUser === 0
+                              ? 'border-bottom:2px solid var(--primary-500)'
+                              : ''}"
+                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                             <c-box relative top-0 left-0>
                               <img src="${this.userImgDefault || ''}" alt="" />
                               <c-box ui="${this.genderBox}"> ${gender} </c-box>
@@ -434,9 +446,13 @@ export class ShiftSchedule extends LitElement {
                                       this.viewerRole === 'manager' ? this.currentUserIndex : 0;
 
                                     return html` <c-box
-                                      @mouseover="${() => this.ManagerHoverUser(indexUser)}"
-                                      ui="${borderBottom}, ${this.tableLineUI}, ${this
-                                        .requestBox}, ${borderRight}">
+                                      @mouseenter="${this.viewerRole === 'manager'
+                                        ? (e: MouseEvent) => this.managerHoverUser(indexUser, e)
+                                        : null}"
+                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
+                                      style="${this.viewerRole === 'staff' && indexUser === 0
+                                        ? 'border-bottom:2px solid var(--primary-500)'
+                                        : ''}">
                                       <c-box w-full h-full bg-white>
                                         <!-- if have request date then render request -->
                                         <!-- when saving -->
@@ -499,9 +515,15 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
-  ManagerHoverUser(indexUser: number) {
-    if (this.viewerRole === 'manager') {
-      this.currentUserIndex = indexUser;
+  managerHoverUser(indexUser: number, e: MouseEvent) {
+    this.currentUserIndex = indexUser;
+    const target = e.target as HTMLElement;
+    if (target) {
+      const targetRect = target.getBoundingClientRect();
+      this.dividerTop = Math.floor(targetRect.bottom);
+      if (this.dividerRef.value) {
+        this.dividerRef.value.style.translate = `0 ${this.dividerTop}px`;
+      }
     }
   }
 

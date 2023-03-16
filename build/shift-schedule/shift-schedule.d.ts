@@ -92,16 +92,19 @@ export declare class ShiftSchedule extends LitElement {
     datepickerData?: DateRangeSelected;
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
+    dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
+    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
+    dividerTop: number;
     render(): import("lit-html").TemplateResult<1>;
-    ManagerHoverUser(indexUser: number): void;
+    managerHoverUser(indexUser: number, e: MouseEvent): void;
     sentRemoveEvent(): void;
     removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;

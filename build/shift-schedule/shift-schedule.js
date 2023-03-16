@@ -56,7 +56,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.shiftVacRequestSaved = {};
         this.shiftWoffRequestSaved = {};
         this.tableWrapperRef = createRef();
+        this.dividerRef = createRef();
         this.isRemoveMode = false;
+        this.dividerTop = 0;
         this.saveWithDateData = (practitioner) => {
             const remarkInput = this.querySelector('#remarkRef');
             const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
@@ -202,12 +204,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    // async connectedCallback() {
-    //   super.connectedCallback();
-    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    // }
+    async connectedCallback() {
+        super.connectedCallback();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;
@@ -223,14 +225,23 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           transition: all 0.25s ease;
         }
 
+        .cbox-divider {
+          transition: all 0.125s ease;
+          width: 100%;
+          height: 2px;
+          background-color: var(--primary-500);
+          z-index: 1;
+        }
+
         c-box[input-box].remark-input {
           width: var(--size-274) !important;
         }
       </style>
       <cx-theme>
         <cx-modal .set="${{ multiplePopover: true }}"></cx-modal>
-        <c-box style="height:100vh" overflow-hidden>
-          <c-box bg-white p-24 flex flex-col row-gap-24>
+        <c-box style="height:100vh" relative overflow-hidden>
+          <c-box class="cbox-divider" fixed ${ref(this.dividerRef)}></c-box>
+          <c-box bg-white flex flex-col row-gap-24>
             ${this.mode === 'edit'
             ? html ` <c-box ui="${this.buttonGroupUI}">
                   <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
@@ -342,17 +353,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     .items=${this.scheduleData?.schedulePractitioner}
                     .renderItem="${(practitioner, indexUser) => {
             const { practitioner: { gender, nameFamily, nameGiven, practitionerLevel, practitionerRole, }, schedulePractitionerRequest: request, } = practitioner;
-            const borderBottom = indexUser === (this.viewerRole === 'manager' ? this.currentUserIndex : 0)
-                ? this.userSelected
-                : '';
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
                         <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                           <c-box
                             min-w="260"
-                            ui="${borderBottom}, ${this.userTitle}, ${this.tableLineUI}, ${this
-                .titleSticky}">
+                            style="${this.viewerRole === 'staff' && indexUser === 0
+                ? 'border-bottom:2px solid var(--primary-500)'
+                : ''}"
+                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                             <c-box relative top-0 left-0>
                               <img src="${this.userImgDefault || ''}" alt="" />
                               <c-box ui="${this.genderBox}"> ${gender} </c-box>
@@ -382,9 +392,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const woffSaved = this.shiftWoffRequestSaved?.[practitioner.id]?.request;
                         const userTargetIndex = this.viewerRole === 'manager' ? this.currentUserIndex : 0;
                         return html ` <c-box
-                                      @mouseover="${() => this.ManagerHoverUser(indexUser)}"
-                                      ui="${borderBottom}, ${this.tableLineUI}, ${this
-                            .requestBox}, ${borderRight}">
+                                      @mouseenter="${this.viewerRole === 'manager'
+                            ? (e) => this.managerHoverUser(indexUser, e)
+                            : null}"
+                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
+                                      style="${this.viewerRole === 'staff' && indexUser === 0
+                            ? 'border-bottom:2px solid var(--primary-500)'
+                            : ''}">
                                       <c-box w-full h-full bg-white>
                                         <!-- if have request date then render request -->
                                         <!-- when saving -->
@@ -422,9 +436,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </cx-theme>
     `;
     }
-    ManagerHoverUser(indexUser) {
-        if (this.viewerRole === 'manager') {
-            this.currentUserIndex = indexUser;
+    managerHoverUser(indexUser, e) {
+        this.currentUserIndex = indexUser;
+        const target = e.target;
+        if (target) {
+            const targetRect = target.getBoundingClientRect();
+            this.dividerTop = Math.floor(targetRect.bottom);
+            if (this.dividerRef.value) {
+                this.dividerRef.value.style.translate = `0 ${this.dividerTop}px`;
+            }
         }
     }
     sentRemoveEvent() {
@@ -1343,6 +1363,10 @@ __decorate([
     state(),
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "isRemoveMode", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Object)
+], ShiftSchedule.prototype, "dividerTop", void 0);
 ShiftSchedule = __decorate([
     customElement('cx-shift-schedule')
 ], ShiftSchedule);
