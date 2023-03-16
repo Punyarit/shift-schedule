@@ -1377,6 +1377,19 @@ export class ShiftSchedule extends LitElement {
         shiftPlan: SrShiftPlan;
       };
     }
+
+    if (typeof this.shiftSrRequestSaved[practitioner.id].request !== 'object') {
+      this.shiftSrRequestSaved[practitioner.id].request = {};
+    }
+    if (
+      typeof this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] !==
+      'object'
+    ) {
+      this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] = {} as {
+        shiftPlan: SrShiftPlan;
+      };
+    }
+
     this.shiftSrRequestSaved[practitioner.id].practitioner = practitioner;
     this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)].shiftPlan =
       this.shiftSrRequestCache;

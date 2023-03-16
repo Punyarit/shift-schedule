@@ -1038,6 +1038,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.shiftSrRequestSaved[practitioner.id].request = {};
             this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] = {};
         }
+        if (typeof this.shiftSrRequestSaved[practitioner.id].request !== 'object') {
+            this.shiftSrRequestSaved[practitioner.id].request = {};
+        }
+        if (typeof this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] !==
+            'object') {
+            this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)] = {};
+        }
         this.shiftSrRequestSaved[practitioner.id].practitioner = practitioner;
         this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)].shiftPlan =
             this.shiftSrRequestCache;
