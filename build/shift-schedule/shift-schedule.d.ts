@@ -33,7 +33,8 @@ export declare class ShiftSchedule extends LitElement {
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
     practitionerId?: string;
-    currentUserIndex: number;
+    userHoverIndex: number;
+    userSelectedIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
     private removeOriginCache;
     requestTypes?: RequestType[] | ScheduleRequestType[];
@@ -125,8 +126,9 @@ export declare class ShiftSchedule extends LitElement {
         date: Date;
         practitioner: SchedulePractitionerEntity;
         dateString: string;
+        indexUser: number;
     }): void;
-    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): import("lit-html").TemplateResult<1> | undefined;
+    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number): import("lit-html").TemplateResult<1> | undefined;
     renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart): import("lit-html").TemplateResult<1>;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity): void;
     groupShiftsByLetter(arr: any): any;

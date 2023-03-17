@@ -28,7 +28,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         super(...arguments);
         this.buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
         this.scheduleTitleUI = 'scheduleTitleUI: inline-flex';
-        this.tableLineUI = 'tableLineUI: border-1 border-solid border-primary-100 border-box';
+        this.tableLineUI = 'tableLineUI: border-1 border-solid border-gray-100 border-box';
         this.titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
         this.monthUI = 'monthUI: flex items-center';
         this.genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
@@ -46,7 +46,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.viewerRole = 'staff';
         this.mode = 'view';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
-        this.currentUserIndex = 0;
+        this.userHoverIndex = 0;
+        this.userSelectedIndex = 0;
         this.removeOriginCache = [];
         this.srState = [];
         this.shiftSrRequestCache = {};
@@ -222,6 +223,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           --cbox-divider-top: 0;
         }
 
+        .focus-divider {
+          border-bottom: 2px solid var(--primary-500);
+        }
+
         input::placeholder {
           font-family: Sarabun-Regular;
         }
@@ -235,7 +240,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           width: var(--cbox-divider-width);
           translate: 0 var(--cbox-divider-top);
           height: 2px;
-          background-color: var(--primary-500);
+          background-color: var(--primary-100);
           z-index: 1;
         }
 
@@ -357,8 +362,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                       <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                         <c-box
                           min-w="260"
-                          style="${this.viewerRole === 'staff' && indexUser === 0
-                ? 'border-bottom:2px solid var(--primary-500)'
+                          class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                (this.viewerRole === 'manager' &&
+                    indexUser === this.userSelectedIndex &&
+                    this.requestSelected)
+                ? 'focus-divider'
                 : ''}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
@@ -386,14 +394,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const vacSaved = this.shiftVacRequestSaved[practitioner.id];
                         const requestInitial = requestData[dateString];
                         const woffSaved = this.shiftWoffRequestSaved?.[practitioner.id]?.request;
-                        const userTargetIndex = this.viewerRole === 'manager' ? this.currentUserIndex : 0;
+                        const userTargetIndex = this.viewerRole === 'manager' ? this.userHoverIndex : 0;
                         return html ` <c-box
                                     @mouseenter="${this.viewerRole === 'manager'
                             ? (e) => this.managerHoverUser(indexUser, e)
                             : null}"
                                     ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                    style="${this.viewerRole === 'staff' && indexUser === 0
-                            ? 'border-bottom:2px solid var(--primary-500)'
+                                    class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                            (this.viewerRole === 'manager' &&
+                                indexUser === this.userSelectedIndex &&
+                                this.requestSelected)
+                            ? 'focus-divider'
                             : ''}">
                                     <c-box w-full h-full bg-white>
                                       <!-- if have request date then render request -->
@@ -411,7 +422,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                             : requestInitial
                                                 ? this.renderInitialRequest(requestInitial, practitioner, day)
                                                 : indexUser === userTargetIndex
-                                                    ? this.renderEmptyDateForSelect(day, practitioner, dateString)
+                                                    ? this.renderEmptyDateForSelect(day, practitioner, dateString, indexUser)
                                                     : undefined}
                                     </c-box>
                                   </c-box>`;
@@ -432,7 +443,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     managerHoverUser(indexUser, e) {
-        this.currentUserIndex = indexUser;
+        this.userHoverIndex = indexUser;
         const target = e.target;
         const weekMonthUser = this.querySelector('#week-month-user');
         if (target) {
@@ -807,6 +818,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     </c-box>`;
     }
     appendPopover(type, data) {
+        this.userSelectedIndex = data.indexUser;
         const boxTarget = this.querySelector(`#shift-cell-${data.dateString}`);
         if (boxTarget) {
             const firstElement = boxTarget.firstElementChild;
@@ -874,7 +886,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         }
     }
-    renderEmptyDateForSelect(date, practitioner, dateString) {
+    renderEmptyDateForSelect(date, practitioner, dateString, indexUser) {
         switch (this.requestSelected?.abbr) {
             case 'sr':
                 return html `
@@ -886,6 +898,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     date,
                     practitioner,
                     dateString,
+                    indexUser,
                 })}">
             ${this.renderEmptyBox(date, 'display')}
           </c-box>
@@ -901,6 +914,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     date,
                     practitioner,
                     dateString,
+                    indexUser,
                 })}">
           ${this.renderEmptyBox(date, 'display')}
         </c-box>`;
@@ -1298,7 +1312,11 @@ __decorate([
 __decorate([
     state(),
     __metadata("design:type", Object)
-], ShiftSchedule.prototype, "currentUserIndex", void 0);
+], ShiftSchedule.prototype, "userHoverIndex", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Object)
+], ShiftSchedule.prototype, "userSelectedIndex", void 0);
 __decorate([
     property({ type: Object }),
     __metadata("design:type", Object)
