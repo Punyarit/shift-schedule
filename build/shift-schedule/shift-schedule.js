@@ -445,6 +445,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     managerClickUser(indexUser, practitioner) {
+        if (!this.requestSelected)
+            return;
         this.currentUserSelectedIndex = indexUser;
         if (this.dividerRef.value) {
             this.dividerRef.value.style.opacity = '0';

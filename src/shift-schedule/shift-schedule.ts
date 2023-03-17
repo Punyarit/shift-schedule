@@ -499,6 +499,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   managerClickUser(indexUser: number, practitioner: SchedulePractitionerEntity) {
+    if (!this.requestSelected) return;
     this.currentUserSelectedIndex = indexUser;
 
     if (this.dividerRef.value) {
