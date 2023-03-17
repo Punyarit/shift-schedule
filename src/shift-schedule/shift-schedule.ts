@@ -214,7 +214,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   private calcHeightOfUserTable() {
-    const theme = this.querySelector('cx-theme');
+    const theme = document.body.querySelector('cx-theme');
     const userTable = this.querySelector('#week-month-user');
 
     setTimeout(() => {
@@ -225,12 +225,12 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  }
+  // async connectedCallback() {
+  //   super.connectedCallback();
+  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  // }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -246,6 +246,11 @@ export class ShiftSchedule extends LitElement {
   render() {
     return html`
       <style>
+        :host {
+          --cbox-divider-width: 100%;
+          --cbox-divider-top: 0;
+        }
+
         input::placeholder {
           font-family: Sarabun-Regular;
         }
@@ -256,7 +261,8 @@ export class ShiftSchedule extends LitElement {
 
         .cbox-divider {
           transition: all 0.125s ease;
-          width: 100%;
+          width: var(--cbox-divider-width);
+          translate: 0 var(--cbox-divider-top);
           height: 2px;
           background-color: var(--primary-500);
           z-index: 1;
@@ -266,263 +272,255 @@ export class ShiftSchedule extends LitElement {
           width: var(--size-274) !important;
         }
       </style>
-      <cx-theme>
-        <cx-modal .set="${{ multiplePopover: true } as CXModal.Set}"></cx-modal>
-        <c-box style="height:100vh" relative overflow-hidden>
-          <c-box class="cbox-divider" fixed ${ref(this.dividerRef)}></c-box>
-          <c-box bg-white flex flex-col row-gap-24>
-            ${this.mode === 'edit'
-              ? html` <c-box ui="${this.buttonGroupUI}">
-                  <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
-                  ${this.renderRequestButton()}
-                  <c-box inline h-40 w-1 bg-pinky-100></c-box>
+      <c-box style="height:100vh" relative overflow-hidden>
+        <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
+        <c-box bg-white flex flex-col row-gap-24>
+          ${this.mode === 'edit'
+            ? html` <c-box ui="${this.buttonGroupUI}">
+                <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
+                ${this.renderRequestButton()}
+                <c-box inline h-40 w-1 bg-pinky-100></c-box>
+                <c-box
+                  @click="${this.setRemoveMode}"
+                  cursor-pointer
+                  shadow-hover="shadow-3"
+                  inline-flex
+                  items-center
+                  col-gap-12
+                  round-44
+                  w-96
+                  border-solid
+                  border-1
+                  border-pinky-100
+                  bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
                   <c-box
-                    @click="${this.setRemoveMode}"
-                    cursor-pointer
-                    shadow-hover="shadow-3"
-                    inline-flex
-                    items-center
-                    col-gap-12
-                    round-44
-                    w-96
-                    border-solid
-                    border-1
-                    border-pinky-100
-                    bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
-                    <c-box
-                      flex-center
-                      icon-prefix="close-circle-line"
-                      icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
-                      w-44
-                      h-44
-                      round-full
-                      bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
-                    </c-box>
-                    <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
+                    flex-center
+                    icon-prefix="close-circle-line"
+                    icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                    w-44
+                    h-44
+                    round-full
+                    bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
                   </c-box>
-                </c-box>`
-              : undefined}
+                  <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
+                </c-box>
+              </c-box>`
+            : undefined}
 
-            <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
-              <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
-                <c-box ui="${this.scheduleTitleUI}">
-                  <!-- FIXME: should titleSticky below -->
-                  <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
-                    <c-box semiBold tx-16>รายชื่อเจ้าหน้าที่</c-box>
-                    <c-box tx-14
-                      >ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box
-                    >
-                  </c-box>
+          <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
+            <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
+              <c-box ui="${this.scheduleTitleUI}">
+                <!-- FIXME: should titleSticky below -->
+                <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
+                  <c-box semiBold tx-16>รายชื่อเจ้าหน้าที่</c-box>
+                  <c-box tx-14>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
+                </c-box>
 
-                  <c-box flex id="week-month-title">
-                    ${this.dateBetween?.map((dateBet) => {
-                      return html`
-                        <c-box>
-                          <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
-                            <c-box
-                              icon-prefix="favorite-line"
-                              icon-suffix="favorite-line"
-                              tx-12
-                              py-6>
-                              ${this.dateFormat(dateBet.currentMonth, {
-                                month: 'short',
-                              })}
-                            </c-box>
-                          </c-box>
-
-                          <c-box ui=${this.weekDayWRapperUI}>
-                            ${dateBet.dateBetween.map((weekday) => {
-                              return html`
-                                <c-box flex flex-col>
-                                  <c-box
-                                    ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
-                                      .tableLineUI}">
-                                    ${this.dateFormat(dateBet.currentMonth, {
-                                      month: 'short',
-                                      year: 'numeric',
-                                    })}
-                                  </c-box>
-
-                                  <c-box flex>
-                                    ${weekday.map((date) => {
-                                      const isSunday =
-                                        date.getDay() === 0 ? this.sundayBorderRightUI : '';
-                                      return html` <c-box
-                                        ui="${isSunday}, ${this.tableLineUI}, ${this.weekDayUI}">
-                                        <c-box tx-12>
-                                          ${this.dateFormat(date, {
-                                            weekday: 'short',
-                                          })}
-                                        </c-box>
-                                        <c-box tx-14>
-                                          ${this.dateFormat(date, {
-                                            day: 'numeric',
-                                          })}
-                                        </c-box>
-                                      </c-box>`;
-                                    })}
-                                  </c-box>
-                                </c-box>
-                              `;
+                <c-box flex id="week-month-title">
+                  ${this.dateBetween?.map((dateBet) => {
+                    return html`
+                      <c-box>
+                        <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
+                          <c-box icon-prefix="favorite-line" icon-suffix="favorite-line" tx-12 py-6>
+                            ${this.dateFormat(dateBet.currentMonth, {
+                              month: 'short',
                             })}
                           </c-box>
                         </c-box>
-                      `;
-                    })}
-                  </c-box>
-                </c-box>
 
-                <c-box
-                  inline-flex
-                  flex-col
-                  id="week-month-user"
-                  overflow-y-auto
-                  overflow-x-hidden
-                  style="height:${this.maxHeightOfUserTable!}px">
-                  <lit-virtualizer
-                    .items=${(this.scheduleData as SchedulingData)?.schedulePractitioner!}
-                    .renderItem="${(
-                      practitioner: SchedulePractitionerEntity,
-                      indexUser: number
-                    ) => {
-                      const {
-                        practitioner: {
-                          gender,
-                          nameFamily,
-                          nameGiven,
-                          practitionerLevel,
-                          practitionerRole,
-                        },
-                        schedulePractitionerRequest: request,
-                      } = practitioner;
-
-                      const requestData = this.convertRequestDatesToObject(
-                        request as SchedulePractitionerRequestEntity[]
-                      );
-                      const targetUser = practitioner?.practitionerId === this.practitionerId!;
-                      return html`
-                        <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
-                          <c-box
-                            min-w="260"
-                            style="${this.viewerRole === 'staff' && indexUser === 0
-                              ? 'border-bottom:2px solid var(--primary-500)'
-                              : ''}"
-                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
-                            <c-box relative top-0 left-0>
-                              <img src="${this.userImgDefault || ''}" alt="" />
-                              <c-box ui="${this.genderBox}"> ${gender} </c-box>
-                            </c-box>
-
-                            <c-box>
-                              <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                              <c-box tx-12
-                                >${practitionerRole.name}, ${practitionerLevel.name}</c-box
-                              >
-                            </c-box>
-                          </c-box>
-
-                          ${this.dateBetween?.map((dateBet) => {
+                        <c-box ui=${this.weekDayWRapperUI}>
+                          ${dateBet.dateBetween.map((weekday) => {
                             return html`
-                              ${dateBet.dateBetween.map((week) => {
-                                return html`
-                                  ${week.map((day) => {
-                                    day.setHours(0, 0, 0, 0);
-                                    const borderRight =
-                                      day.getDay() === 0 ? this.sundayBorderRightUI : '';
+                              <c-box flex flex-col>
+                                <c-box
+                                  ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
+                                    .tableLineUI}">
+                                  ${this.dateFormat(dateBet.currentMonth, {
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </c-box>
 
-                                    const dateString = this.convertDateToString(day);
-                                    const srSaved = this.shiftSrRequestSaved[practitioner.id];
-
-                                    const semSaved = this.shiftSemRequestSaved[practitioner.id];
-                                    const offSaved = this.shiftOffRequestSaved[practitioner.id];
-                                    const vacSaved = this.shiftVacRequestSaved[practitioner.id];
-
-                                    const requestInitial = requestData[dateString];
-
-                                    const woffSaved =
-                                      this.shiftWoffRequestSaved?.[practitioner.id]?.request;
-
-                                    const userTargetIndex =
-                                      this.viewerRole === 'manager' ? this.currentUserIndex : 0;
-
+                                <c-box flex>
+                                  ${weekday.map((date) => {
+                                    const isSunday =
+                                      date.getDay() === 0 ? this.sundayBorderRightUI : '';
                                     return html` <c-box
-                                      @mouseenter="${this.viewerRole === 'manager'
-                                        ? (e: MouseEvent) => this.managerHoverUser(indexUser, e)
-                                        : null}"
-                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                      style="${this.viewerRole === 'staff' && indexUser === 0
-                                        ? 'border-bottom:2px solid var(--primary-500)'
-                                        : ''}">
-                                      <c-box w-full h-full bg-white>
-                                        <!-- if have request date then render request -->
-                                        <!-- when saving -->
-                                        ${srSaved && srSaved?.request?.[dateString]
-                                          ? this.renderSrShiftPlanSaved(
-                                              srSaved,
-                                              dateString,
-                                              practitioner
-                                            )
-                                          : semSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
-                                              semSaved?.request?.[dateString],
-                                              'sem',
-                                              practitioner
-                                            )
-                                          : offSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
-                                              offSaved?.request?.[dateString],
-                                              'off',
-                                              practitioner
-                                            )
-                                          : vacSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
-                                              vacSaved?.request?.[dateString],
-                                              'vac',
-                                              practitioner
-                                            )
-                                          : woffSaved?.[dateString]
-                                          ? this.renderWoffSaved(dateString, practitioner)
-                                          : requestInitial
-                                          ? this.renderInitialRequest(
-                                              requestInitial,
-                                              practitioner,
-                                              day
-                                            )
-                                          : indexUser === userTargetIndex
-                                          ? this.renderEmptyDateForSelect(
-                                              day,
-                                              practitioner,
-                                              dateString
-                                            )
-                                          : undefined}
+                                      ui="${isSunday}, ${this.tableLineUI}, ${this.weekDayUI}">
+                                      <c-box tx-12>
+                                        ${this.dateFormat(date, {
+                                          weekday: 'short',
+                                        })}
+                                      </c-box>
+                                      <c-box tx-14>
+                                        ${this.dateFormat(date, {
+                                          day: 'numeric',
+                                        })}
                                       </c-box>
                                     </c-box>`;
                                   })}
-                                `;
-                              })}
+                                </c-box>
+                              </c-box>
                             `;
                           })}
                         </c-box>
-                      `;
-                    }}">
-                  </lit-virtualizer>
+                      </c-box>
+                    `;
+                  })}
                 </c-box>
+              </c-box>
+
+              <c-box
+                inline-flex
+                flex-col
+                id="week-month-user"
+                overflow-y-auto
+                overflow-x-hidden
+                style="height:${this.maxHeightOfUserTable!}px">
+                <lit-virtualizer
+                  .items=${(this.scheduleData as SchedulingData)?.schedulePractitioner!}
+                  .renderItem="${(practitioner: SchedulePractitionerEntity, indexUser: number) => {
+                    const {
+                      practitioner: {
+                        gender,
+                        nameFamily,
+                        nameGiven,
+                        practitionerLevel,
+                        practitionerRole,
+                      },
+                      schedulePractitionerRequest: request,
+                    } = practitioner;
+
+                    const requestData = this.convertRequestDatesToObject(
+                      request as SchedulePractitionerRequestEntity[]
+                    );
+                    const targetUser = practitioner?.practitionerId === this.practitionerId!;
+                    return html`
+                      <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
+                        <c-box
+                          min-w="260"
+                          style="${this.viewerRole === 'staff' && indexUser === 0
+                            ? 'border-bottom:2px solid var(--primary-500)'
+                            : ''}"
+                          ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
+                          <c-box relative top-0 left-0>
+                            <img src="${this.userImgDefault || ''}" alt="" />
+                            <c-box ui="${this.genderBox}"> ${gender} </c-box>
+                          </c-box>
+
+                          <c-box>
+                            <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
+                            <c-box tx-12>${practitionerRole.name}, ${practitionerLevel.name}</c-box>
+                          </c-box>
+                        </c-box>
+
+                        ${this.dateBetween?.map((dateBet) => {
+                          return html`
+                            ${dateBet.dateBetween.map((week) => {
+                              return html`
+                                ${week.map((day) => {
+                                  day.setHours(0, 0, 0, 0);
+                                  const borderRight =
+                                    day.getDay() === 0 ? this.sundayBorderRightUI : '';
+
+                                  const dateString = this.convertDateToString(day);
+                                  const srSaved = this.shiftSrRequestSaved[practitioner.id];
+
+                                  const semSaved = this.shiftSemRequestSaved[practitioner.id];
+                                  const offSaved = this.shiftOffRequestSaved[practitioner.id];
+                                  const vacSaved = this.shiftVacRequestSaved[practitioner.id];
+
+                                  const requestInitial = requestData[dateString];
+
+                                  const woffSaved =
+                                    this.shiftWoffRequestSaved?.[practitioner.id]?.request;
+
+                                  const userTargetIndex =
+                                    this.viewerRole === 'manager' ? this.currentUserIndex : 0;
+
+                                  return html` <c-box
+                                    @mouseenter="${this.viewerRole === 'manager'
+                                      ? (e: MouseEvent) => this.managerHoverUser(indexUser, e)
+                                      : null}"
+                                    ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
+                                    style="${this.viewerRole === 'staff' && indexUser === 0
+                                      ? 'border-bottom:2px solid var(--primary-500)'
+                                      : ''}">
+                                    <c-box w-full h-full bg-white>
+                                      <!-- if have request date then render request -->
+                                      <!-- when saving -->
+                                      ${srSaved && srSaved?.request?.[dateString]
+                                        ? this.renderSrShiftPlanSaved(
+                                            srSaved,
+                                            dateString,
+                                            practitioner
+                                          )
+                                        : semSaved?.request?.[dateString]
+                                        ? this.renderShiftPlanSaved(
+                                            semSaved?.request?.[dateString],
+                                            'sem',
+                                            practitioner
+                                          )
+                                        : offSaved?.request?.[dateString]
+                                        ? this.renderShiftPlanSaved(
+                                            offSaved?.request?.[dateString],
+                                            'off',
+                                            practitioner
+                                          )
+                                        : vacSaved?.request?.[dateString]
+                                        ? this.renderShiftPlanSaved(
+                                            vacSaved?.request?.[dateString],
+                                            'vac',
+                                            practitioner
+                                          )
+                                        : woffSaved?.[dateString]
+                                        ? this.renderWoffSaved(dateString, practitioner)
+                                        : requestInitial
+                                        ? this.renderInitialRequest(
+                                            requestInitial,
+                                            practitioner,
+                                            day
+                                          )
+                                        : indexUser === userTargetIndex
+                                        ? this.renderEmptyDateForSelect(
+                                            day,
+                                            practitioner,
+                                            dateString
+                                          )
+                                        : undefined}
+                                    </c-box>
+                                  </c-box>`;
+                                })}
+                              `;
+                            })}
+                          `;
+                        })}
+                      </c-box>
+                    `;
+                  }}">
+                </lit-virtualizer>
               </c-box>
             </c-box>
           </c-box>
         </c-box>
-      </cx-theme>
+      </c-box>
     `;
   }
 
   managerHoverUser(indexUser: number, e: MouseEvent) {
     this.currentUserIndex = indexUser;
     const target = e.target as HTMLElement;
+    const weekMonthUser = this.querySelector('#week-month-user');
     if (target) {
       const targetRect = target.getBoundingClientRect();
-      this.dividerTop = Math.floor(targetRect.bottom);
+      const hostRect = this.getBoundingClientRect();
+      const tableRect = weekMonthUser?.getBoundingClientRect();
       if (this.dividerRef.value) {
-        this.dividerRef.value.style.translate = `0 ${this.dividerTop}px`;
+        this.dividerRef.value.style.setProperty(
+          '--cbox-divider-top',
+          `${Math.floor(targetRect.bottom - hostRect.top)}px`
+        );
+        this.dividerRef.value.style.setProperty('--cbox-divider-width', `${tableRect?.width}px`);
       }
     }
   }
