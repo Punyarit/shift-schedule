@@ -6,7 +6,9 @@ export declare const CxShiftSchedule: import("@lit-labs/react").ReactWebComponen
     onSaveOff: string;
     onSaveVac: string;
     onSaveWoff: string;
-    onClearRequest: string;
+    onRemoveREquest: string;
+    onSelectRequest: string;
+    onRemoveOrigin: string;
 }>;
 declare global {
     namespace CXShiftSchedule {

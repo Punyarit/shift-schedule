@@ -64,6 +64,7 @@ export interface SchedulePractitionerRequestEntity {
     requestShift: string;
     organizationId?: null;
     requestType: RequestType;
+    remark?: string;
 }
 export interface Practitioner {
     nameGiven: string;
@@ -90,17 +91,35 @@ export type DateBetweenData = {
     currentMonth: string;
     dateBetween: Date[][];
 };
-export type ScheduleDataWithRender = {
-    arrangedRequest: ArrangedRequest;
-    requestType: RequestType;
+export type ScheduleDataWithRender = SchedulePractitionerRequestEntity & {
+    arrangedRequest?: ArrangedRequest;
 };
 export type ArrangedRequest = Record<DayPart, string[]>;
 export type SrShiftPlan = {
-    m: Record<number, string>;
-    a: Record<number, string>;
-    n: Record<number, string>;
+    m: Record<number, ScheduleShiftsEntity>;
+    a: Record<number, ScheduleShiftsEntity>;
+    n: Record<number, ScheduleShiftsEntity>;
 };
 export type DatePickerShiftPlan = {
-    date?: Date;
+    dateString?: string;
     remark?: string;
+};
+export type QueryRemoveOrigin = {
+    queryIndex: {
+        practitionerIndex: number;
+        requestIndex: number | number[];
+    };
+    schedulePractitioner: SchedulePractitionerEntity;
+    schedulePractitionerRequest: SchedulePractitionerRequestEntity | ScheduleRequestIndex;
+};
+export type ScheduleRequestIndex = {
+    [index: number]: SchedulePractitionerRequestEntity;
+};
+export type DatePickerRequest = {
+    [id: string]: {
+        practitioner: SchedulePractitionerEntity;
+        request: {
+            [date: string]: DatePickerShiftPlan;
+        };
+    };
 };
