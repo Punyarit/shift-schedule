@@ -37,7 +37,7 @@ import '@lit-labs/virtualizer';
 export class ShiftSchedule extends LitElement {
   private buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
   private scheduleTitleUI = 'scheduleTitleUI: inline-flex';
-  private tableLineUI = 'tableLineUI: border-1 border-solid border-primary-100 border-box';
+  private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-100 border-box';
   private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
   private monthUI = 'monthUI: flex items-center';
   private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
@@ -67,7 +67,7 @@ export class ShiftSchedule extends LitElement {
   // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
 
   @state()
-  currentUserIndex = 0;
+  currentUserSelectedIndex = 0;
 
   @property({ type: Object })
   public scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
@@ -237,12 +237,16 @@ export class ShiftSchedule extends LitElement {
           transition: all 0.25s ease;
         }
 
+        .focus-divider {
+          border-bottom: 2px solid var(--primary-500);
+        }
+
         .cbox-divider {
           transition: all 0.125s ease;
           width: var(--cbox-divider-width);
           translate: 0 var(--cbox-divider-top);
           height: 2px;
-          background-color: var(--primary-500);
+          background-color: var(--primary-100);
           z-index: 1;
         }
 
@@ -377,8 +381,11 @@ export class ShiftSchedule extends LitElement {
                       <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                         <c-box
                           min-w="260"
-                          style="${this.viewerRole === 'staff' && indexUser === 0
-                            ? 'border-bottom:2px solid var(--primary-500)'
+                          class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                          (this.viewerRole === 'manager' &&
+                            indexUser === this.currentUserSelectedIndex &&
+                            this.requestSelected)
+                            ? 'focus-divider'
                             : ''}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
@@ -414,15 +421,21 @@ export class ShiftSchedule extends LitElement {
                                     this.shiftWoffRequestSaved?.[practitioner.id]?.request;
 
                                   const userTargetIndex =
-                                    this.viewerRole === 'manager' ? this.currentUserIndex : 0;
+                                    this.viewerRole === 'manager'
+                                      ? this.currentUserSelectedIndex
+                                      : 0;
 
                                   return html` <c-box
+                                    @click="${() => this.managerClickUser(indexUser, practitioner)}"
                                     @mouseenter="${this.viewerRole === 'manager'
-                                      ? (e: MouseEvent) => this.managerHoverUser(indexUser, e)
+                                      ? (e: MouseEvent) => this.managerHoverUser(e)
                                       : null}"
                                     ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                    style="${this.viewerRole === 'staff' && indexUser === 0
-                                      ? 'border-bottom:2px solid var(--primary-500)'
+                                    class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                                    (this.viewerRole === 'manager' &&
+                                      indexUser === this.currentUserSelectedIndex &&
+                                      this.requestSelected)
+                                      ? 'focus-divider'
                                       : ''}">
                                     <c-box w-full h-full bg-white>
                                       <!-- if have request date then render request -->
@@ -485,8 +498,20 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
-  managerHoverUser(indexUser: number, e: MouseEvent) {
-    this.currentUserIndex = indexUser;
+  managerClickUser(indexUser: number, practitioner: SchedulePractitionerEntity) {
+    this.currentUserSelectedIndex = indexUser;
+
+    if (this.dividerRef.value) {
+      this.dividerRef.value.style.opacity = '0';
+    }
+
+    this.dispatchEvent(
+      new CustomEvent('focus-request', {
+        detail: { practitioner },
+      })
+    );
+  }
+  managerHoverUser(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const weekMonthUser = this.querySelector('#week-month-user');
     if (target) {
@@ -494,6 +519,8 @@ export class ShiftSchedule extends LitElement {
       const hostRect = this.getBoundingClientRect();
       const tableRect = weekMonthUser?.getBoundingClientRect();
       if (this.dividerRef.value) {
+        this.dividerRef.value.style.opacity = '1';
+
         this.dividerRef.value.style.setProperty(
           '--cbox-divider-top',
           `${Math.floor(targetRect.bottom - hostRect.top)}px`

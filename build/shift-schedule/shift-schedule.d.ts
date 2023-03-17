@@ -33,7 +33,7 @@ export declare class ShiftSchedule extends LitElement {
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
     practitionerId?: string;
-    currentUserIndex: number;
+    currentUserSelectedIndex: number;
     scheduleData?: SchedulingData | ScheduleRequestDetailResponse | null;
     private removeOriginCache;
     requestTypes?: RequestType[] | ScheduleRequestType[];
@@ -83,7 +83,8 @@ export declare class ShiftSchedule extends LitElement {
     isRemoveMode: boolean;
     dividerTop: number;
     render(): import("lit-html").TemplateResult<1>;
-    managerHoverUser(indexUser: number, e: MouseEvent): void;
+    managerClickUser(indexUser: number, practitioner: SchedulePractitionerEntity): void;
+    managerHoverUser(e: MouseEvent): void;
     sentRemoveEvent(): void;
     removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
