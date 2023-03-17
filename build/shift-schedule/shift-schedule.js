@@ -57,16 +57,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.shiftWoffRequestSaved = {};
         this.tableWrapperRef = createRef();
         this.dividerRef = createRef();
+        this.remarkRef = createRef();
         this.isRemoveMode = false;
         this.dividerTop = 0;
         this.saveWithDateData = (practitioner) => {
-            const remarkInput = this.querySelector('#remarkRef');
             const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
             const dataDate = {};
             for (const date of dateBetween) {
                 dataDate[this.convertDateToString(date)] = {
                     dateString: this.convertDateToString(date),
-                    remark: remarkInput?.value,
+                    remark: this.remarkRef.value?.value,
                 };
             }
             switch (this.requestSelected?.abbr) {
@@ -615,7 +615,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         p-6
         border-box
         @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
-        ${data.remark
+        ${data?.remark
             ? html `<c-box
               flex
               flex-col
@@ -635,6 +635,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     </c-box>`;
     }
     removeInitialSr(practitioner, dateString, dayPart) {
+        if (!this.isRemoveMode)
+            return;
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitioner.practitionerId);
         if (typeof practitionerIndex === 'number') {
             const shiftPlans = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
@@ -797,7 +799,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <c-box mt-12>หมายเหตุ</c-box>
       <c-box class="remark-input" mt-6 input-box="primary-200">
         <input
-          id="remarkRef"
+          ${ref(this.remarkRef)}
           type="text"
           style="border:none;outline:none;width:200px"
           placeholder="หมายเหตุเพิ่มเติม" />

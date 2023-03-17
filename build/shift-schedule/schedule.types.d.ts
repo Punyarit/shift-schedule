@@ -115,3 +115,11 @@ export type QueryRemoveOrigin = {
 export type ScheduleRequestIndex = {
     [index: number]: SchedulePractitionerRequestEntity;
 };
+export type DatePickerRequest = {
+    [id: string]: {
+        practitioner: SchedulePractitionerEntity;
+        request: {
+            [date: string]: DatePickerShiftPlan;
+        };
+    };
+};

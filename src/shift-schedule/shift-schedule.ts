@@ -25,6 +25,7 @@ import {
   ScheduleShiftsEntity,
   QueryRemoveOrigin,
   ScheduleRequestIndex,
+  DatePickerRequest,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
@@ -110,37 +111,13 @@ export class ShiftSchedule extends LitElement {
   };
 
   @state()
-  shiftSemRequestSaved = {} as {
-    [id: string]: {
-      practitioner: SchedulePractitionerEntity;
-      request: {
-        // 📌key such as 2023-01-25
-        [date: string]: DatePickerShiftPlan;
-      };
-    };
-  };
+  shiftSemRequestSaved = {} as DatePickerRequest;
 
   @state()
-  shiftOffRequestSaved = {} as {
-    [id: string]: {
-      practitioner: SchedulePractitionerEntity;
-      request: {
-        // 📌key such as 2023-01-25
-        [date: string]: DatePickerShiftPlan;
-      };
-    };
-  };
+  shiftOffRequestSaved = {} as DatePickerRequest;
 
   @state()
-  shiftVacRequestSaved = {} as {
-    [id: string]: {
-      practitioner: SchedulePractitionerEntity;
-      request: {
-        // 📌key such as 2023-01-25
-        [date: string]: DatePickerShiftPlan;
-      };
-    };
-  };
+  shiftVacRequestSaved = {} as DatePickerRequest;
 
   @state()
   shiftWoffRequestSaved = {} as {
@@ -165,6 +142,7 @@ export class ShiftSchedule extends LitElement {
 
   public tableWrapperRef = createRef<HTMLDivElement>();
   public dividerRef = createRef<HTMLDivElement>();
+  public remarkRef = createRef<HTMLInputElement>();
   private currentPopoverRef?: CXPopover.Ref;
   protected willUpdate(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
@@ -761,7 +739,7 @@ export class ShiftSchedule extends LitElement {
         p-6
         border-box
         @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
-        ${data.remark
+        ${data?.remark
           ? html`<c-box
               flex
               flex-col
@@ -782,6 +760,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
+    if (!this.isRemoveMode) return;
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.practitionerId === practitioner.practitionerId
     );
@@ -934,7 +913,6 @@ export class ShiftSchedule extends LitElement {
   }
 
   saveWithDateData = (practitioner: SchedulePractitionerEntity) => {
-    const remarkInput = this.querySelector<HTMLInputElement>('#remarkRef');
     const dateBetween = getDateBetweenArrayDate(
       this.datepickerData?.startdate!,
       this.datepickerData?.enddate!
@@ -944,7 +922,7 @@ export class ShiftSchedule extends LitElement {
     for (const date of dateBetween) {
       dataDate[this.convertDateToString(date)] = {
         dateString: this.convertDateToString(date),
-        remark: remarkInput?.value,
+        remark: this.remarkRef.value?.value,
       };
     }
 
@@ -1095,7 +1073,7 @@ export class ShiftSchedule extends LitElement {
       <c-box mt-12>หมายเหตุ</c-box>
       <c-box class="remark-input" mt-6 input-box="primary-200">
         <input
-          id="remarkRef"
+          ${ref(this.remarkRef)}
           type="text"
           style="border:none;outline:none;width:200px"
           placeholder="หมายเหตุเพิ่มเติม" />

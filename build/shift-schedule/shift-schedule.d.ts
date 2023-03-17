@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, DatePickerShiftPlan, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -54,30 +54,9 @@ export declare class ShiftSchedule extends LitElement {
             };
         };
     };
-    shiftSemRequestSaved: {
-        [id: string]: {
-            practitioner: SchedulePractitionerEntity;
-            request: {
-                [date: string]: DatePickerShiftPlan;
-            };
-        };
-    };
-    shiftOffRequestSaved: {
-        [id: string]: {
-            practitioner: SchedulePractitionerEntity;
-            request: {
-                [date: string]: DatePickerShiftPlan;
-            };
-        };
-    };
-    shiftVacRequestSaved: {
-        [id: string]: {
-            practitioner: SchedulePractitionerEntity;
-            request: {
-                [date: string]: DatePickerShiftPlan;
-            };
-        };
-    };
+    shiftSemRequestSaved: DatePickerRequest;
+    shiftOffRequestSaved: DatePickerRequest;
+    shiftVacRequestSaved: DatePickerRequest;
     shiftWoffRequestSaved: {
         [id: string]: {
             practitioner: SchedulePractitionerEntity;
@@ -93,6 +72,7 @@ export declare class ShiftSchedule extends LitElement {
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
+    remarkRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
     private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
