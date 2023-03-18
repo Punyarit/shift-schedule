@@ -30,6 +30,7 @@ export declare class ShiftSchedule extends LitElement {
     private tableWrapperUI;
     private iconTitleWrapper;
     private iconTitle;
+    private weekendBg;
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
     practitionerId?: string;

@@ -43,6 +43,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
         this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
+        this.weekendBg = 'weekendBg: bg-pinky-25! w-full h-full';
         this.viewerRole = 'staff';
         this.mode = 'view';
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
@@ -231,8 +232,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           font-family: Sarabun-Regular;
         }
 
+        .bg-pinky {
+          background: var(--pinky-25);
+        }
+
         c-box[_ui='targetUser'] {
           transition: all 0.25s ease;
+        }
+
+        .hover-request {
+          cursor: pointer;
         }
 
         .cbox-divider {
@@ -320,8 +329,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 <c-box flex>
                                   ${weekday.map((date) => {
                     const isSunday = date.getDay() === 0 ? this.sundayBorderRightUI : '';
+                    const isWeekend = date.getDay() === 0 || date.getDay() === 6
+                        ? this.weekendBg
+                        : '';
                     return html ` <c-box
-                                      ui="${isSunday}, ${this.tableLineUI}, ${this.weekDayUI}">
+                                      ui="${isSunday}, ${this.tableLineUI}, ${this
+                        .weekDayUI}, ${isWeekend}">
                                       <c-box tx-12>
                                         ${this.dateFormat(date, {
                         weekday: 'short',
@@ -387,6 +400,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 ${week.map((day) => {
                         day.setHours(0, 0, 0, 0);
                         const borderRight = day.getDay() === 0 ? this.sundayBorderRightUI : '';
+                        const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                         const dateString = this.convertDateToString(day);
                         const srSaved = this.shiftSrRequestSaved[practitioner.id];
                         const semSaved = this.shiftSemRequestSaved[practitioner.id];
@@ -405,8 +419,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 indexUser === this.userSelectedIndex &&
                                 this.requestSelected)
                             ? 'focus-divider'
-                            : ''}">
-                                    <c-box w-full h-full bg-white>
+                            : ''} ${isWeekend ? 'bg-pinky' : ''}">
+                                    <c-box w-full h-full>
                                       <!-- if have request date then render request -->
                                       <!-- when saving -->
                                       ${srSaved && srSaved?.request?.[dateString]
@@ -509,7 +523,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     renderWoffSaved(dateString, practitioner, data) {
         return html `<c-box h-full w-full p-4 border-box>
       <c-box
-        class="woff-saved"
+        class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
         bg-bluestate-200
         icon-prefix="pause-circle-line"
         w-full
@@ -617,7 +631,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     renderShiftPlanSaved(data, type, practitioner) {
         return html `<c-box p-4 border-box h-full w-full>
       <c-box
-        class="shift-plan-datepicker"
+        class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
+            ? 'hover-request'
+            : ''}"
         bg-modern-green-100
         bg-color="${requestTypeStyles[type].iconBgColor}"
         h-full
@@ -702,7 +718,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   h-44
                   bg-color="${this.setColorRequestType(dayPart)}">
                   <div
-                    style="cursor:${this.isRemoveMode ? 'pointer' : ''}; width:100%; height:100%">
+                    style="cursor:${this.requestSelected || this.isRemoveMode
+                        ? 'pointer'
+                        : ''}; width:100%; height:100%">
                     <c-box>
                       <c-box icon-prefix="favorite-line" flex flex-col>
                         <c-box>${plans.map((plan) => html `<c-box inline>${plan}</c-box> `)}</c-box>
@@ -1106,6 +1124,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     renderEmptyBox(date, state, type, practitioner) {
         const isSameDate = this.selectedDate === date;
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
         return html `
       <c-box
         p-4
@@ -1119,7 +1138,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <c-box
           bg-hover="primary-100"
           bg-active="primary-200"
-          bg-color="${isSameDate ? 'primary-100' : 'white'}"
+          bg-color="${isSameDate ? 'primary-100' : isWeekend ? 'pinky-25' : 'white'}"
           icon-prefix="${isSameDate ? 'plus-line' : 'none'}"
           icon-prefix-color="${type ? 'gray-600' : 'primary-300'}"
           w-full
