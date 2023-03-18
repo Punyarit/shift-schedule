@@ -1,4 +1,4 @@
-import { LitElement, PropertyValueMap } from 'lit';
+import { LitElement, PropertyValueMap, TemplateResult } from 'lit';
 import '@cortex-ui/core/cx/c-box';
 import '@cortex-ui/core/cx/modal';
 import '@cortex-ui/core/cx/theme';
@@ -79,14 +79,15 @@ export declare class ShiftSchedule extends LitElement {
     private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
-    renderRequestButton(): import("lit-html").TemplateResult<1>;
+    renderRequestButton(): TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
     private disableDateArranged;
+    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     dividerTop: number;
-    render(): import("lit-html").TemplateResult<1>;
+    render(): TemplateResult<1>;
     managerHoverUser(indexUser: number, e: MouseEvent): void;
     sentRemoveEvent(): void;
     removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
@@ -94,7 +95,7 @@ export declare class ShiftSchedule extends LitElement {
     }): void;
     renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
-    }): import("lit-html").TemplateResult<1>;
+    }): TemplateResult<1>;
     removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity): void;
     renderSrShiftPlanSaved(planRequest: {
         practitioner: SchedulePractitionerEntity;
@@ -103,7 +104,7 @@ export declare class ShiftSchedule extends LitElement {
                 shiftPlan: SrShiftPlan;
             };
         };
-    }, dateString: string, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    }, dateString: string, practitioner: SchedulePractitionerEntity): TemplateResult<1>;
     removeShiftDatePicker(data: {
         dateString?: string;
         remark?: string;
@@ -114,9 +115,10 @@ export declare class ShiftSchedule extends LitElement {
         dateString?: string;
         remark?: string;
         initial?: boolean;
-    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): TemplateResult<1>;
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
-    renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date): import("lit-html").TemplateResult<1> | undefined;
+    renderSrHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
+    renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]): void;
     saveWithDateData: (practitioner: SchedulePractitionerEntity) => void;
@@ -124,23 +126,23 @@ export declare class ShiftSchedule extends LitElement {
         title: string;
         practitioner: SchedulePractitionerEntity;
         date: Date;
-    }): import("lit-html").TemplateResult<1>;
-    appendPopover(type: RequestType['abbr'], data: {
+    }): TemplateResult<1>;
+    appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
         practitioner: SchedulePractitionerEntity;
         dateString: string;
         indexUser: number;
-    }): void;
-    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number): import("lit-html").TemplateResult<1> | undefined;
-    renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart): import("lit-html").TemplateResult<1>;
+    }, popoverContent: TemplateResult, popoverHost: TemplateResult): void;
+    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number): TemplateResult<1> | undefined;
+    renderRequestSr(shifts: ScheduleShiftsEntity[], dayPart: DayPart): TemplateResult<1>;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity): void;
     groupShiftsByLetter(arr: any): any;
-    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity): TemplateResult<1>;
     saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity): void;
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
-    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): import("lit-html").TemplateResult<1>;
+    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {

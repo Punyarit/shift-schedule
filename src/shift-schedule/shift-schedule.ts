@@ -1,4 +1,4 @@
-import { LitElement, html, PropertyValueMap, render } from 'lit';
+import { LitElement, html, PropertyValueMap, render, TemplateResult } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { getDateBetweenArrayDate } from '@cortex-ui/core/cx/helpers/functions/date/date-methods';
 import '@cortex-ui/core/cx/c-box';
@@ -217,12 +217,12 @@ export class ShiftSchedule extends LitElement {
     [date: string]: DisableDate;
   };
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
-  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  // }
+  async connectedCallback() {
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -514,7 +514,8 @@ export class ShiftSchedule extends LitElement {
                                         ? this.renderInitialRequest(
                                             requestInitial,
                                             practitioner,
-                                            day
+                                            day,
+                                            indexUser
                                           )
                                         : indexUser === userTargetIndex
                                         ? this.renderEmptyDateForSelect(
@@ -874,40 +875,73 @@ export class ShiftSchedule extends LitElement {
     }
   }
 
+  renderSrHost(
+    request: ScheduleDataWithRender,
+    practitioner: SchedulePractitionerEntity,
+    dateString: string
+  ) {
+    return html` <c-box w-full h-full slot="host">
+      ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
+        return html`
+          <c-box p-4 border-box flex flex-col row-gap-4>
+            <c-box
+              @click="${this.isRemoveMode
+                ? () => this.removeInitialSr(practitioner, dateString, dayPart)
+                : null}"
+              p-4
+              border-box
+              round-6
+              h-44
+              bg-color="${this.setColorRequestType(dayPart as DayPart)}">
+              <div
+                style="cursor:${this.requestSelected || this.isRemoveMode
+                  ? 'pointer'
+                  : ''}; width:100%; height:100%">
+                <c-box>
+                  <c-box icon-prefix="favorite-line" flex flex-col>
+                    <c-box>${plans.map((plan) => html`<c-box inline>${plan}</c-box> `)}</c-box>
+                  </c-box>
+                </c-box>
+              </div>
+            </c-box>
+          </c-box>
+        `;
+      })}
+    </c-box>`;
+  }
+
   renderInitialRequest(
     request: ScheduleDataWithRender,
     practitioner: SchedulePractitionerEntity,
-    date: Date
+    date: Date,
+    indexUser: number
   ) {
     const dateString = this.convertDateToString(date);
-
+    const cellId = 'initial-data-shift-cell';
     switch (request.requestType.abbr) {
       case 'sr':
         return html`
-          ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
-            return html`
-              <c-box p-4 border-box flex flex-col row-gap-4>
-                <c-box
-                  @click="${() => this.removeInitialSr(practitioner, dateString, dayPart)}"
-                  p-4
-                  border-box
-                  round-6
-                  h-44
-                  bg-color="${this.setColorRequestType(dayPart as DayPart)}">
-                  <div
-                    style="cursor:${this.requestSelected || this.isRemoveMode
-                      ? 'pointer'
-                      : ''}; width:100%; height:100%">
-                    <c-box>
-                      <c-box icon-prefix="favorite-line" flex flex-col>
-                        <c-box>${plans.map((plan) => html`<c-box inline>${plan}</c-box> `)}</c-box>
-                      </c-box>
-                    </c-box>
-                  </div>
-                </c-box>
-              </c-box>
-            `;
-          })}
+          <c-box
+            w-full
+            h-full
+            id="${cellId}-${dateString}"
+            @click="${this.requestSelected
+              ? () =>
+                  this.appendPopover(
+                    request.requestType.abbr,
+                    cellId,
+                    {
+                      date,
+                      dateString,
+                      indexUser,
+                      practitioner,
+                    },
+                    this.renderSrPopover(date, practitioner),
+                    this.renderSrHost(request, practitioner, dateString)
+                  )
+              : null}">
+            ${this.renderSrHost(request, practitioner, dateString)}
+          </c-box>
         `;
 
       case 'woff':
@@ -1145,15 +1179,19 @@ export class ShiftSchedule extends LitElement {
 
   appendPopover(
     type: RequestType['abbr'],
+    cellId: string,
     data: {
       date: Date;
       practitioner: SchedulePractitionerEntity;
       dateString: string;
       indexUser: number;
-    }
+    },
+    popoverContent: TemplateResult,
+    popoverHost: TemplateResult
   ) {
     this.userSelectedIndex = data.indexUser;
-    const boxTarget = this.querySelector(`#shift-cell-${data.dateString}`) as HTMLElement;
+    const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`) as HTMLElement;
+    console.log('shift-schedule.js |boxTarget| = ', boxTarget);
     if (boxTarget) {
       const firstElement = boxTarget.firstElementChild;
       if (firstElement?.tagName !== 'CX-POPOVER') {
@@ -1173,8 +1211,7 @@ export class ShiftSchedule extends LitElement {
                 mouseleave: 'none',
                 transform: 'center',
               } as CXPopover.Set}">
-              ${this.renderEmptyBox(data.date, 'select')}
-              ${this.renderSrPopover(data.date, data.practitioner)}
+              ${popoverHost} ${popoverContent}
             </cx-popover>
           `;
           render(popoverSr, boxTarget);
@@ -1232,20 +1269,27 @@ export class ShiftSchedule extends LitElement {
     dateString: string,
     indexUser: number
   ) {
+    const cellId = 'empty-shift-cell';
     switch (this.requestSelected?.abbr) {
       case 'sr':
         return html`
           <c-box
-            id="shift-cell-${dateString}"
+            id="${cellId}-${dateString}"
             w-full
             h-full
             @click="${() =>
-              this.appendPopover(this.requestSelected?.abbr!, {
-                date,
-                practitioner,
-                dateString,
-                indexUser,
-              })}">
+              this.appendPopover(
+                this.requestSelected?.abbr!,
+                cellId,
+                {
+                  date,
+                  practitioner,
+                  dateString,
+                  indexUser,
+                },
+                this.renderSrPopover(date, practitioner),
+                this.renderEmptyBox(date, 'select')
+              )}">
             ${this.renderEmptyBox(date, 'display')}
           </c-box>
         `;
@@ -1254,16 +1298,22 @@ export class ShiftSchedule extends LitElement {
       case 'off':
       case 'sem':
         return html` <c-box
-          id="shift-cell-${dateString}"
+          id="empty-shift-cell-${dateString}"
           w-full
           h-full
           @click="${() =>
-            this.appendPopover(this.requestSelected?.abbr!, {
-              date,
-              practitioner,
-              dateString,
-              indexUser,
-            })}">
+            this.appendPopover(
+              this.requestSelected?.abbr!,
+              cellId,
+              {
+                date,
+                practitioner,
+                dateString,
+                indexUser,
+              },
+              this.renderSrPopover(date, practitioner),
+              this.renderEmptyBox(date, 'select')
+            )}">
           ${this.renderEmptyBox(date, 'display')}
         </c-box>`;
 
