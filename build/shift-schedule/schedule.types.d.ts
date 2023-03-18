@@ -123,3 +123,8 @@ export type DatePickerRequest = {
         };
     };
 };
+export type DisableDate = {
+    title: string;
+    date: string;
+    repetition: 'once' | 'every-week' | 'every-month' | 'every-year';
+};

@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisableDate } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -33,6 +33,7 @@ export declare class ShiftSchedule extends LitElement {
     private weekendBg;
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
+    disableDates: DisableDate[];
     practitionerId?: string;
     userHoverIndex: number;
     userSelectedIndex: number;
@@ -81,6 +82,7 @@ export declare class ShiftSchedule extends LitElement {
     renderRequestButton(): import("lit-html").TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
+    private disableDateArranged;
     private setRemoveMode;
     isRemoveMode: boolean;
     dividerTop: number;
@@ -148,6 +150,7 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;
+    getHolidayOccurrences(holidays: any, startDate: any, endDate: any): {};
     getDateBetween(startDate: Date, endDate: Date): DateBetweenData[];
     createRenderRoot(): this;
 }

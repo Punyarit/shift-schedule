@@ -26,6 +26,7 @@ import {
   QueryRemoveOrigin,
   ScheduleRequestIndex,
   DatePickerRequest,
+  DisableDate,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
@@ -33,6 +34,7 @@ import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-c
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
 import '@lit-labs/virtualizer';
+
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
   private buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
@@ -63,6 +65,9 @@ export class ShiftSchedule extends LitElement {
 
   @property({ type: String })
   mode: 'view' | 'edit' = 'view';
+
+  @property({ type: Object })
+  disableDates: DisableDate[] = [];
 
   @property({ type: String })
   practitionerId?: string;
@@ -208,6 +213,10 @@ export class ShiftSchedule extends LitElement {
     }, 250);
   }
 
+  private disableDateArranged = {} as {
+    [date: string]: DisableDate;
+  };
+
   // async connectedCallback() {
   //   super.connectedCallback();
   //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
@@ -252,6 +261,18 @@ export class ShiftSchedule extends LitElement {
 
         .hover-request {
           cursor: pointer;
+        }
+
+        .diagonal-pattern {
+          width: 100%;
+          height: 100%;
+          background: repeating-linear-gradient(
+            135deg,
+            var(--pinky-50),
+            var(--pinky-50) 5px,
+            #ffffff 5px,
+            #ffffff 10px
+          );
         }
 
         .cbox-divider {
@@ -439,6 +460,8 @@ export class ShiftSchedule extends LitElement {
 
                                   const requestInitial = requestData[dateString];
 
+                                  const disableDate = this.disableDateArranged?.[dateString];
+
                                   const woffSaved =
                                     this.shiftWoffRequestSaved?.[practitioner.id]?.request;
 
@@ -459,7 +482,9 @@ export class ShiftSchedule extends LitElement {
                                     <c-box w-full h-full>
                                       <!-- if have request date then render request -->
                                       <!-- when saving -->
-                                      ${srSaved && srSaved?.request?.[dateString]
+                                      ${disableDate
+                                        ? html` <div class="diagonal-pattern"></div> `
+                                        : srSaved && srSaved?.request?.[dateString]
                                         ? this.renderSrShiftPlanSaved(
                                             srSaved,
                                             dateString,
@@ -1690,6 +1715,71 @@ export class ShiftSchedule extends LitElement {
         ele?.removeAttribute('cursor-pointer');
       });
     }
+
+    this.disableDateArranged = this.getHolidayOccurrences(
+      this.disableDates,
+      this.scheduleData?.startDate,
+      this.scheduleData?.endDate
+    );
+
+    console.log('shift-schedule.js |this.disableDateArranged`| = ', this.disableDateArranged);
+  }
+
+  // @ts-ignore
+  getHolidayOccurrences(holidays, startDate, endDate) {
+    const result = {};
+
+    // Loop through each holiday object in the array
+    // @ts-ignore
+    holidays.forEach((holiday) => {
+      // If the holiday occurs only once, check if it falls within the date range
+      // @ts-ignore
+      if (holiday.repetition === 'once' && holiday.date >= startDate && holiday.date <= endDate) {
+        // @ts-ignore
+        result[holiday.date] = holiday;
+      }
+      // If the holiday occurs every week, calculate occurrence dates between the date range
+      else if (holiday.repetition === 'every-week') {
+        let currentDate = holiday.date;
+        while (currentDate <= endDate) {
+          // @ts-ignore
+          if (currentDate >= startDate) {
+            // @ts-ignore
+            result[currentDate] = { ...holiday, date: currentDate };
+          }
+          const nextWeek = new Date(currentDate);
+          nextWeek.setDate(nextWeek.getDate() + 7);
+          currentDate = nextWeek.toISOString().slice(0, 10);
+        }
+      }
+      // If the holiday occurs every month, calculate occurrence dates between the date range
+      else if (holiday.repetition === 'every-month') {
+        let currentDate = new Date(holiday.date);
+        while (currentDate <= new Date(endDate)) {
+          const dateStr = currentDate.toISOString().slice(0, 10);
+          // @ts-ignore
+          if (dateStr >= startDate && dateStr <= endDate) {
+            // @ts-ignore
+            result[dateStr] = { ...holiday, date: dateStr };
+          }
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        }
+      }
+      // If the holiday occurs every year, calculate occurrence dates between the date range
+      else if (holiday.repetition === 'every-year') {
+        let currentDate = new Date(holiday.date);
+        while (currentDate <= new Date(endDate)) {
+          const dateStr = currentDate.toISOString().slice(0, 10);
+          if (dateStr >= startDate && dateStr <= endDate) {
+            // @ts-ignore
+            result[dateStr] = { ...holiday, date: dateStr };
+          }
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+        }
+      }
+    });
+
+    return result;
   }
 
   getDateBetween(startDate: Date, endDate: Date): DateBetweenData[] {

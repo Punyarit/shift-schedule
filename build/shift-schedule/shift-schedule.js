@@ -46,6 +46,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.weekendBg = 'weekendBg: bg-pinky-25! w-full h-full';
         this.viewerRole = 'staff';
         this.mode = 'view';
+        this.disableDates = [];
         // practitionerId?: string = 'C1CD433E-F36B-1410-870D-0060E4CDB88B';
         this.userHoverIndex = 0;
         this.userSelectedIndex = 0;
@@ -60,6 +61,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.tableWrapperRef = createRef();
         this.dividerRef = createRef();
         this.remarkRef = createRef();
+        this.disableDateArranged = {};
         this.isRemoveMode = false;
         this.dividerTop = 0;
         this.saveWithDateData = (practitioner) => {
@@ -244,6 +246,18 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           cursor: pointer;
         }
 
+        .diagonal-pattern {
+          width: 100%;
+          height: 100%;
+          background: repeating-linear-gradient(
+            135deg,
+            var(--pinky-50),
+            var(--pinky-50) 5px,
+            #ffffff 5px,
+            #ffffff 10px
+          );
+        }
+
         .cbox-divider {
           transition: all 0.125s ease;
           width: var(--cbox-divider-width);
@@ -407,6 +421,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const offSaved = this.shiftOffRequestSaved[practitioner.id];
                         const vacSaved = this.shiftVacRequestSaved[practitioner.id];
                         const requestInitial = requestData[dateString];
+                        const disableDate = this.disableDateArranged?.[dateString];
                         const woffSaved = this.shiftWoffRequestSaved?.[practitioner.id]?.request;
                         const userTargetIndex = this.viewerRole === 'manager' ? this.userHoverIndex : 0;
                         return html ` <c-box
@@ -423,21 +438,23 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                     <c-box w-full h-full>
                                       <!-- if have request date then render request -->
                                       <!-- when saving -->
-                                      ${srSaved && srSaved?.request?.[dateString]
-                            ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner)
-                            : semSaved?.request?.[dateString]
-                                ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner)
-                                : offSaved?.request?.[dateString]
-                                    ? this.renderShiftPlanSaved(offSaved?.request?.[dateString], 'off', practitioner)
-                                    : vacSaved?.request?.[dateString]
-                                        ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner)
-                                        : woffSaved?.[dateString]
-                                            ? this.renderWoffSaved(dateString, practitioner)
-                                            : requestInitial
-                                                ? this.renderInitialRequest(requestInitial, practitioner, day)
-                                                : indexUser === userTargetIndex
-                                                    ? this.renderEmptyDateForSelect(day, practitioner, dateString, indexUser)
-                                                    : undefined}
+                                      ${disableDate
+                            ? html ` <div class="diagonal-pattern"></div> `
+                            : srSaved && srSaved?.request?.[dateString]
+                                ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner)
+                                : semSaved?.request?.[dateString]
+                                    ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner)
+                                    : offSaved?.request?.[dateString]
+                                        ? this.renderShiftPlanSaved(offSaved?.request?.[dateString], 'off', practitioner)
+                                        : vacSaved?.request?.[dateString]
+                                            ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner)
+                                            : woffSaved?.[dateString]
+                                                ? this.renderWoffSaved(dateString, practitioner)
+                                                : requestInitial
+                                                    ? this.renderInitialRequest(requestInitial, practitioner, day)
+                                                    : indexUser === userTargetIndex
+                                                        ? this.renderEmptyDateForSelect(day, practitioner, dateString, indexUser)
+                                                        : undefined}
                                     </c-box>
                                   </c-box>`;
                     })}
@@ -1282,6 +1299,62 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 ele?.removeAttribute('cursor-pointer');
             });
         }
+        this.disableDateArranged = this.getHolidayOccurrences(this.disableDates, this.scheduleData?.startDate, this.scheduleData?.endDate);
+        console.log('shift-schedule.js |this.disableDateArranged`| = ', this.disableDateArranged);
+    }
+    // @ts-ignore
+    getHolidayOccurrences(holidays, startDate, endDate) {
+        const result = {};
+        // Loop through each holiday object in the array
+        // @ts-ignore
+        holidays.forEach((holiday) => {
+            // If the holiday occurs only once, check if it falls within the date range
+            // @ts-ignore
+            if (holiday.repetition === 'once' && holiday.date >= startDate && holiday.date <= endDate) {
+                // @ts-ignore
+                result[holiday.date] = holiday;
+            }
+            // If the holiday occurs every week, calculate occurrence dates between the date range
+            else if (holiday.repetition === 'every-week') {
+                let currentDate = holiday.date;
+                while (currentDate <= endDate) {
+                    // @ts-ignore
+                    if (currentDate >= startDate) {
+                        // @ts-ignore
+                        result[currentDate] = { ...holiday, date: currentDate };
+                    }
+                    const nextWeek = new Date(currentDate);
+                    nextWeek.setDate(nextWeek.getDate() + 7);
+                    currentDate = nextWeek.toISOString().slice(0, 10);
+                }
+            }
+            // If the holiday occurs every month, calculate occurrence dates between the date range
+            else if (holiday.repetition === 'every-month') {
+                let currentDate = new Date(holiday.date);
+                while (currentDate <= new Date(endDate)) {
+                    const dateStr = currentDate.toISOString().slice(0, 10);
+                    // @ts-ignore
+                    if (dateStr >= startDate && dateStr <= endDate) {
+                        // @ts-ignore
+                        result[dateStr] = { ...holiday, date: dateStr };
+                    }
+                    currentDate.setMonth(currentDate.getMonth() + 1);
+                }
+            }
+            // If the holiday occurs every year, calculate occurrence dates between the date range
+            else if (holiday.repetition === 'every-year') {
+                let currentDate = new Date(holiday.date);
+                while (currentDate <= new Date(endDate)) {
+                    const dateStr = currentDate.toISOString().slice(0, 10);
+                    if (dateStr >= startDate && dateStr <= endDate) {
+                        // @ts-ignore
+                        result[dateStr] = { ...holiday, date: dateStr };
+                    }
+                    currentDate.setFullYear(currentDate.getFullYear() + 1);
+                }
+            }
+        });
+        return result;
     }
     getDateBetween(startDate, endDate) {
         const result = [];
@@ -1324,6 +1397,10 @@ __decorate([
     property({ type: String }),
     __metadata("design:type", String)
 ], ShiftSchedule.prototype, "mode", void 0);
+__decorate([
+    property({ type: Object }),
+    __metadata("design:type", Array)
+], ShiftSchedule.prototype, "disableDates", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
