@@ -595,7 +595,7 @@ export class ShiftSchedule extends LitElement {
     if (this.isRemoveMode) {
       if (data?.initial) {
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
-          (res) => res.practitionerId === practitioner?.practitionerId
+          (res) => res.id === practitioner?.id
         );
 
         if (typeof practitionerIndex === 'number') {
@@ -768,7 +768,7 @@ export class ShiftSchedule extends LitElement {
   ) {
     if (data?.initial && this.isRemoveMode) {
       const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
-        (res) => res.practitionerId === practitioner.practitionerId
+        (res) => res.id === practitioner.id
       );
 
       if (typeof practitionerIndex === 'number') {
@@ -873,7 +873,7 @@ export class ShiftSchedule extends LitElement {
   removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
     if (!this.isRemoveMode) return;
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
-      (res) => res.practitionerId === practitioner.practitionerId
+      (res) => res.id === practitioner.id
     );
 
     if (typeof practitionerIndex === 'number') {
@@ -1073,7 +1073,7 @@ export class ShiftSchedule extends LitElement {
     console.log('shift-schedule.js removeInitialSameData|practitionerId| = ', practitionerId);
     console.log('shift-schedule.js removeInitialSameData|dateString| = ', dateString);
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
-      (res) => res.practitionerId === practitionerId
+      (res) => res.id === practitionerId
     );
 
     console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
@@ -1099,7 +1099,7 @@ export class ShiftSchedule extends LitElement {
             const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
               .schedulePractitionerRequest![index] as SchedulePractitionerRequestEntity;
 
-            if (request.requestType.abbr === 'sr' && request.requestDate === dateString) {
+            if (request?.requestType?.abbr === 'sr' && request?.requestDate === dateString) {
               delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                 .schedulePractitionerRequest![index];
             }
@@ -1330,7 +1330,7 @@ export class ShiftSchedule extends LitElement {
       default:
         break;
     }
-    this.removeDataInSameDate(practitioner.practitionerId, dateString);
+    this.removeDataInSameDate(practitioner.id, dateString);
 
     this.selectedDate = undefined;
     ModalCaller.popover().clear();
@@ -1750,7 +1750,7 @@ export class ShiftSchedule extends LitElement {
         this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
       }, 0);
     }
-    this.removeDataInSameDate(practitioner.practitionerId, dateString);
+    this.removeDataInSameDate(practitioner.id, dateString);
     this.requestUpdate();
     this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
 

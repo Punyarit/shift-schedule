@@ -146,7 +146,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 default:
                     break;
             }
-            this.removeDataInSameDate(practitioner.practitionerId, dateString);
+            this.removeDataInSameDate(practitioner.id, dateString);
             this.selectedDate = undefined;
             ModalCaller.popover().clear();
         };
@@ -508,7 +508,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     removeWoffSaved(dateString, practitioner, data) {
         if (this.isRemoveMode) {
             if (data?.initial) {
-                const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitioner?.practitionerId);
+                const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner?.id);
                 if (typeof practitionerIndex === 'number') {
                     const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => {
                         return res?.requestDate === dateString;
@@ -627,7 +627,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     removeShiftDatePicker(data, type, practitioner) {
         if (data?.initial && this.isRemoveMode) {
-            const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitioner.practitionerId);
+            const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner.id);
             if (typeof practitionerIndex === 'number') {
                 const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => res?.requestDate === data.dateString);
                 if (typeof requestIndex === 'number') {
@@ -712,7 +712,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     removeInitialSr(practitioner, dateString, dayPart) {
         if (!this.isRemoveMode)
             return;
-        const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitioner.practitionerId);
+        const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner.id);
         if (typeof practitionerIndex === 'number') {
             const shiftPlans = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                 .schedulePractitionerRequest;
@@ -861,7 +861,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     removeInitialSameData(practitionerId, dateString) {
         console.log('shift-schedule.js removeInitialSameData|practitionerId| = ', practitionerId);
         console.log('shift-schedule.js removeInitialSameData|dateString| = ', dateString);
-        const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitionerId);
+        const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitionerId);
         console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
         if (typeof practitionerIndex === 'number') {
             const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => res?.requestDate === dateString);
@@ -875,7 +875,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             ?.length; index++) {
                         const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                             .schedulePractitionerRequest[index];
-                        if (request.requestType.abbr === 'sr' && request.requestDate === dateString) {
+                        if (request?.requestType?.abbr === 'sr' && request?.requestDate === dateString) {
                             delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                                 .schedulePractitionerRequest[index];
                         }
@@ -1294,7 +1294,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.shiftSrRequestCache[dateString] = {};
             }, 0);
         }
-        this.removeDataInSameDate(practitioner.practitionerId, dateString);
+        this.removeDataInSameDate(practitioner.id, dateString);
         this.requestUpdate();
         this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
         this.dispatchEvent(new CustomEvent('save-request', {
