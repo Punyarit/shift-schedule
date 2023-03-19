@@ -96,7 +96,7 @@ export declare class ShiftSchedule extends LitElement {
     renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
     }): TemplateResult<1>;
-    removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity): void;
+    removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, removeMode?: boolean): void;
     renderSrSavedHost(dateString: string, practitioner: SchedulePractitionerEntity, planEntries: [string, Record<number, ScheduleShiftsEntity>][]): TemplateResult<1>;
     renderSrShiftPlanSaved(planRequest: {
         practitioner: SchedulePractitionerEntity;
@@ -121,12 +121,28 @@ export declare class ShiftSchedule extends LitElement {
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
+    removeInitialSameData(practitionerId: string, dateString: string): void;
+    removeDataInSameDate(practitionerId: string, dateString: string): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]): void;
-    saveWithDateData: (practitioner: SchedulePractitionerEntity) => void;
+    getPopoverByRequest(data: {
+        date: Date;
+        practitioner: SchedulePractitionerEntity;
+        request?: SrShiftPlan;
+        cellId?: string;
+        dateString?: string;
+        type?: RequestType['abbr'];
+        title?: string;
+        remark?: string;
+    }): TemplateResult<1> | undefined;
+    saveWithDateData: (practitioner: SchedulePractitionerEntity, dateString: string) => void;
     renderDatepickerBox(data: {
         title: string;
         practitioner: SchedulePractitionerEntity;
         date: Date;
+        cellId: string;
+        dateString: string;
+        remark: string;
+        type: RequestType['abbr'];
     }): TemplateResult<1>;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
