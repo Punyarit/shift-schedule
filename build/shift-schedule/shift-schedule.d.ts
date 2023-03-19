@@ -95,7 +95,10 @@ export declare class ShiftSchedule extends LitElement {
     }): void;
     renderWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
-    }): TemplateResult<1>;
+    }, type?: RequestType['abbr'], date?: Date, indexUser?: number): TemplateResult<1>;
+    renderWoffSavedHost(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
+        initial: boolean;
+    }, type?: RequestType['abbr'], date?: Date, indexUser?: number): TemplateResult;
     removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, removeMode?: boolean): void;
     renderSrSavedHost(dateString: string, practitioner: SchedulePractitionerEntity, planEntries: [string, Record<number, ScheduleShiftsEntity>][]): TemplateResult<1>;
     renderSrShiftPlanSaved(planRequest: {
@@ -121,8 +124,8 @@ export declare class ShiftSchedule extends LitElement {
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
-    removeInitialSameData(practitionerId: string, dateString: string): void;
-    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], checkScheduleData?: boolean): void;
+    removeInitialSameData(practitionerId: string, dateString?: string): void;
+    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
         date: Date;
         practitioner: SchedulePractitionerEntity;

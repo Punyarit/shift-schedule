@@ -143,7 +143,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 default:
                     break;
             }
-            this.deleteInitialDatePicker(practitioner.id, dateBetween, true);
+            this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
             this.selectedDate = undefined;
             ModalCaller.popover().clear();
         };
@@ -450,7 +450,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                         : vacSaved?.request?.[dateString]
                                             ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner)
                                             : woffSaved?.[dateString]
-                                                ? this.renderWoffSaved(dateString, practitioner)
+                                                ? this.renderWoffSaved(dateString, practitioner, undefined, 'woff', day, indexUser)
                                                 : requestInitial
                                                     ? this.renderInitialRequest(requestInitial, practitioner, day, indexUser)
                                                     : indexUser === userTargetIndex
@@ -538,8 +538,33 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         }
     }
-    renderWoffSaved(dateString, practitioner, data) {
-        return html `<c-box h-full w-full p-4 border-box>
+    renderWoffSaved(dateString, practitioner, data, type, date, indexUser) {
+        const cellId = 'woff-saved-shift-cell';
+        return html `
+      <c-box
+        w-full
+        h-full
+        id="${cellId}-${dateString}"
+        @click="${this.requestSelected
+            ? () => this.appendPopover(type, cellId, {
+                date: date,
+                dateString: dateString,
+                indexUser: indexUser,
+                practitioner: practitioner,
+            }, this.getPopoverByRequest({
+                date: date,
+                practitioner: practitioner,
+                dateString,
+                cellId,
+                type,
+            }), this.renderWoffSavedHost(dateString, practitioner, { initial: true }, 'woff', date, indexUser))
+            : null}">
+        ${this.renderWoffSavedHost(dateString, practitioner, data, type, date, indexUser)}
+      </c-box>
+    `;
+    }
+    renderWoffSavedHost(dateString, practitioner, data, type, date, indexUser) {
+        return html `<c-box h-full w-full p-4 border-box slot="host">
       <c-box
         class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
         bg-bluestate-200
@@ -549,7 +574,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         flex
         justify-center
         round-6
-        @click="${() => this.removeWoffSaved(dateString, practitioner, data)}"
+        @click="${this.isRemoveMode
+            ? () => this.removeWoffSaved(dateString, practitioner, data)
+            : null}"
         items-center></c-box>
     </c-box>`;
     }
@@ -779,9 +806,25 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         })}
     </c-box>`;
     }
+    // 📌id cell maybe duplicate please careful. bug can occur
     renderInitialRequest(request, practitioner, date, indexUser) {
         const dateString = this.convertDateToString(date);
         const cellId = 'initial-data-shift-cell';
+        const title = {
+            sem: 'ขออบรม, สัมนา, ไปราชการ',
+            off: 'ขอลาหยุด',
+            vac: 'ขอลาพักร้อน',
+        };
+        const popoverObj = {
+            date,
+            practitioner,
+            dateString,
+            cellId,
+            request: request.arrangedRequest,
+            remark: request?.remark || '',
+            title: title[request.requestType.abbr],
+            type: request.requestType.abbr,
+        };
         switch (request.requestType.abbr) {
             case 'sr':
                 return html `
@@ -795,27 +838,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         dateString,
                         indexUser,
                         practitioner,
-                    }, this.getPopoverByRequest({
-                        date,
-                        practitioner,
-                        cellId,
-                        request: request.arrangedRequest,
-                        dateString,
-                    }), this.renderSrInitialHost(request, practitioner, dateString))
+                    }, this.getPopoverByRequest(popoverObj), this.renderSrInitialHost(request, practitioner, dateString))
                     : null}">
             ${this.renderSrInitialHost(request, practitioner, dateString)}
           </c-box>
         `;
             case 'woff':
-                return html `${this.renderWoffSaved(dateString, practitioner, { initial: true })}`;
-            case 'sem':
-            case 'vac':
-            case 'off':
-                const title = {
-                    sem: 'ขออบรม, สัมนา, ไปราชการ',
-                    off: 'ขอลาหยุด',
-                    vac: 'ขอลาพักร้อน',
-                };
                 return html `
           <c-box
             w-full
@@ -827,15 +855,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         dateString,
                         indexUser,
                         practitioner,
-                    }, this.getPopoverByRequest({
+                    }, this.getPopoverByRequest(popoverObj), this.renderWoffSavedHost(dateString, practitioner, { initial: true }, 'woff', date, indexUser))
+                    : null}">
+            ${this.renderWoffSavedHost(dateString, practitioner, { initial: true }, 'woff', date, indexUser)}
+          </c-box>
+        `;
+            case 'sem':
+            case 'vac':
+            case 'off':
+                return html `
+          <c-box
+            w-full
+            h-full
+            id="${cellId}-${dateString}"
+            @click="${this.requestSelected
+                    ? () => this.appendPopover(request.requestType.abbr, cellId, {
                         date,
-                        practitioner,
                         dateString,
-                        cellId,
-                        remark: request?.remark || '',
-                        title: title[request.requestType.abbr],
-                        type: request.requestType.abbr,
-                    }), this.renderShiftPlanSaved({
+                        indexUser,
+                        practitioner,
+                    }, this.getPopoverByRequest(popoverObj), this.renderShiftPlanSaved({
                         dateString,
                         remark: request.remark,
                         initial: true,
@@ -856,8 +895,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.datepickerData = e.detail.date;
     }
     removeInitialSameData(practitionerId, dateString) {
-        console.log('shift-schedule.js removeInitialSameData|practitionerId| = ', practitionerId);
-        console.log('shift-schedule.js removeInitialSameData|dateString| = ', dateString);
+        console.log('shift-schedule.js |practitionerId| = ', practitionerId);
+        console.log('shift-schedule.js |dateString| = ', dateString);
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitionerId);
         console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
         if (typeof practitionerIndex === 'number') {
@@ -885,55 +924,51 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         }
     }
-    deleteInitialDatePicker(practitionerId, dateBetween, checkScheduleData) {
+    deleteInitialDatePicker(practitionerId, dateBetween, dateString) {
         switch (this.requestSelected?.abbr) {
             case 'sem':
                 for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    if (checkScheduleData) {
-                        this.removeInitialSameData(practitionerId, dateString);
-                    }
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                    const dateBetString = this.convertDateToString(date);
+                    this.removeInitialSameData(practitionerId, dateBetString);
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateBetString];
                 }
                 break;
             case 'vac':
                 for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                    const dateBetString = this.convertDateToString(date);
+                    this.removeInitialSameData(practitionerId, dateBetString);
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateBetString];
                 }
                 break;
             case 'off':
                 for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                    const dateBetString = this.convertDateToString(date);
+                    this.removeInitialSameData(practitionerId, dateBetString);
+                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateBetString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateBetString];
                 }
                 break;
             case 'woff':
-                for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                }
+                this.removeInitialSameData(practitionerId, dateString);
+                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
                 break;
             case 'sr':
-                for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
-                }
+                this.removeInitialSameData(practitionerId, dateString);
+                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+                delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
                 break;
             default:
                 break;
@@ -1032,6 +1067,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             return;
         this.userSelectedIndex = data.indexUser;
         const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`);
+        console.log('shift-schedule.js |boxTarget| = ', boxTarget);
         if (boxTarget) {
             const firstElement = boxTarget.firstElementChild;
             if (firstElement?.tagName !== 'CX-POPOVER') {
@@ -1275,7 +1311,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }, 0);
         }
         const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
-        this.deleteInitialDatePicker(practitioner.id, dateBetween, true);
+        this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
         this.requestUpdate();
         this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
         this.dispatchEvent(new CustomEvent('save-request', {
