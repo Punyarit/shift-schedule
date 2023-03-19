@@ -1070,10 +1070,13 @@ export class ShiftSchedule extends LitElement {
   }
 
   removeInitialSameData(practitionerId: string, dateString: string) {
+    console.log('shift-schedule.js removeInitialSameData|practitionerId| = ', practitionerId);
+    console.log('shift-schedule.js removeInitialSameData|dateString| = ', dateString);
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.practitionerId === practitionerId
     );
 
+    console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
     if (typeof practitionerIndex === 'number') {
       const requestIndex = this.scheduleData?.schedulePractitioner?.[
         practitionerIndex
@@ -1081,6 +1084,7 @@ export class ShiftSchedule extends LitElement {
         (res) => (res as SchedulePractitionerRequestEntity)?.requestDate === dateString
       );
 
+      console.log('shift-schedule.js removeInitialSameData|requestIndex| = ', requestIndex);
       if (typeof requestIndex === 'number') {
         const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
           .schedulePractitionerRequest?.[requestIndex]! as SchedulePractitionerRequestEntity;
@@ -1092,12 +1096,10 @@ export class ShiftSchedule extends LitElement {
               ?.length!;
             index++
           ) {
-            if (
-              (
-                this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-                  .schedulePractitionerRequest![index] as SchedulePractitionerRequestEntity
-              ).requestType.abbr === 'sr'
-            ) {
+            const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+              .schedulePractitionerRequest![index] as SchedulePractitionerRequestEntity;
+
+            if (request.requestType.abbr === 'sr' && request.requestDate === dateString) {
               delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                 .schedulePractitionerRequest![index];
             }

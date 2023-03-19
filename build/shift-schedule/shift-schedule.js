@@ -859,9 +859,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.datepickerData = e.detail.date;
     }
     removeInitialSameData(practitionerId, dateString) {
+        console.log('shift-schedule.js removeInitialSameData|practitionerId| = ', practitionerId);
+        console.log('shift-schedule.js removeInitialSameData|dateString| = ', dateString);
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.practitionerId === practitionerId);
+        console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
         if (typeof practitionerIndex === 'number') {
             const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => res?.requestDate === dateString);
+            console.log('shift-schedule.js removeInitialSameData|requestIndex| = ', requestIndex);
             if (typeof requestIndex === 'number') {
                 const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                     .schedulePractitionerRequest?.[requestIndex];
@@ -869,8 +873,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     for (let index = 0; index <
                         this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest
                             ?.length; index++) {
-                        if ((this.scheduleData?.schedulePractitioner?.[practitionerIndex]
-                            .schedulePractitionerRequest[index]).requestType.abbr === 'sr') {
+                        const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
+                            .schedulePractitionerRequest[index];
+                        if (request.requestType.abbr === 'sr' && request.requestDate === dateString) {
                             delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                                 .schedulePractitionerRequest[index];
                         }
