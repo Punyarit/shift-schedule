@@ -557,14 +557,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     removeSrPlan(dayPart, dateString, practitioner) {
         if (this.isRemoveMode) {
-            delete this.shiftSrRequestSaved[practitioner.id].request[dateString].shiftPlan[dayPart];
-            if (Object.keys(this.shiftSrRequestSaved[practitioner.id].request[dateString].shiftPlan)
-                .length === 0) {
-                delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
-            }
-            if (Object.keys(this.shiftSrRequestSaved[practitioner.id].request).length === 0) {
-                delete this.shiftSrRequestSaved[practitioner.id];
-            }
+            delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
             this.removeRequestSelected = this.findRequestType('sr');
             this.sentRemoveEvent();
             this.requestUpdate();
@@ -591,7 +584,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 bg-color="${this.setColorRequestType(dayPart)}">
                 <c-box>
                   <c-box icon-prefix="favorite-line" flex flex-col>
-                    <c-box
+                    <c-box flex col-gap-4
                       >${Object.keys(plans).map((plan) => {
                 console.log('plan', plan);
                 return html `<c-box inline>${plan}</c-box>`;
@@ -721,8 +714,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             let requestIndex = [];
             let requestResult = {};
             for (let index = 0; index < shiftPlans.length; index++) {
-                if (shiftPlans[index]?.requestShift?.split('')?.[0] === dayPart &&
-                    shiftPlans[index]?.requestDate === dateString) {
+                if (shiftPlans[index]?.requestDate === dateString) {
                     requestIndex.push(index);
                     requestResult[index] = shiftPlans[index];
                 }
