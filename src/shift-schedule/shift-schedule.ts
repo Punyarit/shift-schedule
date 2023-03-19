@@ -1111,6 +1111,8 @@ export class ShiftSchedule extends LitElement {
       }
     }
   }
+
+  // FIXME: it bug / use for loop help
   removeDataInSameDate(practitionerId: string, dateString: string) {
     this.removeInitialSameData(practitionerId, dateString);
     switch (this.requestSelected?.abbr!) {
@@ -1649,6 +1651,7 @@ export class ShiftSchedule extends LitElement {
         ...request,
       };
     }
+
     return html`
       <c-box slot="popover">
         <c-box content>
@@ -1674,17 +1677,13 @@ export class ShiftSchedule extends LitElement {
                         `#${cellId}-${dateString}`
                       ) as HTMLElement;
 
-                      console.log('shift-schedule.js |boxTarget| = ', boxTarget);
+                      const popoverHost = boxTarget.querySelector("c-box[slot='host']");
+
                       setTimeout(() => {
-                        const planEntries = Object.entries(
-                          this.shiftSrRequestCache[dateString] || {}
-                        );
-                        render(
-                          this.renderSrSavedHost(dateString, practitioner, planEntries),
-                          boxTarget
-                        );
+                        const planEntries = Object.entries(request || {});
                         this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
-                      }, 0);
+                        boxTarget.appendChild(popoverHost!);
+                      }, 500);
                     }
                   }}"
                   >ยกเลิก</cx-button
