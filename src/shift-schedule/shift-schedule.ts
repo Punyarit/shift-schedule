@@ -1449,8 +1449,8 @@ export class ShiftSchedule extends LitElement {
     if (this.shiftSrRequestCache[dateString][dayPart][+plan]) {
       delete this.shiftSrRequestCache[dateString][dayPart][+plan];
 
-      if (Object.keys(this.shiftSrRequestCache[dayPart]).length === 0) {
-        delete this.shiftSrRequestCache[dayPart];
+      if (Object.keys(this.shiftSrRequestCache[dateString][dayPart]).length === 0) {
+        delete this.shiftSrRequestCache[dateString][dayPart];
       }
     } else {
       this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
