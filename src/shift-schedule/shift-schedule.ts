@@ -683,7 +683,6 @@ export class ShiftSchedule extends LitElement {
     practitioner: SchedulePractitionerEntity,
     planEntries: [string, Record<number, ScheduleShiftsEntity>][]
   ) {
-    console.log('shift-schedule.js |planEntries| = ', planEntries);
     return html` <c-box w-full h-full slot="host">
       ${planEntries
         ?.sort((a, b) => {
@@ -1341,7 +1340,7 @@ export class ShiftSchedule extends LitElement {
                   dateString,
                   indexUser,
                 },
-                this.renderSrPopover(date, practitioner),
+                this.renderSrPopover(date, practitioner, undefined, cellId),
                 this.renderEmptyBox(date, 'select')
               )}">
             ${this.renderEmptyBox(date, 'display')}
@@ -1365,7 +1364,7 @@ export class ShiftSchedule extends LitElement {
                 dateString,
                 indexUser,
               },
-              this.renderSrPopover(date, practitioner),
+              this.renderSrPopover(date, practitioner, undefined, cellId),
               this.renderEmptyBox(date, 'select')
             )}">
           ${this.renderEmptyBox(date, 'display')}
@@ -1451,6 +1450,10 @@ export class ShiftSchedule extends LitElement {
 
       if (Object.keys(this.shiftSrRequestCache[dateString][dayPart]).length === 0) {
         delete this.shiftSrRequestCache[dateString][dayPart];
+
+        if (Object.keys(this.shiftSrRequestCache[dateString]).length === 0) {
+          delete this.shiftSrRequestCache[dateString];
+        }
       }
     } else {
       this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
@@ -1511,7 +1514,26 @@ export class ShiftSchedule extends LitElement {
                 <cx-button
                   .var="${{ width: 'size-0' }}"
                   .set="${{ type: 'secondary' } as CXButton.Set}"
-                  @click="${this.closePopover}"
+                  @click="${() => {
+                    this.closePopover();
+                    if (cellId) {
+                      const boxTarget = this.querySelector(
+                        `#${cellId}-${dateString}`
+                      ) as HTMLElement;
+
+                      console.log('shift-schedule.js |boxTarget| = ', boxTarget);
+                      setTimeout(() => {
+                        const planEntries = Object.entries(
+                          this.shiftSrRequestCache[dateString] || {}
+                        );
+                        render(
+                          this.renderSrSavedHost(dateString, practitioner, planEntries),
+                          boxTarget
+                        );
+                        this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
+                      }, 0);
+                    }
+                  }}"
                   >ยกเลิก</cx-button
                 >
                 <cx-button
