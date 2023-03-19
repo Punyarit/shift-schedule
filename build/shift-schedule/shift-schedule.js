@@ -85,7 +85,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         },
                         practitioner,
                     };
-                    this.deleteInitialDatePicker(practitioner.id, dateBetween);
                     this.dispatchEvent(new CustomEvent('save-sem', {
                         detail: this.shiftSemRequestSaved,
                     }));
@@ -107,7 +106,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         },
                         practitioner,
                     };
-                    this.deleteInitialDatePicker(practitioner.id, dateBetween);
                     this.dispatchEvent(new CustomEvent('save-off', {
                         detail: this.shiftOffRequestSaved,
                     }));
@@ -133,7 +131,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         },
                         practitioner,
                     };
-                    this.deleteInitialDatePicker(practitioner.id, dateBetween);
                     this.dispatchEvent(new CustomEvent('save-vac', {
                         detail: this.shiftVacRequestSaved,
                     }));
@@ -146,7 +143,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 default:
                     break;
             }
-            this.removeDataInSameDate(practitioner.id, dateString);
+            this.deleteInitialDatePicker(practitioner.id, dateBetween, true);
             this.selectedDate = undefined;
             ModalCaller.popover().clear();
         };
@@ -888,71 +885,53 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         }
     }
-    // FIXME: it bug / use for loop help
-    removeDataInSameDate(practitionerId, dateString) {
-        this.removeInitialSameData(practitionerId, dateString);
+    deleteInitialDatePicker(practitionerId, dateBetween, checkScheduleData) {
         switch (this.requestSelected?.abbr) {
-            case 'sr':
-                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
-                break;
             case 'sem':
-                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                for (const date of dateBetween) {
+                    const dateString = this.convertDateToString(date);
+                    if (checkScheduleData) {
+                        this.removeInitialSameData(practitionerId, dateString);
+                    }
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                }
                 break;
             case 'vac':
-                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                for (const date of dateBetween) {
+                    const dateString = this.convertDateToString(date);
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                }
                 break;
             case 'off':
-                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                for (const date of dateBetween) {
+                    const dateString = this.convertDateToString(date);
+                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
+                }
                 break;
             case 'woff':
-                delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                break;
-            default:
-                break;
-        }
-        this.requestUpdate();
-    }
-    deleteInitialDatePicker(practitionerId, dateBetween) {
-        switch (this.requestSelected?.abbr) {
-            case 'sem':
-                for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
-                }
-                break;
-            case 'vac':
-                for (const date of dateBetween) {
-                    const dateString = this.convertDateToString(date);
-                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
-                    delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
-                }
-                break;
-            case 'off':
                 for (const date of dateBetween) {
                     const dateString = this.convertDateToString(date);
                     delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
                     delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
                     delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+                }
+                break;
+            case 'sr':
+                for (const date of dateBetween) {
+                    const dateString = this.convertDateToString(date);
+                    delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString];
+                    delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString];
                     delete this.shiftWoffRequestSaved[practitionerId]?.request?.[dateString];
                 }
                 break;
@@ -1295,7 +1274,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.shiftSrRequestCache[dateString] = {};
             }, 0);
         }
-        this.removeDataInSameDate(practitioner.id, dateString);
+        const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
+        this.deleteInitialDatePicker(practitioner.id, dateBetween, true);
         this.requestUpdate();
         this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
         this.dispatchEvent(new CustomEvent('save-request', {

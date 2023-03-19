@@ -122,8 +122,7 @@ export declare class ShiftSchedule extends LitElement {
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate): void;
     removeInitialSameData(practitionerId: string, dateString: string): void;
-    removeDataInSameDate(practitionerId: string, dateString: string): void;
-    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[]): void;
+    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], checkScheduleData?: boolean): void;
     getPopoverByRequest(data: {
         date: Date;
         practitioner: SchedulePractitionerEntity;
