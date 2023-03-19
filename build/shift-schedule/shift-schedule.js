@@ -17,7 +17,6 @@ import '@cortex-ui/core/cx/icon';
 import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
-import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import './components/request-button';
 import { requestTypeStyles, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
@@ -246,6 +245,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           cursor: pointer;
         }
 
+        .srDayPart {
+          cursor: pointer;
+        }
+
         .diagonal-pattern {
           width: 100%;
           height: 100%;
@@ -441,7 +444,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                       ${disableDate
                             ? html ` <div class="diagonal-pattern"></div> `
                             : srSaved && srSaved?.request?.[dateString]
-                                ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner)
+                                ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner, indexUser)
                                 : semSaved?.request?.[dateString]
                                     ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner)
                                     : offSaved?.request?.[dateString]
@@ -567,31 +570,62 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.requestUpdate();
         }
     }
-    renderSrShiftPlanSaved(planRequest, dateString, practitioner) {
-        const planEntries = Object.entries(planRequest?.request[dateString].shiftPlan);
-        return html `
-      ${planEntries.map(([dayPart, plans]) => {
+    renderSrSavedHost(dateString, practitioner, planEntries) {
+        console.log('shift-schedule.js |planEntries| = ', planEntries);
+        return html ` <c-box w-full h-full slot="host">
+      ${planEntries
+            ?.sort((a, b) => {
+            const indexMap = { m: 0, a: 1, n: 2 };
+            // @ts-ignore
+            return indexMap[a[0]] - indexMap[b[0]];
+        })
+            ?.map(([dayPart, plans]) => {
             return html `
-          <c-box p-4 border-box flex flex-col row-gap-4>
-            <c-box
-              class="srDayPart"
-              p-4
-              border-box
-              round-6
-              h-44
-              @click="${() => this.removeSrPlan(dayPart, dateString, practitioner)}"
-              bg-color="${this.setColorRequestType(dayPart)}">
-              <c-box>
-                <c-box icon-prefix="favorite-line" flex flex-col>
-                  <c-box
-                    >${Object.keys(plans).map((plan) => html `<c-box inline>${plan}</c-box> `)}</c-box
-                  >
+            <c-box p-4 border-box flex flex-col row-gap-4>
+              <c-box
+                class="${this.isRemoveMode || this.requestSelected ? 'srDayPart' : ''} "
+                p-4
+                border-box
+                round-6
+                h-44
+                @click="${() => this.removeSrPlan(dayPart, dateString, practitioner)}"
+                bg-color="${this.setColorRequestType(dayPart)}">
+                <c-box>
+                  <c-box icon-prefix="favorite-line" flex flex-col>
+                    <c-box
+                      >${Object.keys(plans).map((plan) => {
+                console.log('plan', plan);
+                return html `<c-box inline>${plan}</c-box>`;
+            })}</c-box
+                    >
+                  </c-box>
                 </c-box>
               </c-box>
             </c-box>
-          </c-box>
-        `;
+          `;
         })}
+    </c-box>`;
+    }
+    renderSrShiftPlanSaved(planRequest, dateString, practitioner, indexUser) {
+        const planEntries = Object.entries(planRequest?.request[dateString].shiftPlan);
+        console.log('shift-schedule.js |planEntries5555| = ', planEntries);
+        console.log('shift-schedule.js |planEntries| = ', planEntries);
+        const shiftPlan = this.shiftSrRequestSaved?.[practitioner.id]?.request?.[dateString]?.shiftPlan;
+        const cellId = 'sr-saved-shift-cell';
+        const date = new Date(dateString);
+        return html `
+      <c-box
+        w-full
+        h-full
+        id="${cellId}-${dateString}"
+        @click="${() => this.appendPopover('sr', cellId, {
+            date,
+            dateString,
+            indexUser,
+            practitioner,
+        }, this.renderSrPopover(date, practitioner, shiftPlan, cellId), this.renderSrSavedHost(dateString, practitioner, planEntries))}">
+        ${this.renderSrSavedHost(dateString, practitioner, planEntries)}
+      </c-box>
     `;
     }
     removeShiftDatePicker(data, type, practitioner) {
@@ -719,9 +753,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         }
     }
-    renderSrHost(request, practitioner, dateString) {
+    renderSrInitialHost(request, practitioner, dateString) {
         return html ` <c-box w-full h-full slot="host">
       ${Object.entries(request.arrangedRequest).map(([dayPart, plans]) => {
+            const plansEntries = Object.entries(plans);
             return html `
           <c-box p-4 border-box flex flex-col row-gap-4>
             <c-box
@@ -739,7 +774,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 : ''}; width:100%; height:100%">
                 <c-box>
                   <c-box icon-prefix="favorite-line" flex flex-col>
-                    <c-box>${plans.map((plan) => html `<c-box inline>${plan}</c-box> `)}</c-box>
+                    <c-box
+                      >${plansEntries.map(([plan]) => html `<c-box inline>${plan}</c-box> `)}</c-box
+                    >
                   </c-box>
                 </c-box>
               </div>
@@ -765,9 +802,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         dateString,
                         indexUser,
                         practitioner,
-                    }, this.renderSrPopover(date, practitioner), this.renderSrHost(request, practitioner, dateString))
+                    }, this.renderSrPopover(date, practitioner, request.arrangedRequest, cellId), this.renderSrInitialHost(request, practitioner, dateString))
                     : null}">
-            ${this.renderSrHost(request, practitioner, dateString)}
+            ${this.renderSrInitialHost(request, practitioner, dateString)}
           </c-box>
         `;
             case 'woff':
@@ -874,15 +911,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     </c-box>`;
     }
     appendPopover(type, cellId, data, popoverContent, popoverHost) {
+        if (this.isRemoveMode)
+            return;
         this.userSelectedIndex = data.indexUser;
         const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`);
-        console.log('shift-schedule.js |boxTarget| = ', boxTarget);
         if (boxTarget) {
             const firstElement = boxTarget.firstElementChild;
             if (firstElement?.tagName !== 'CX-POPOVER') {
                 firstElement?.remove();
             }
-            if (firstElement?.tagName === 'CX-POPOVER') {
+            else {
                 return;
             }
             switch (type) {
@@ -982,7 +1020,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     // FIXME: any type w8 for api data
-    renderRequestSr(shifts, dayPart) {
+    renderRequestSr(shifts, dayPart, dateString, initialSr) {
         const srData = {
             a: {
                 text: 'กลางวัน',
@@ -1007,21 +1045,23 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <c-box>
         <c-box flex col-gap-6>
           ${shifts?.map((requestPlan) => {
+            const [dayPart, plan] = requestPlan.shiftName.split('');
+            const hasInitialSr = initialSr?.[+plan];
             return html ` <c-box flex items-center flex-col>
               <c-box
-                @click="${() => this.addSrShiftRequest(requestPlan)}"
+                @click="${() => this.addSrShiftRequest(requestPlan, dateString)}"
                 bg-hover="primary-100"
                 bg-toggle="primary-100"
                 bg-active="primary-200"
                 cursor-pointer
                 w-80
                 h-30
-                bg-color="primary-50"
+                bg-color="${hasInitialSr ? 'primary-100' : 'primary-50'}"
                 round-8
                 flex
                 justify-center
                 items-center
-                >${requestPlan.shiftName.split('')[1]}</c-box
+                >${plan}</c-box
               >
               <c-box tx-12
                 >${requestPlan.startTime.slice(0, -3)} - ${requestPlan.endTime.slice(0, -3)}</c-box
@@ -1032,18 +1072,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     </c-box>`;
     }
-    addSrShiftRequest(requestPlan) {
+    addSrShiftRequest(requestPlan, dateString) {
         const [dayPart, plan] = requestPlan.shiftName.split('');
         // 📌 long hand =  if (!this.shiftRequest[dayPart]) this.shiftRequest[dayPart] = {};
-        this.shiftSrRequestCache[dayPart] ||= {};
-        if (this.shiftSrRequestCache[dayPart][+plan]) {
-            delete this.shiftSrRequestCache[dayPart][+plan];
+        this.shiftSrRequestCache[dateString] ||= {};
+        this.shiftSrRequestCache[dateString][dayPart] ||= {};
+        if (this.shiftSrRequestCache[dateString][dayPart][+plan]) {
+            delete this.shiftSrRequestCache[dateString][dayPart][+plan];
             if (Object.keys(this.shiftSrRequestCache[dayPart]).length === 0) {
                 delete this.shiftSrRequestCache[dayPart];
             }
         }
         else {
-            this.shiftSrRequestCache[dayPart][+plan] = requestPlan;
+            this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
         }
     }
     groupShiftsByLetter(arr) {
@@ -1057,8 +1098,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
         return result;
     }
-    renderSrPopover(date, practitioner) {
+    renderSrPopover(date, practitioner, request, cellId) {
         const shiftGroup = this.groupShiftsByLetter(this.scheduleData?.scheduleShifts);
+        const dateString = this.convertDateToString(date);
+        if (request) {
+            this.shiftSrRequestCache[dateString] = {
+                ...(this.shiftSrRequestCache[dateString] || {}),
+                ...request,
+            };
+        }
+        console.log('shift-schedule.js |this.shiftSrRequestCache initial| = ', this.shiftSrRequestCache);
         return html `
       <c-box slot="popover">
         <c-box content>
@@ -1082,7 +1131,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 >
                 <cx-button
                   .var="${{ width: 'size-0' }}"
-                  @click="${() => this.saveSrRequestPlan(date, practitioner)}"
+                  @click="${() => this.saveSrRequestPlan(date, practitioner, cellId)}"
                   >บันทึก</cx-button
                 >
               </c-box>
@@ -1092,22 +1141,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <!-- selected request -->
           <c-box mt-12 flex flex-col row-gap-24>
             <!-- morning -->
-            ${['m', 'a', 'n'].map((res) => html `${shiftGroup[res] ? this.renderRequestSr(shiftGroup[res], res) : undefined}`)}
+            ${['m', 'a', 'n'].map((res) => html `${shiftGroup[res]
+            ? this.renderRequestSr(shiftGroup[res], res, dateString, request?.[res])
+            : undefined}`)}
           </c-box>
         </c-box>
       </c-box>
     `;
     }
-    saveSrRequestPlan(date, practitioner) {
-        if (!Object.keys(this.shiftSrRequestCache).length) {
-            const popoverContent = ModalSingleton.modalRef.querySelector("c-box[slot='popover']");
-            popoverContent?.firstElementChild?.classList.toggle('shake-efx');
-            const timer = setTimeout(() => {
-                popoverContent?.firstElementChild?.classList.toggle('shake-efx');
-                clearTimeout(timer);
-            }, 600);
-            return;
-        }
+    saveSrRequestPlan(date, practitioner, cellId) {
+        const dateString = this.convertDateToString(date);
         if (!this.shiftSrRequestSaved[practitioner.id]) {
             this.shiftSrRequestSaved[practitioner.id] = {};
             this.shiftSrRequestSaved[practitioner.id].request = {};
@@ -1122,7 +1165,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
         this.shiftSrRequestSaved[practitioner.id].practitioner = practitioner;
         this.shiftSrRequestSaved[practitioner.id].request[this.convertDateToString(date)].shiftPlan =
-            this.shiftSrRequestCache;
+            this.shiftSrRequestCache[dateString];
+        // it not re render
+        if (cellId) {
+            const boxTarget = this.querySelector(`#${cellId}-${dateString}`);
+            setTimeout(() => {
+                const planEntries = Object.entries(this.shiftSrRequestCache[dateString]);
+                render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
+                this.shiftSrRequestCache[dateString] = {};
+            }, 0);
+        }
         this.requestUpdate();
         this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
         this.dispatchEvent(new CustomEvent('save-request', {
@@ -1132,7 +1184,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.closePopover();
     }
     closePopover() {
-        this.shiftSrRequestCache = {};
         ModalCaller.popover().clear();
     }
     selectDateRequest(date, type, practitioner) {
@@ -1251,9 +1302,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             result[requestDate] = { arrangedRequest: {}, ...item };
                         }
                         if (!result[requestDate].arrangedRequest[dayPart]) {
-                            result[requestDate].arrangedRequest[dayPart] = [];
+                            result[requestDate].arrangedRequest[dayPart] = {};
                         }
-                        result[requestDate].arrangedRequest[dayPart].push(requestPart);
+                        result[requestDate].arrangedRequest[dayPart][+requestPart] =
+                            // @ts-ignore
+                            this.scheduleData?.scheduleShifts?.find((res) => res.shiftName === requestShift);
                         // assign other properties to the result object
                         result[requestDate] = { ...result[requestDate] };
                         break;
@@ -1296,13 +1349,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         });
         this.calcHeightOfUserTable();
         // sr
-        const srDayParts = this.querySelectorAll('.srDayPart');
         const shiftPlandatepicker = this.querySelectorAll('.shift-plan-datepicker');
         const woffSaved = this.querySelectorAll('.woff-saved');
         if (this.isRemoveMode) {
-            srDayParts.forEach((ele) => {
-                ele?.setAttribute('cursor-pointer', '');
-            });
             shiftPlandatepicker.forEach((ele) => {
                 ele?.setAttribute('cursor-pointer', '');
             });
@@ -1311,9 +1360,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             });
         }
         else {
-            srDayParts.forEach((ele) => {
-                ele?.removeAttribute('cursor-pointer');
-            });
             shiftPlandatepicker.forEach((ele) => {
                 ele?.removeAttribute('cursor-pointer');
             });

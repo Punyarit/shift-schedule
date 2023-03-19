@@ -127,7 +127,7 @@ export type ScheduleDataWithRender = SchedulePractitionerRequestEntity & {
   arrangedRequest?: ArrangedRequest;
 };
 
-export type ArrangedRequest = Record<DayPart, string[]>;
+export type ArrangedRequest = SrShiftPlan;
 
 export type SrShiftPlan = {
   m: Record<number, ScheduleShiftsEntity>;
