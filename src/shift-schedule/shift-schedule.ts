@@ -1510,6 +1510,13 @@ export class ShiftSchedule extends LitElement {
   ) {
     if (this.isRemoveMode) return;
     this.userSelectedIndex = data.indexUser;
+
+    this.dispatchEvent(
+      new CustomEvent('focus-request', {
+        detail: { practitioner: data.practitioner },
+      })
+    );
+
     const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`) as HTMLElement;
     console.log('shift-schedule.js |boxTarget| = ', boxTarget);
     if (boxTarget) {
