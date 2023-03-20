@@ -205,12 +205,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
-    async connectedCallback() {
-        super.connectedCallback();
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-        console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-    }
+    // async connectedCallback() {
+    //   super.connectedCallback();
+    //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+    // }
     setRemoveMode() {
         this.requestSelected = undefined;
         this.isRemoveMode = true;

@@ -220,12 +220,12 @@ export class ShiftSchedule extends LitElement {
     [date: string]: DisabledDate;
   };
 
-  async connectedCallback() {
-    super.connectedCallback();
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-    console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  }
+  // async connectedCallback() {
+  //   super.connectedCallback();
+  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
+  // }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
