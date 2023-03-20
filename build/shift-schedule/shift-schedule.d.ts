@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisableDate } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
@@ -33,7 +33,7 @@ export declare class ShiftSchedule extends LitElement {
     private weekendBg;
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
-    disableDates: DisableDate[];
+    disableDates: DisabledDate[];
     practitionerId?: string;
     userHoverIndex: number;
     userSelectedIndex: number;

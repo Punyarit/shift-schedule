@@ -123,7 +123,7 @@ export type DatePickerRequest = {
         };
     };
 };
-export type DisableDate = {
+export type DisabledDate = {
     title: string;
     date: string;
     repetition: 'once' | 'every-week' | 'every-month' | 'every-year';

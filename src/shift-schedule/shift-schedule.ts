@@ -26,7 +26,7 @@ import {
   QueryRemoveOrigin,
   ScheduleRequestIndex,
   DatePickerRequest,
-  DisableDate,
+  DisabledDate,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
@@ -68,7 +68,7 @@ export class ShiftSchedule extends LitElement {
   mode: 'view' | 'edit' = 'view';
 
   @property({ type: Object })
-  disableDates: DisableDate[] = [];
+  disableDates: DisabledDate[] = [];
 
   @property({ type: String })
   practitionerId?: string;
@@ -217,7 +217,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   private disableDateArranged = {} as {
-    [date: string]: DisableDate;
+    [date: string]: DisabledDate;
   };
 
   async connectedCallback() {
