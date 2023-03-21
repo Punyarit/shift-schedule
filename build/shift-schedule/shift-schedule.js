@@ -22,6 +22,17 @@ import { requestTypeStyles, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
+const srIconPlan = {
+    m: {
+        src: 'cloud-sun-u',
+    },
+    a: {
+        src: 'sunset-u',
+    },
+    n: {
+        src: 'moon-u',
+    },
+};
 let ShiftSchedule = class ShiftSchedule extends LitElement {
     constructor() {
         super(...arguments);
@@ -39,7 +50,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
         this.titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
         this.tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
-        this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
+        this.iconTitleWrapper = 'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid items-center col-gap-6 pr-12';
         this.iconTitle = 'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
         this.weekendBg = 'weekendBg: bg-pinky-25! w-full h-full';
         this.viewerRole = 'staff';
@@ -300,7 +311,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   bg="${this.isRemoveMode ? 'pinky-300' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="16 close-circle-line ${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                    icon-prefix="20 close-circle-line ${this.isRemoveMode ? 'white' : 'pinky-900'}"
                     w-44
                     h-44
                     round-full
@@ -580,7 +591,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <c-box
         class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
         bg-bluestate-200
-        icon-prefix="16 pause-circle-line black"
+        icon-prefix="26 pause-circle-line black"
         w-full
         h-full
         flex
@@ -620,10 +631,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 @click="${() => this.removeSrPlan(dayPart, dateString, practitioner)}"
                 bg="${this.setColorRequestType(dayPart)}">
                 <c-box>
-                  <c-box icon-prefix="16 favorite-line black" flex flex-col>
+                  <c-box icon-prefix="16 ${srIconPlan[dayPart].src} black" flex flex-col>
                     <c-box flex col-gap-4
                       >${Object.keys(plans).map((plan) => {
-                console.log('plan', plan);
                 return html `<c-box inline>${plan}</c-box>`;
             })}</c-box
                     >
@@ -713,13 +723,18 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return this.requestTypes?.find((res) => res.abbr === abbr);
     }
     renderShiftPlanSaved(data, type, practitioner) {
+        const shiftPlanIcon = {
+            sem: 'exit-right-custom',
+            off: 'block-custom',
+            vac: 'vacation-custom',
+        };
         return html `<c-box p-4 border-box h-full w-full slot="host">
       <c-box
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
             ? 'hover-request'
             : ''}"
         bg-modern-green-100
-        bg="${requestTypeStyles[type].iconBgColor}"
+        bg="${requestTypeStyles?.[type]?.iconBgColor}"
         h-full
         w-full
         round-6
@@ -727,7 +742,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         border-box
         @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
         ${data?.remark
-            ? html `<c-box flex flex-col icon-prefix="16 favorite-line modern-green-500">
+            ? html `<c-box flex flex-col icon-prefix="16 ${shiftPlanIcon[type]} modern-green-500">
               ${data.remark}
             </c-box>`
             : html `<c-box
@@ -735,7 +750,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
               justify-center
               items-center
               h-full
-              icon-prefix="16 favorite-line modern-green-500">
+              icon-prefix="26 ${shiftPlanIcon[type]} modern-green-500">
             </c-box>`}
       </c-box>
     </c-box>`;
@@ -800,7 +815,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 ? 'pointer'
                 : ''}; width:100%; height:100%">
                 <c-box>
-                  <c-box icon-prefix="16 favorite-line black" flex flex-col>
+                  <c-box icon-prefix="16 ${srIconPlan[dayPart].src} black" flex flex-col>
                     <c-box
                       >${plansEntries.map(([plan]) => html `<c-box inline>${plan}</c-box> `)}</c-box
                     >
@@ -903,10 +918,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     removeInitialSameData(practitionerId, dateString) {
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitionerId);
-        console.log('shift-schedule.js |practitionerIndex| = ', practitionerIndex);
         if (typeof practitionerIndex === 'number') {
             const requestIndex = this.scheduleData?.schedulePractitioner?.[practitionerIndex].schedulePractitionerRequest?.findIndex((res) => res?.requestDate === dateString);
-            console.log('shift-schedule.js removeInitialSameData|requestIndex| = ', requestIndex);
             if (typeof requestIndex === 'number') {
                 const request = this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                     .schedulePractitionerRequest?.[requestIndex];
@@ -999,6 +1012,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     renderDatepickerBox(data) {
+        const title = {
+            sem: 'ขออบรม, สัมนา, ไปราชการ',
+            off: 'ขอลาหยุด',
+            vac: 'ขอลาพักร้อน',
+        };
         return html `
       <c-box slot="popover">
         <c-box content>
@@ -1006,7 +1024,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <c-box>
             <c-box ui="${this.iconTitleWrapper}">
               <c-box icon-prefix="16 circle-line primary-500" ui="${this.iconTitle}"></c-box>
-              <c-box tx-14> ${data.title} </c-box>
+              <c-box tx-14> ${title[this.requestSelected?.abbr]} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
               <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการขอ</c-box>
@@ -1039,7 +1057,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             </c-box>
           </c-box>
           <!-- date picker -->
-          <c-box mt-12>
+          <c-box mt-18>
             <c-box mb-12>Date</c-box>
             <cx-datepicker
               @select-date="${(e) => this.saveDatepicker(e)}"
@@ -1158,9 +1176,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 text: 'เช้า',
             },
         };
-        return html ` <c-box flex col-gap-24>
-      <c-box flex col-gap-6 items-center h-fit mt-2 min-w-80>
-        <c-box bg="primary-100" p-2 round-full icon-prefix="16 circle-line primary-500"></c-box>
+        return html ` <c-box flex col-gap-24 justify-between>
+      <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
+        <c-box
+          bg="primary-100"
+          p-2
+          w-24
+          h-24
+          flex-center
+          round-8
+          icon-prefix="16 ${srIconPlan[dayPart].src} primary-500"></c-box>
         <c-box>${srData[dayPart].text}</c-box>
       </c-box>
       <c-box>
@@ -1170,17 +1195,30 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const hasInitialSr = initialSr?.[+plan];
             return html ` <c-box flex items-center flex-col>
               <c-box
-                @click="${() => this.addSrShiftRequest(requestPlan, dateString)}"
-                ui-hover="_1: bg-primary-100!"
-                ui-toggle="_2: bg-primary-100!"
-                ui-active="_3: bg-primary-200!"
+                @click="${(e) => {
+                this.addSrShiftRequest(requestPlan, dateString);
+                const target = e.target;
+                target.uiToggled = !target.uiToggled;
+                const bgAttr = hasInitialSr
+                    ? target.uiToggled
+                        ? 'primary-25   !'
+                        : 'primary-100!'
+                    : target.uiToggled
+                        ? 'primary-100!'
+                        : 'primary-25!';
+                target.setAttribute('bg', bgAttr);
+            }}"
+                shadow-hover="shadow-3"
+                ui-active="_1:bg-primary-200!"
+                transition="all 0.2s ease"
                 w-80
                 h-30
-                bg="${hasInitialSr ? 'primary-100' : 'primary-50'}"
+                bg="${hasInitialSr ? 'primary-100' : 'primary-25'}"
                 round-8
                 flex
                 justify-center
                 items-center
+                cursor-pointer
                 >${plan}</c-box
               >
               <c-box tx-12
@@ -1236,10 +1274,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <!-- title -->
           <c-box>
             <c-box ui="${this.iconTitleWrapper}">
-              <c-box icon-prefix="16 circle-line primary-500" ui="${this.iconTitle}"></c-box>
+              <c-box icon-prefix="16 emoji-wink-custom primary-500" ui="${this.iconTitle}"></c-box>
               <c-box tx-14> ขอเข้าเวร </c-box>
             </c-box>
-            <c-box mt-12 flex items-center flex justify-between>
+            <c-box ui="titleSrWrapper:mt-12 flex items-center flex justify-between col-gap-12">
               <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการ</c-box>
               <c-box>
                 <cx-button
@@ -1499,7 +1537,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             });
         }
         this.disableDateArranged = this.getHolidayOccurrences(this.disableDates, this.scheduleData?.startDate, this.scheduleData?.endDate);
-        console.log('shift-schedule.js |this.disableDateArranged`| = ', this.disableDateArranged);
     }
     // @ts-ignore
     getHolidayOccurrences(holidays, startDate, endDate) {

@@ -15,10 +15,10 @@
   resolved "https://registry.yarnpkg.com/@cortex-ui/fonts/-/fonts-1.0.0.tgz#72c6749b6591c5698401114c9c88ffb639ba0021"
   integrity sha512-ck+6Xg6aK0uL/Eu7oJovduECPgJQHE6xQM7GWARQqByKt4oi8wFZAM+ow0W8xqr8Zd7PnRyD940ea4VLelBxEA==
 
-"@cortex-ui/icons@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/icons/-/icons-1.0.4.tgz#fb271081370dfc6f0fdec8d2386a3941b7d822ab"
-  integrity sha512-q7Xha2Bux1o5pHcWCh1ja1hiou4s2MuE1lhTmGw36sz0uLuyqqqjfV5KBIxg+6WCmTVFUxeZlksuTE3pPaiVQA==
+"@cortex-ui/icons@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@cortex-ui/icons/-/icons-1.0.5.tgz#0a9f09134001d89174d0fe1609e5efef75420e9c"
+  integrity sha512-RUwghnEaCVSJaEzVezkv+JQTXq0QXZhFVioQhx6hu8FOnrIzDBAwCq8o7/hBCYHWe27uoRxZwlbJ/vdPHH5q+w==
 
 "@lit-labs/react@^1.1.1":
   version "1.1.1"
