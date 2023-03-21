@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@cortex-ui/core@^0.0.185":
-  version "0.0.185"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.185.tgz#3ac302f4190f25d050e586122a1620871b9b39e8"
-  integrity sha512-aeb8Pu8FStAcr4e1uU66kgHdnHhBm0NivQZ3s8TwiJ9YCMsOYuPlVGlKHIsbrP6u5vxgnKKT4s++I/tBvJMjeQ==
+"@cortex-ui/core@^0.0.207":
+  version "0.0.207"
+  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.207.tgz#a43e8f9e735b17bf3e2722530ab4d09867b213d3"
+  integrity sha512-oq0r0bNqx64wLIy2xbGROgWT+l5mFsJ7YRJqOSfoiFD/CD8NNnJ+DRMOWMBDhM5rL7jKjU0XgyC1rcklsa1dbw==
   dependencies:
     "@types/react" "^18.0.27"
     lit "^2.6.1"
@@ -15,10 +15,10 @@
   resolved "https://registry.yarnpkg.com/@cortex-ui/fonts/-/fonts-1.0.0.tgz#72c6749b6591c5698401114c9c88ffb639ba0021"
   integrity sha512-ck+6Xg6aK0uL/Eu7oJovduECPgJQHE6xQM7GWARQqByKt4oi8wFZAM+ow0W8xqr8Zd7PnRyD940ea4VLelBxEA==
 
-"@cortex-ui/icons@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/icons/-/icons-1.0.0.tgz#f0d8d2327fc455858b04432bb13a62934bb7a7e4"
-  integrity sha512-sa+ZEUKmQv/Jdc8g/qI346v9uRRGnQqK8/6BF1nlzQpSK1nipWrbmgiUYc7cXwMmOTi8ecXTQk8f7J3yvRaqBg==
+"@cortex-ui/icons@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@cortex-ui/icons/-/icons-1.0.4.tgz#fb271081370dfc6f0fdec8d2386a3941b7d822ab"
+  integrity sha512-q7Xha2Bux1o5pHcWCh1ja1hiou4s2MuE1lhTmGw36sz0uLuyqqqjfV5KBIxg+6WCmTVFUxeZlksuTE3pPaiVQA==
 
 "@lit-labs/react@^1.1.1":
   version "1.1.1"

@@ -1,21 +1,21 @@
 export const requestTypeStyles = {
     sr: {
-        iconSrc: 'favorite-line',
+        iconSrc: 'emoji-wink-custom',
         accentColor: 'primary-500',
         iconBgColor: 'primary-100',
     },
     sem: {
-        iconSrc: 'favorite-line',
+        iconSrc: 'exit-right-custom',
         accentColor: 'modern-green-500',
         iconBgColor: 'modern-green-100',
     },
     off: {
-        iconSrc: 'favorite-line',
+        iconSrc: 'block-custom',
         accentColor: 'alarm-orange-500',
         iconBgColor: 'alarm-orange-200',
     },
     vac: {
-        iconSrc: 'favorite-line',
+        iconSrc: 'vacation-custom',
         accentColor: 'warning-500',
         iconBgColor: 'warning-200',
     },

@@ -8,7 +8,6 @@ import '@cortex-ui/core/cx/icon';
 import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
-import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import './components/request-button';
 import {
   ArrangedRequest,
@@ -32,9 +31,7 @@ import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
-import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
 import '@lit-labs/virtualizer';
-import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name';
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -51,8 +48,6 @@ export class ShiftSchedule extends LitElement {
   private monthEachUI = 'monthEachUI: tx-12 pl-12 py-6 border-right-solid';
   private sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
   private titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
-  private userSelected =
-    'userSelected: border-bottom-2! border-bottom-solid! border-bottom-primary-500!';
   private tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
   private iconTitleWrapper =
     'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid flex items-center col-gap-6 pr-12';
@@ -149,7 +144,7 @@ export class ShiftSchedule extends LitElement {
   maxHeight?: number;
 
   @state()
-  datepickerData?: DateRangeSelected;
+  datepickerData?: CXDatePicker.SelectDate.DateRange['detail'];
 
   private removeRequestSelected?: RequestType;
 
@@ -220,12 +215,18 @@ export class ShiftSchedule extends LitElement {
     [date: string]: DisabledDate;
   };
 
-  // async connectedCallback() {
-  //   super.connectedCallback();
-  //   this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-  //   this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
-  //   console.log('shift-schedule.js |this.scheduleData| = ', this.scheduleData);
-  // }
+  async connectedCallback() {
+    // const cssVariables = [
+    //   { variable: 'primary-500', css: 'black' },
+    //   { variable: 'pinky-500', css: 'pink' },
+    // ] as const;
+    // for (const { css, variable } of cssVariables) {
+    //   this.style.setProperty(`--${variable}`, css);
+    // }
+    super.connectedCallback();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+  }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
@@ -315,17 +316,20 @@ export class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   border-pinky-100
-                  bg-color="${this.isRemoveMode ? 'pinky-300' : 'white'}">
+                  bg="${this.isRemoveMode ? 'pinky-300' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="close-circle-line"
-                    icon-prefix-color="${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                    icon-prefix="16 close-circle-line ${this.isRemoveMode ? 'white' : 'pinky-900'}"
                     w-44
                     h-44
                     round-full
-                    bg-color="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
+                    bg="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
                   </c-box>
-                  <c-box tx-color="${this.isRemoveMode ? 'white' : 'pinky-900'}">ลบ</c-box>
+                  <c-box
+                    transition="all 0.2s ease"
+                    ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-pinky-900'}"
+                    >ลบ</c-box
+                  >
                 </c-box>
               </c-box>`
             : undefined}
@@ -344,7 +348,11 @@ export class ShiftSchedule extends LitElement {
                     return html`
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
-                          <c-box icon-prefix="favorite-line" icon-suffix="favorite-line" tx-12 py-6>
+                          <c-box
+                            icon-prefix="16 favorite-line black"
+                            icon-suffix="16 favorite-line black"
+                            tx-12
+                            py-6>
                             ${this.dateFormat(dateBet.currentMonth, {
                               month: 'short',
                             })}
@@ -707,7 +715,7 @@ export class ShiftSchedule extends LitElement {
       <c-box
         class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
         bg-bluestate-200
-        icon-prefix="pause-circle-line"
+        icon-prefix="16 pause-circle-line black"
         w-full
         h-full
         flex
@@ -756,9 +764,9 @@ export class ShiftSchedule extends LitElement {
                 round-6
                 h-44
                 @click="${() => this.removeSrPlan(dayPart as DayPart, dateString, practitioner)}"
-                bg-color="${this.setColorRequestType(dayPart as DayPart)}">
+                bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
-                  <c-box icon-prefix="favorite-line" flex flex-col>
+                  <c-box icon-prefix="16 favorite-line black" flex flex-col>
                     <c-box flex col-gap-4
                       >${Object.keys(plans).map((plan) => {
                         console.log('plan', plan);
@@ -904,7 +912,7 @@ export class ShiftSchedule extends LitElement {
           ? 'hover-request'
           : ''}"
         bg-modern-green-100
-        bg-color="${requestTypeStyles[type].iconBgColor}"
+        bg="${requestTypeStyles[type].iconBgColor}"
         h-full
         w-full
         round-6
@@ -912,11 +920,7 @@ export class ShiftSchedule extends LitElement {
         border-box
         @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
         ${data?.remark
-          ? html`<c-box
-              flex
-              flex-col
-              icon-prefix="favorite-line"
-              icon-prefix-color="modern-green-500">
+          ? html`<c-box flex flex-col icon-prefix="16 favorite-line modern-green-500">
               ${data.remark}
             </c-box>`
           : html`<c-box
@@ -924,8 +928,7 @@ export class ShiftSchedule extends LitElement {
               justify-center
               items-center
               h-full
-              icon-prefix="favorite-line"
-              icon-prefix-color="modern-green-500">
+              icon-prefix="16 favorite-line modern-green-500">
             </c-box>`}
       </c-box>
     </c-box>`;
@@ -1001,13 +1004,13 @@ export class ShiftSchedule extends LitElement {
               border-box
               round-6
               h-44
-              bg-color="${this.setColorRequestType(dayPart as DayPart)}">
+              bg="${this.setColorRequestType(dayPart as DayPart)}">
               <div
                 style="cursor:${this.requestSelected || this.isRemoveMode
                   ? 'pointer'
                   : ''}; width:100%; height:100%">
                 <c-box>
-                  <c-box icon-prefix="favorite-line" flex flex-col>
+                  <c-box icon-prefix="16 favorite-line black" flex flex-col>
                     <c-box
                       >${plansEntries.map(([plan]) => html`<c-box inline>${plan}</c-box> `)}</c-box
                     >
@@ -1160,13 +1163,11 @@ export class ShiftSchedule extends LitElement {
     }
   }
 
-  saveDatepicker(e: CXDatePicker.SelectDate) {
-    this.datepickerData = e.detail.date as DateRangeSelected;
+  saveDatepicker(e: CXDatePicker.SelectDate.DateRange) {
+    this.datepickerData = e.detail;
   }
 
   removeInitialSameData(practitionerId: string, dateString?: string) {
-    console.log('shift-schedule.js |practitionerId| = ', practitionerId);
-    console.log('shift-schedule.js |dateString| = ', dateString);
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.id === practitionerId
     );
@@ -1423,10 +1424,7 @@ export class ShiftSchedule extends LitElement {
           <!-- title -->
           <c-box>
             <c-box ui="${this.iconTitleWrapper}">
-              <c-box
-                icon-prefix="circle-line"
-                icon-prefix-color="primary-500"
-                ui="${this.iconTitle}"></c-box>
+              <c-box icon-prefix="16 circle-line primary-500" ui="${this.iconTitle}"></c-box>
               <c-box tx-14> ${data.title} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
@@ -1473,7 +1471,7 @@ export class ShiftSchedule extends LitElement {
           <c-box mt-12>
             <c-box mb-12>Date</c-box>
             <cx-datepicker
-              @select-date="${(e: CXDatePicker.SelectDate) => this.saveDatepicker(e)}"
+              @select-date="${(e: CXDatePicker.SelectDate.DateRange) => this.saveDatepicker(e)}"
               .set="${{
                 date: data.date,
                 daterange: true,
@@ -1518,7 +1516,6 @@ export class ShiftSchedule extends LitElement {
     );
 
     const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`) as HTMLElement;
-    console.log('shift-schedule.js |boxTarget| = ', boxTarget);
     if (boxTarget) {
       const firstElement = boxTarget.firstElementChild;
       if (firstElement?.tagName !== 'CX-POPOVER') {
@@ -1637,12 +1634,7 @@ export class ShiftSchedule extends LitElement {
 
     return html` <c-box flex col-gap-24>
       <c-box flex col-gap-6 items-center h-fit mt-2 min-w-80>
-        <c-box
-          bg-color="primary-100"
-          p-2
-          round-full
-          icon-prefix-color="primary-500"
-          icon-prefix="circle-line"></c-box>
+        <c-box bg="primary-100" p-2 round-full icon-prefix="16 circle-line primary-500"></c-box>
         <c-box>${srData[dayPart].text}</c-box>
       </c-box>
       <c-box>
@@ -1654,13 +1646,12 @@ export class ShiftSchedule extends LitElement {
             return html` <c-box flex items-center flex-col>
               <c-box
                 @click="${() => this.addSrShiftRequest(requestPlan, dateString)}"
-                bg-hover="primary-100"
-                bg-toggle="primary-100"
-                bg-active="primary-200"
-                cursor-pointer
+                ui-hover="_1: bg-primary-100!"
+                ui-toggle="_2: bg-primary-100!"
+                ui-active="_3: bg-primary-200!"
                 w-80
                 h-30
-                bg-color="${hasInitialSr ? 'primary-100' : 'primary-50'}"
+                bg="${hasInitialSr ? 'primary-100' : 'primary-50'}"
                 round-8
                 flex
                 justify-center
@@ -1736,10 +1727,7 @@ export class ShiftSchedule extends LitElement {
           <!-- title -->
           <c-box>
             <c-box ui="${this.iconTitleWrapper}">
-              <c-box
-                icon-prefix="circle-line"
-                icon-prefix-color="primary-500"
-                ui="${this.iconTitle}"></c-box>
+              <c-box icon-prefix="16 circle-line primary-500" ui="${this.iconTitle}"></c-box>
               <c-box tx-14> ขอเข้าเวร </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
@@ -1919,11 +1907,11 @@ export class ShiftSchedule extends LitElement {
           ? () => this.selectDateRequest(date, type, practitioner)
           : null}">
         <c-box
-          bg-hover="primary-100"
-          bg-active="primary-200"
-          bg-color="${isSameDate ? 'primary-100' : isWeekend ? 'pinky-25' : 'white'}"
-          icon-prefix="${isSameDate ? 'plus-line' : 'none'}"
-          icon-prefix-color="${type ? 'gray-600' : 'primary-300'}"
+          transition="all 0.2s ease"
+          ui-hover="_1: bg-primary-100!"
+          ui-active="_2: bg-primary-200!"
+          bg="${isSameDate ? 'primary-100' : isWeekend ? 'pinky-25' : 'white'}"
+          icon-prefix="16 ${isSameDate ? 'plus-line' : 'none'} ${type ? 'gray-600' : 'primary-300'}"
           w-full
           h-full
           round-8
@@ -1931,8 +1919,7 @@ export class ShiftSchedule extends LitElement {
           justify-center
           items-center
           cursor-pointer
-          icon-prefix-color-hover="primary-300"
-          icon-prefix-hover="plus-line"></c-box>
+          icon-prefix-hover="16 plus-line primary-300"></c-box>
       </c-box>
     `;
   }

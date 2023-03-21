@@ -20,25 +20,28 @@ let MyElement = class MyElement extends LitElement {
     render() {
         const isSelected = this.requestType.abbr === this.currentType?.abbr;
         return html `
+      <style>
+        c-box[icon-prefix]::before {
+          transition: 0.2s ease;
+        }
+      </style>
       <c-box
         shadow-hover="shadow-3"
         class="wrapper"
         tabindex="0"
-        tx-color="${isSelected ? 'white' : this.accentColor}"
+        tx="16 regular ${isSelected ? 'white' : this.accentColor}"
         ui="${this.btnWrapper}"
-        bg-color="${isSelected ? this.accentColor : 'white'}">
+        transition="all 0.2s ease"
+        bg="${isSelected ? this.accentColor : 'white'}">
         <c-box
           id="icon-head"
           ui="${this.btnContent}"
           min-w="${this.width}"
           min-h="${this.height}"
-          bg-color="${isSelected ? this.accentColor : this.iconBgColor}">
-          <c-box
-            icon-prefix="${this.icon}"
-            icon-prefix-size="24"
-            icon-prefix-color="${this.iconColor}"></c-box>
+          bg="${isSelected ? this.accentColor : this.iconBgColor}">
+          <c-box icon-prefix="24 ${this.icon} ${isSelected ? 'white' : this.accentColor}"></c-box>
         </c-box>
-        <c-box whitespace-pre>${this.text}</c-box>
+        <c-box whitespace-pre tx="16 regular ${isSelected ? 'white' : 'black'}">${this.text}</c-box>
       </c-box>
     `;
     }

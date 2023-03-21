@@ -10,7 +10,6 @@ import './components/request-button';
 import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate } from './schedule.types';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
-import { DateRangeSelected } from '@cortex-ui/core/cx/components/calendar/types/calendar.types';
 import '@lit-labs/virtualizer';
 export declare class ShiftSchedule extends LitElement {
     private buttonGroupUI;
@@ -26,7 +25,6 @@ export declare class ShiftSchedule extends LitElement {
     private monthEachUI;
     private sundayBorderRightUI;
     private titleSticky;
-    private userSelected;
     private tableWrapperUI;
     private iconTitleWrapper;
     private iconTitle;
@@ -71,7 +69,7 @@ export declare class ShiftSchedule extends LitElement {
         };
     };
     maxHeight?: number;
-    datepickerData?: DateRangeSelected;
+    datepickerData?: CXDatePicker.SelectDate.DateRange['detail'];
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
@@ -83,6 +81,7 @@ export declare class ShiftSchedule extends LitElement {
     selectRequest(type: RequestType): void;
     private calcHeightOfUserTable;
     private disableDateArranged;
+    connectedCallback(): Promise<void>;
     private setRemoveMode;
     isRemoveMode: boolean;
     dividerTop: number;
@@ -122,7 +121,7 @@ export declare class ShiftSchedule extends LitElement {
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
-    saveDatepicker(e: CXDatePicker.SelectDate): void;
+    saveDatepicker(e: CXDatePicker.SelectDate.DateRange): void;
     removeInitialSameData(practitionerId: string, dateString?: string): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
