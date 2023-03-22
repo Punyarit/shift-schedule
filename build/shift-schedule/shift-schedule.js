@@ -273,10 +273,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           height: 100%;
           background: repeating-linear-gradient(
             135deg,
-            var(--pinky-50),
-            var(--pinky-50) 5px,
-            #ffffff 5px,
-            #ffffff 10px
+            var(--pinky-25),
+            var(--pinky-25) 4px,
+            #ffffff 4px,
+            #ffffff 8px
           );
         }
 
