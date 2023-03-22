@@ -195,3 +195,8 @@ export const dayPortValue = {
     lowColor: 'primary-25',
   },
 };
+
+export const genderType = {
+  M: 'ช',
+  F: 'ญ',
+};

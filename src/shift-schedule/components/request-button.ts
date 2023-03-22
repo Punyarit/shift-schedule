@@ -66,7 +66,7 @@ export class MyElement extends LitElement {
           bg="${isSelected ? this.accentColor : this.iconBgColor}">
           <c-box icon-prefix="24 ${this.icon} ${isSelected ? 'white' : this.accentColor}"></c-box>
         </c-box>
-        <c-box whitespace-pre tx="16 regular ${isSelected ? 'white' : 'black'}">${this.text}</c-box>
+        <c-box whitespace-pre tx="16 regular ${isSelected ? 'white' : 'gray-800'}">${this.text}</c-box>
       </c-box>
     `;
   }

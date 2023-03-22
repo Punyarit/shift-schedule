@@ -157,3 +157,7 @@ export declare const dayPortValue: {
         lowColor: string;
     };
 };
+export declare const genderType: {
+    M: string;
+    F: string;
+};

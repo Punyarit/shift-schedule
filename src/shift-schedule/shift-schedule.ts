@@ -28,9 +28,9 @@ import {
   DatePickerRequest,
   DisabledDate,
   dayPortValue,
+  genderType,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
-import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
@@ -42,7 +42,7 @@ export class ShiftSchedule extends LitElement {
   private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
   private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
   private monthUI = 'monthUI: flex items-center';
-  private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
+  private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white! flex justify-center items-center round-full z-1`;
   private requestBox = 'requestBox: min-w-90 inline-flex flex-col';
   private userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
   private weekDayUI = 'weekDayUI: py-6 min-w-90 pl-12 border-box';
@@ -222,6 +222,7 @@ export class ShiftSchedule extends LitElement {
       { variable: 'gray-100', css: '#eaedf2' },
       { variable: 'gray-300', css: '#E7EEFF' },
       { variable: 'gray-600', css: '#556E97' },
+      { variable: 'gray-800', css: '#2A3959' },
       { variable: 'pinky-25', css: '#F8F9FC' },
       { variable: 'color-1-100', css: '#DDEBFF' },
       { variable: 'color-12-100', css: '#FFF1CE' },
@@ -257,6 +258,10 @@ export class ShiftSchedule extends LitElement {
         :host {
           --cbox-divider-width: 100%;
           --cbox-divider-top: 0;
+        }
+
+        c-box {
+          color: var(--gray-800);
         }
 
         .focus-divider {
@@ -343,7 +348,7 @@ export class ShiftSchedule extends LitElement {
                   </c-box>
                   <c-box
                     transition="all 0.2s ease"
-                    ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-pinky-900'}"
+                    ui="_:${this.isRemoveMode ? 'tx-white!' : 'tx-gray-800'}"
                     >ลบ</c-box
                   >
                 </c-box>
@@ -355,8 +360,8 @@ export class ShiftSchedule extends LitElement {
               <c-box ui="${this.scheduleTitleUI}">
                 <!-- FIXME: should titleSticky below -->
                 <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
-                  <c-box semiBold tx-16>รายชื่อเจ้าหน้าที่</c-box>
-                  <c-box tx-14>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
+                  <c-box semiBold>รายชื่อเจ้าหน้าที่</c-box>
+                  <c-box>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
                 </c-box>
 
                 <c-box flex id="week-month-title">
@@ -366,8 +371,8 @@ export class ShiftSchedule extends LitElement {
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
                           <c-box
-                            icon-prefix="16 arrow-left-line black"
-                            icon-suffix="16 arrow-right-line black"
+                            icon-prefix="16 arrow-left-line gray-800"
+                            icon-suffix="16 arrow-right-line gray-800"
                             tx-12
                             py-6>
                             ${this.dateFormat(dateBet.currentMonth, {
@@ -463,7 +468,9 @@ export class ShiftSchedule extends LitElement {
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
                             <img src="${this.userImgDefault || ''}" alt="" />
-                            <c-box ui="${this.genderBox}"> ${gender} </c-box>
+                            <c-box ui="${this.genderBox}">
+                              ${genderType[gender as 'M' | 'F']}
+                            </c-box>
                           </c-box>
 
                           <c-box>
