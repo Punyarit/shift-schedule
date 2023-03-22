@@ -27,29 +27,13 @@ import {
   ScheduleRequestIndex,
   DatePickerRequest,
   DisabledDate,
+  dayPortValue,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
-
-const srIconPlan: Record<
-  string,
-  {
-    src: string;
-  }
-> = {
-  m: {
-    src: 'cloud-sun-u',
-  },
-  a: {
-    src: 'sunset-u',
-  },
-  n: {
-    src: 'moon-u',
-  },
-};
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -271,6 +255,7 @@ export class ShiftSchedule extends LitElement {
 
         input::placeholder {
           font-family: Sarabun-Regular;
+          font-size: 16px;
         }
 
         .bg-pinky {
@@ -311,7 +296,7 @@ export class ShiftSchedule extends LitElement {
         }
 
         c-box[input-box].remark-input {
-          width: var(--size-274) !important;
+          width: var(--size-284) !important;
         }
       </style>
       <c-box style="height:100vh" relative overflow-hidden>
@@ -366,12 +351,13 @@ export class ShiftSchedule extends LitElement {
 
                 <c-box flex id="week-month-title">
                   ${this.dateBetween?.map((dateBet) => {
+                    const a:CXIcon.Set["src"] = "arrow-left-line"
                     return html`
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
                           <c-box
-                            icon-prefix="16 favorite-line black"
-                            icon-suffix="16 favorite-line black"
+                            icon-prefix="16 arrow-left-line black"
+                            icon-suffix="16 arrow-right-line black"
                             tx-12
                             py-6>
                             ${this.dateFormat(dateBet.currentMonth, {
@@ -736,7 +722,7 @@ export class ShiftSchedule extends LitElement {
       <c-box
         class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
         bg-bluestate-200
-        icon-prefix="26 pause-circle-line black"
+        icon-prefix="26 pause-circle-line ${requestTypeStyles[type!].accentColor}"
         w-full
         h-full
         flex
@@ -787,7 +773,12 @@ export class ShiftSchedule extends LitElement {
                 @click="${() => this.removeSrPlan(dayPart as DayPart, dateString, practitioner)}"
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
-                  <c-box icon-prefix="16 ${srIconPlan[dayPart].src} black" flex flex-col>
+                  <c-box
+                    icon-prefix="16 ${dayPortValue[dayPart as DayPart].src} ${dayPortValue[
+                      dayPart as DayPart
+                    ].iconColor}"
+                    flex
+                    flex-col>
                     <c-box flex col-gap-4
                       >${Object.keys(plans).map((plan) => {
                         return html`<c-box inline>${plan}</c-box>`;
@@ -945,7 +936,10 @@ export class ShiftSchedule extends LitElement {
         border-box
         @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
         ${data?.remark
-          ? html`<c-box flex flex-col icon-prefix="16 ${shiftPlanIcon[type]} modern-green-500">
+          ? html`<c-box
+              flex
+              flex-col
+              icon-prefix="16 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
               ${data.remark}
             </c-box>`
           : html`<c-box
@@ -953,7 +947,7 @@ export class ShiftSchedule extends LitElement {
               justify-center
               items-center
               h-full
-              icon-prefix="26 ${shiftPlanIcon[type]} modern-green-500">
+              icon-prefix="26 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
             </c-box>`}
       </c-box>
     </c-box>`;
@@ -1035,7 +1029,12 @@ export class ShiftSchedule extends LitElement {
                   ? 'pointer'
                   : ''}; width:100%; height:100%">
                 <c-box>
-                  <c-box icon-prefix="16 ${srIconPlan[dayPart].src} black" flex flex-col>
+                  <c-box
+                    icon-prefix="16 ${dayPortValue[dayPart as DayPart].src} ${dayPortValue[
+                      dayPart as DayPart
+                    ].iconColor}"
+                    flex
+                    flex-col>
                     <c-box
                       >${plansEntries.map(([plan]) => html`<c-box inline>${plan}</c-box> `)}</c-box
                     >
@@ -1189,6 +1188,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   saveDatepicker(e: CXDatePicker.SelectDate.DateRange) {
+    console.log('shift-schedule.js |e.detail| = ', e.detail);
     this.datepickerData = e.detail;
   }
 
@@ -1446,18 +1446,18 @@ export class ShiftSchedule extends LitElement {
       off: 'ขอลาหยุด',
       vac: 'ขอลาพักร้อน',
     };
-    const iconBgColor = requestTypeStyles[this.requestSelected?.abbr!].iconBgColor;
+    const iconSoftColor = requestTypeStyles[this.requestSelected?.abbr!].iconBgColor;
     const accentColor = requestTypeStyles[this.requestSelected?.abbr!].accentColor;
     return html`
       <c-box slot="popover">
         <c-box content>
           <!-- title -->
           <c-box>
-            <c-box ui="${this.iconTitleWrapper('primary-200')}">
+            <c-box ui="${this.iconTitleWrapper(iconSoftColor)}">
               <c-box
                 icon-prefix="16 ${requestTypeStyles[this.requestSelected?.abbr!]
                   .iconSrc} ${accentColor}"
-                ui="${this.iconTitle(iconBgColor)}"></c-box>
+                ui="${this.iconTitle(iconSoftColor)}"></c-box>
               <c-box tx-14> ${title[this.requestSelected?.abbr!]} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
@@ -1508,6 +1508,12 @@ export class ShiftSchedule extends LitElement {
               .set="${{
                 date: data.date,
                 daterange: true,
+                value: {
+                  startdate: this.datepickerData?.startdate
+                    ? this.datepickerData?.startdate
+                    : data.date,
+                  enddate: this.datepickerData?.enddate,
+                },
                 inputStyle: 'short',
                 min: new Date(this.scheduleData?.startDate!),
                 max: new Date(this.scheduleData?.endDate!),
@@ -1647,35 +1653,23 @@ export class ShiftSchedule extends LitElement {
   }
 
   // FIXME: any type w8 for api data
-  renderRequestSr(
+  renderShipSrRequest(
     shifts: ScheduleShiftsEntity[],
     dayPart: DayPart,
     dateString: string,
     initialSr?: Record<number, ScheduleShiftsEntity>
   ) {
-    const srData = {
-      a: {
-        text: 'กลางวัน',
-      },
-      n: {
-        text: 'เย็น',
-      },
-      m: {
-        text: 'เช้า',
-      },
-    };
-
     return html` <c-box flex col-gap-24 justify-between>
       <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
         <c-box
-          bg="primary-100"
+          bg="${dayPortValue[dayPart].bgColor}"
           p-2
           w-24
           h-24
           flex-center
           round-8
-          icon-prefix="16 ${srIconPlan[dayPart].src} primary-500"></c-box>
-        <c-box>${srData[dayPart].text}</c-box>
+          icon-prefix="16 ${dayPortValue[dayPart].src} ${dayPortValue[dayPart].iconColor}"></c-box>
+        <c-box>${dayPortValue[dayPart].text}</c-box>
       </c-box>
       <c-box>
         <c-box flex col-gap-6>
@@ -1683,6 +1677,10 @@ export class ShiftSchedule extends LitElement {
             const [dayPart, plan] = requestPlan.shiftName.split('');
             const hasInitialSr = initialSr?.[+plan];
 
+            const softColor = dayPortValue[dayPart as DayPart].softColor;
+            const bgColor = dayPortValue[dayPart as DayPart].bgColor;
+            const lowColor = dayPortValue[dayPart as DayPart].lowColor;
+            const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
             return html` <c-box flex items-center flex-col>
               <c-box
                 @click="${(e: PointerEvent) => {
@@ -1693,20 +1691,20 @@ export class ShiftSchedule extends LitElement {
 
                   const bgAttr = hasInitialSr
                     ? target.uiToggled
-                      ? 'primary-25   !'
-                      : 'primary-100!'
+                      ? `${softColor}!`
+                      : `${bgColor}!`
                     : target.uiToggled
-                    ? 'primary-100!'
-                    : 'primary-25!';
+                    ? `${bgColor}!`
+                    : `${lowColor}!`;
 
                   target.setAttribute('bg', bgAttr);
                 }}"
                 shadow-hover="shadow-3"
-                ui-active="_1:bg-primary-200!"
+                ui-active="_1:bg-${mediumColor}!"
                 transition="all 0.2s ease"
                 w-80
                 h-30
-                bg="${hasInitialSr ? 'primary-100' : 'primary-25'}"
+                bg="${hasInitialSr ? bgColor : lowColor}"
                 round-8
                 flex
                 justify-center
@@ -1827,7 +1825,7 @@ export class ShiftSchedule extends LitElement {
             ${(['m', 'a', 'n'] as const).map(
               (res) =>
                 html`${shiftGroup[res]
-                  ? this.renderRequestSr(shiftGroup[res], res, dateString, request?.[res])
+                  ? this.renderShipSrRequest(shiftGroup[res], res, dateString, request?.[res])
                   : undefined}`
             )}
           </c-box>

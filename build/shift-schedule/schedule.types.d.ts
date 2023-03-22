@@ -128,3 +128,32 @@ export type DisabledDate = {
     date: string;
     repetition: 'once' | 'every-week' | 'every-month' | 'every-year';
 };
+export declare const dayPortValue: {
+    a: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+    };
+    n: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+    };
+    m: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+    };
+};

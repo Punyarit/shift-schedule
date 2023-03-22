@@ -4,8 +4,8 @@ import { customElement, property } from 'lit/decorators.js';
 import { RequestType } from '../schedule.types';
 @customElement('request-button')
 export class MyElement extends LitElement {
-  private btnWrapper =
-    'btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-primary-100 border-solid pr-24';
+  private btnWrapper = (color: string) =>
+    `btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-${color} border-solid pr-24`;
 
   private btnContent = 'btnContent: round-full flex items-center justify-center';
 
@@ -52,7 +52,7 @@ export class MyElement extends LitElement {
         class="wrapper"
         tabindex="0"
         tx="16 regular ${isSelected ? 'white' : this.accentColor}"
-        ui="${this.btnWrapper}"
+        ui="${this.btnWrapper(this.iconBgColor)}"
         transition="all 0.2s ease"
         bg="${isSelected ? this.accentColor : 'white'}"
         ui-active="${isSelected

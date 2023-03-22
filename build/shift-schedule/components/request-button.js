@@ -12,7 +12,7 @@ import { customElement, property } from 'lit/decorators.js';
 let MyElement = class MyElement extends LitElement {
     constructor() {
         super(...arguments);
-        this.btnWrapper = 'btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-primary-100 border-solid pr-24';
+        this.btnWrapper = (color) => `btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-${color} border-solid pr-24`;
         this.btnContent = 'btnContent: round-full flex items-center justify-center';
         this.width = '44';
         this.height = '44';
@@ -30,7 +30,7 @@ let MyElement = class MyElement extends LitElement {
         class="wrapper"
         tabindex="0"
         tx="16 regular ${isSelected ? 'white' : this.accentColor}"
-        ui="${this.btnWrapper}"
+        ui="${this.btnWrapper(this.iconBgColor)}"
         transition="all 0.2s ease"
         bg="${isSelected ? this.accentColor : 'white'}"
         ui-active="${isSelected
