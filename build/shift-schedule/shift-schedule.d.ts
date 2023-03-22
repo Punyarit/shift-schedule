@@ -8,7 +8,6 @@ import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
 import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate } from './schedule.types';
-import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import '@lit-labs/virtualizer';
 export declare class ShiftSchedule extends LitElement {
@@ -165,7 +164,7 @@ export declare class ShiftSchedule extends LitElement {
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;
     };
-    setColorRequestType(requestTime: DayPart): ColorTypes;
+    setColorRequestType(requestTime: DayPart): string;
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;

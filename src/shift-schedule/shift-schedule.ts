@@ -39,7 +39,7 @@ import '@lit-labs/virtualizer';
 export class ShiftSchedule extends LitElement {
   private buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
   private scheduleTitleUI = 'scheduleTitleUI: inline-flex';
-  private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-100 border-box';
+  private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
   private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
   private monthUI = 'monthUI: flex items-center';
   private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white flex justify-center items-center round-full z-1`;
@@ -218,13 +218,23 @@ export class ShiftSchedule extends LitElement {
   };
 
   async connectedCallback() {
-    // const cssVariables = [
-    //   { variable: 'primary-500', css: 'black' },
-    //   { variable: 'pinky-500', css: 'pink' },
-    // ] as const;
-    // for (const { css, variable } of cssVariables) {
-    //   this.style.setProperty(`--${variable}`, css);
-    // }
+    const cssVariables = [
+      { variable: 'gray-100', css: '#eaedf2' },
+      { variable: 'gray-300', css: '#E7EEFF' },
+      { variable: 'gray-600', css: '#556E97' },
+      { variable: 'pinky-25', css: '#F8F9FC' },
+      { variable: 'color-1-100', css: '#DDEBFF' },
+      { variable: 'color-12-100', css: '#FFF1CE' },
+      { variable: 'alarm-orange-100', css: '#FFE9EA' },
+      { variable: 'alarm-orange-500', css: '#FA4453' },
+      { variable: 'modern-green-500', css: '#05CBA7' },
+      { variable: 'modern-green-100', css: '#DEFFF9' },
+      { variable: 'warning-500', css: '#F7773E' },
+      { variable: 'warning-100', css: '#FDE4D8' },
+    ] as const;
+    for (const { css, variable } of cssVariables) {
+      this.style.setProperty(`--${variable}`, css);
+    }
     super.connectedCallback();
     this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
     this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
@@ -351,7 +361,7 @@ export class ShiftSchedule extends LitElement {
 
                 <c-box flex id="week-month-title">
                   ${this.dateBetween?.map((dateBet) => {
-                    const a:CXIcon.Set["src"] = "arrow-left-line"
+                    const a: CXIcon.Set['src'] = 'arrow-left-line';
                     return html`
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
@@ -721,7 +731,7 @@ export class ShiftSchedule extends LitElement {
     return html`<c-box h-full w-full p-4 border-box slot="host">
       <c-box
         class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
-        bg-bluestate-200
+        bg="gray-300"
         icon-prefix="26 pause-circle-line ${requestTypeStyles[type!].accentColor}"
         w-full
         h-full
@@ -2076,13 +2086,13 @@ export class ShiftSchedule extends LitElement {
     return result;
   }
 
-  setColorRequestType(requestTime: DayPart): ColorTypes {
+  setColorRequestType(requestTime: DayPart): string {
     switch (requestTime) {
       case 'a':
-        return 'warning-100';
+        return 'color-12-100';
       case 'n':
       case 'm':
-        return 'primary-100';
+        return 'color-1-100';
     }
   }
 

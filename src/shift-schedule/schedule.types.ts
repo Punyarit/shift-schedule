@@ -117,8 +117,8 @@ export const requestTypeStyles: Record<
   },
   woff: {
     iconSrc: 'pause-circle-line',
-    accentColor: 'gray-500',
-    iconBgColor: 'gray-100',
+    accentColor: 'gray-600',
+    iconBgColor: 'gray-300',
   },
 } as const;
 
@@ -195,4 +195,3 @@ export const dayPortValue = {
     lowColor: 'primary-25',
   },
 };
-
