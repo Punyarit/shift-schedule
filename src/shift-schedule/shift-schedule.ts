@@ -218,7 +218,10 @@ export class ShiftSchedule extends LitElement {
   };
 
   async connectedCallback() {
+    super.connectedCallback();
     const cssVariables = [
+      { variable: 'primary-500', css: '#247CFF' },
+      { variable: 'primary-100', css: '#DDEBFF' },
       { variable: 'gray-100', css: '#eaedf2' },
       { variable: 'gray-300', css: '#E7EEFF' },
       { variable: 'gray-600', css: '#556E97' },
@@ -238,7 +241,6 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    super.connectedCallback();
     this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
     this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
@@ -316,7 +318,7 @@ export class ShiftSchedule extends LitElement {
           width: var(--cbox-divider-width);
           translate: 0 var(--cbox-divider-top);
           height: 2px;
-          background-color: var(--primary-100);
+          background-color: var(--primary-200);
           z-index: 1;
         }
 
@@ -1610,7 +1612,7 @@ export class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
             arrowpoint: true,
-            focusout: 'none',
+            focusout: 'close',
             mouseleave: 'none',
             transform: 'center',
           } as CXPopover.Set}">
