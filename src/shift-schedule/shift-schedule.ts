@@ -262,6 +262,16 @@ export class ShiftSchedule extends LitElement {
           --cbox-divider-top: 0;
         }
 
+        c-box[is-visible='true'] {
+          transition: opacity 0.15s ease !important;
+          opacity: 1;
+        }
+
+        c-box[is-visible='false'] {
+          transition: opacity 0.15s ease !important;
+          opacity: 0;
+        }
+
         c-box {
           color: var(--gray-800);
         }
@@ -1680,7 +1690,7 @@ export class ShiftSchedule extends LitElement {
     dateString: string,
     initialSr?: Record<number, ScheduleShiftsEntity>
   ) {
-    return html` <c-box flex col-gap-24 justify-between>
+    return html` <c-box flex col-gap-24>
       <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
         <c-box
           bg="${dayPortValue[dayPart].bgColor}"
@@ -1692,8 +1702,8 @@ export class ShiftSchedule extends LitElement {
           icon-prefix="16 ${dayPortValue[dayPart].src} ${dayPortValue[dayPart].iconColor}"></c-box>
         <c-box>${dayPortValue[dayPart].text}</c-box>
       </c-box>
-      <c-box>
-        <c-box flex col-gap-6>
+      <c-box w-full>
+        <c-box flex col-gap-6 justify-between>
           ${shifts?.map((requestPlan) => {
             const [dayPart, plan] = requestPlan.shiftName.split('');
             const hasInitialSr = initialSr?.[+plan];
