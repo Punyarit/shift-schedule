@@ -73,6 +73,7 @@ export declare class ShiftSchedule extends LitElement {
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     remarkRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
+    weekMonthUserRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
     private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;

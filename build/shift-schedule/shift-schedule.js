@@ -37,7 +37,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.weekDayWRapperUI = 'weekDayWRapperUI: flex';
         this.monthEachUI = 'monthEachUI: tx-12 pl-12 py-6 border-right-solid';
         this.sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
-        this.titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
+        this.titleSticky = 'titleSticky: sticky top-0 left-0 bg-white z-1';
         this.tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
         this.iconTitleWrapper = (color) => `iconTitleWrapper: inline-flex round-24 border-1 border-${color} border-solid items-center col-gap-6 pr-12`;
         this.iconTitle = (color) => `iconTitle: round-full w-32 h-32 bg-${color} flex justify-center items-center`;
@@ -59,6 +59,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.tableWrapperRef = createRef();
         this.dividerRef = createRef();
         this.remarkRef = createRef();
+        this.weekMonthUserRef = createRef();
         this.disableDateArranged = {};
         this.isRemoveMode = false;
         this.dividerTop = 0;
@@ -147,15 +148,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             ModalCaller.popover().clear();
         };
         this.setTableEgdeLine = () => {
-            const element = this.tableWrapperRef.value;
-            element.firstElementChild?.clientWidth;
-            const hasScrollX = element.scrollWidth > element?.clientWidth;
-            if (hasScrollX) {
-                this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
-            }
-            else {
-                this.tableWrapperRef.value?.removeAttribute('ui');
-            }
+            // const element = this.tableWrapperRef.value!;
+            // element.firstElementChild?.clientWidth;
+            // const hasScrollX = element.scrollWidth > element?.clientWidth!;
+            // if (hasScrollX) {
+            //   this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
+            // } else {
+            //   this.tableWrapperRef.value?.removeAttribute('ui');
+            // }
         };
     }
     willUpdate(_changedProperties) {
@@ -205,6 +205,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }, 250);
     }
     async connectedCallback() {
+        super.connectedCallback();
         const cssVariables = [
             { variable: 'gray-100', css: '#eaedf2' },
             { variable: 'gray-300', css: '#E7EEFF' },
@@ -225,7 +226,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        super.connectedCallback();
         this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
         this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
@@ -241,6 +241,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           --cbox-divider-top: 0;
         }
 
+        lit-virtualizer {
+          display: block;
+          overflow-x: auto;
+        }
         c-box[is-visible='true'] {
           opacity: 1;
         }
@@ -260,6 +264,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         input::placeholder {
           font-family: Sarabun-Regular;
           font-size: 16px;
+        }
+
+        .staff-first-index {
+          position: sticky !important;
+          top: 0;
+          background: white !important;
+          z-index: 1;
         }
 
         .bg-pinky {
@@ -346,84 +357,83 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
               </c-box>`
             : undefined}
 
-          <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
-            <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
-              <c-box ui="${this.scheduleTitleUI}">
-                <!-- FIXME: should titleSticky below -->
-                <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
-                  <c-box semiBold>รายชื่อเจ้าหน้าที่</c-box>
-                  <c-box>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
-                </c-box>
+          <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}" ${ref(this.tableWrapperRef)}>
+            <c-box ui="${this.scheduleTitleUI}">
+              <!-- FIXME: should titleSticky below -->
+              <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
+                <c-box semiBold>รายชื่อเจ้าหน้าที่</c-box>
+                <c-box>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
+              </c-box>
 
-                <c-box flex id="week-month-title">
-                  ${this.dateBetween?.map((dateBet) => {
+              <c-box flex id="week-month-title">
+                ${this.dateBetween?.map((dateBet) => {
             const a = 'arrow-left-line';
             return html `
-                      <c-box>
-                        <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
-                          <c-box
-                            icon-prefix="16 arrow-left-line gray-800"
-                            icon-suffix="16 arrow-right-line gray-800"
-                            tx-12
-                            py-6>
-                            ${this.dateFormat(dateBet.currentMonth, {
+                    <c-box>
+                      <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
+                        <c-box
+                          icon-prefix="16 arrow-left-line gray-800"
+                          icon-suffix="16 arrow-right-line gray-800"
+                          tx-12
+                          py-6>
+                          ${this.dateFormat(dateBet.currentMonth, {
                 month: 'short',
             })}
-                          </c-box>
                         </c-box>
+                      </c-box>
 
-                        <c-box ui=${this.weekDayWRapperUI}>
-                          ${dateBet.dateBetween.map((weekday) => {
+                      <c-box ui=${this.weekDayWRapperUI}>
+                        ${dateBet.dateBetween.map((weekday) => {
                 return html `
-                              <c-box flex flex-col>
-                                <c-box
-                                  ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
+                            <c-box flex flex-col>
+                              <c-box
+                                ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                     .tableLineUI}">
-                                  ${this.dateFormat(dateBet.currentMonth, {
+                                ${this.dateFormat(dateBet.currentMonth, {
                     month: 'short',
                     year: 'numeric',
                 })}
-                                </c-box>
+                              </c-box>
 
-                                <c-box flex>
-                                  ${weekday.map((date) => {
+                              <c-box flex>
+                                ${weekday.map((date) => {
                     const isSunday = date.getDay() === 0 ? this.sundayBorderRightUI : '';
                     const isWeekend = date.getDay() === 0 || date.getDay() === 6
                         ? this.weekendBg
                         : '';
                     return html ` <c-box
-                                      ui="${isSunday}, ${this.tableLineUI}, ${this
+                                    ui="${isSunday}, ${this.tableLineUI}, ${this
                         .weekDayUI}, ${isWeekend}">
-                                      <c-box tx-12>
-                                        ${this.dateFormat(date, {
+                                    <c-box tx-12>
+                                      ${this.dateFormat(date, {
                         weekday: 'short',
                     })}
-                                      </c-box>
-                                      <c-box tx-14>
-                                        ${this.dateFormat(date, {
+                                    </c-box>
+                                    <c-box tx-14>
+                                      ${this.dateFormat(date, {
                         day: 'numeric',
                     })}
-                                      </c-box>
-                                    </c-box>`;
+                                    </c-box>
+                                  </c-box>`;
                 })}
-                                </c-box>
                               </c-box>
-                            `;
+                            </c-box>
+                          `;
             })}
-                        </c-box>
                       </c-box>
-                    `;
+                    </c-box>
+                  `;
         })}
-                </c-box>
               </c-box>
+            </c-box>
 
-              <c-box
-                inline-flex
-                flex-col
-                id="week-month-user"
-                overflow-y-auto
-                overflow-x-hidden
-                style="height:${this.maxHeightOfUserTable}px">
+            <c-box
+              inline-flex
+              flex-col
+              id="week-month-user"
+              style="height:${this.maxHeightOfUserTable}px"
+              overflow-y-auto>
+              <c-box ${ref(this.weekMonthUserRef)}>
                 <lit-virtualizer
                   .items=${this.scheduleData?.schedulePractitioner}
                   .renderItem="${(practitioner, indexUser) => {
@@ -431,7 +441,27 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
-                      <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
+                      <c-box
+                        @visible="${(e) => {
+                if (this.viewerRole === 'staff' && indexUser === 0) {
+                    const detail = e.detail;
+                    if (detail.isIntersecting) {
+                        console.log('staff visible');
+                        console.log();
+                        if (detail.target.closest('lit-virtualizer')) {
+                            detail.target.classList.add('staff-first-index');
+                            this.weekMonthUserRef?.value?.prepend(detail.target);
+                        }
+                    }
+                    else {
+                        // this.weekMonthUserRef?.value?.appendChild(detail.target);
+                        console.log('staff hidden');
+                    }
+                }
+            }}"
+                        id="${this.viewerRole === 'staff' && indexUser === 0 ? 'staff-index' : ''}"
+                        flex
+                        ui="targetUser: ${targetUser ? 'order-first' : ''}">
                         <c-box
                           min-w="260"
                           class="${(this.viewerRole === 'staff' && indexUser === 0) ||
@@ -1108,6 +1138,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
               .set="${{
             date: data.date,
             daterange: true,
+            focusout: 'close',
             value: {
                 startdate: this.datepickerData?.startdate
                     ? this.datepickerData?.startdate
@@ -1152,7 +1183,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
                 arrowpoint: true,
-                focusout: 'none',
+                focusout: 'close',
                 mouseleave: 'none',
                 transform: 'center',
             }}">

@@ -1,6 +1,6 @@
 {
   "name": "@cortex-factory/shift-schedule",
-  "version": "0.0.88",
+  "version": "0.0.90",
   "main": "index.js",
   "scripts": {
     "build": "tsc"
@@ -17,7 +17,7 @@
     "build"
   ],
   "dependencies": {
-    "@cortex-ui/core": "^0.0.227",
+    "@cortex-ui/core": "^0.0.228",
     "@cortex-ui/fonts": "^1.0.0",
     "@cortex-ui/icons": "^1.0.5",
     "@lit-labs/react": "^1.1.1",
