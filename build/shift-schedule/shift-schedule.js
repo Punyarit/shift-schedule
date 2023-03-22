@@ -242,13 +242,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
 
         c-box[is-visible='true'] {
-          transition: opacity 0.15s ease !important;
           opacity: 1;
         }
 
         c-box[is-visible='false'] {
-          transition: opacity 0.15s ease !important;
-          opacity: 0;
+          opacity: 0.4;
         }
 
         c-box {
@@ -484,7 +482,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 this.requestSelected)
                             ? 'focus-divider'
                             : ''} ${isWeekend ? 'bg-pinky' : ''}">
-                                    <c-box w-full h-full>
+                                    <c-box
+                                      w-full
+                                      h-full
+                                      style="opacity:${this.viewerRole === 'staff' &&
+                            indexUser === 0
+                            ? '1'
+                            : '0.6'}">
                                       <!-- if have request date then render request -->
                                       <!-- when saving -->
                                       ${disableDate
