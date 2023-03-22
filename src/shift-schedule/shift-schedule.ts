@@ -224,6 +224,8 @@ export class ShiftSchedule extends LitElement {
       { variable: 'gray-600', css: '#556E97' },
       { variable: 'gray-800', css: '#2A3959' },
       { variable: 'pinky-25', css: '#F8F9FC' },
+      { variable: 'neutral-200', css: '#F1F1F1' },
+      { variable: 'neutral-500', css: '#7A7A7A' },
       { variable: 'color-1-100', css: '#DDEBFF' },
       { variable: 'color-12-100', css: '#FFF1CE' },
       { variable: 'alarm-orange-100', css: '#FFE9EA' },
@@ -335,16 +337,16 @@ export class ShiftSchedule extends LitElement {
                   border-1
                   border-pinky-100
                   ui-active="${this.isRemoveMode
-                    ? 'bg: bg-' + 'pinky-300' + '!'
-                    : 'bg: bg-' + 'pinky-50' + '!'}"
-                  bg="${this.isRemoveMode ? 'pinky-300' : 'white'}">
+                    ? 'bg: bg-' + 'neutral-500' + '!'
+                    : 'bg: bg-' + 'neutral-200' + '!'}"
+                  bg="${this.isRemoveMode ? 'neutral-500' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="20 close-circle-line ${this.isRemoveMode ? 'white' : 'pinky-900'}"
+                    icon-prefix="20 close-circle-line ${this.isRemoveMode ? 'white' : 'neutral-500'}"
                     w-44
                     h-44
                     round-full
-                    bg="${this.isRemoveMode ? 'pinky-300' : 'pinky-50'}">
+                    bg="${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}">
                   </c-box>
                   <c-box
                     transition="all 0.2s ease"
