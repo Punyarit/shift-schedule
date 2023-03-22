@@ -326,15 +326,15 @@ export class ShiftSchedule extends LitElement {
                 <c-box inline h-40 w-1 bg-pinky-100></c-box>
                 <c-box
                   @click="${this.setRemoveMode}"
-                  cursor-pointer
                   shadow-hover="shadow-3"
                   inline-flex
                   items-center
-                  col-gap-12
+                  col-gap-8
                   round-44
                   w-96
                   border-solid
                   border-1
+                  cursor-pointer
                   border-pinky-100
                   ui-active="${this.isRemoveMode
                     ? 'bg: bg-' + 'neutral-500' + '!'
@@ -342,7 +342,9 @@ export class ShiftSchedule extends LitElement {
                   bg="${this.isRemoveMode ? 'neutral-500' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="20 close-circle-line ${this.isRemoveMode ? 'white' : 'neutral-500'}"
+                    icon-prefix="20 close-circle-line ${this.isRemoveMode
+                      ? 'white'
+                      : 'neutral-500'}"
                     w-44
                     h-44
                     round-full

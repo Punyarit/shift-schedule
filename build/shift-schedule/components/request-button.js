@@ -12,7 +12,7 @@ import { customElement, property } from 'lit/decorators.js';
 let MyElement = class MyElement extends LitElement {
     constructor() {
         super(...arguments);
-        this.btnWrapper = (color) => `btnWrapper: cursor-pointer flex items-center col-gap-12 round-24 border-2 border-${color} border-solid pr-24`;
+        this.btnWrapper = (color) => `btnWrapper: cursor-pointer flex items-center col-gap-8 round-24 border-2 border-${color} border-solid pr-24`;
         this.btnContent = 'btnContent: round-full flex items-center justify-center';
         this.width = '44';
         this.height = '44';
