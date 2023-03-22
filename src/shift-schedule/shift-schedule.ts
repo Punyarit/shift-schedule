@@ -533,8 +533,9 @@ export class ShiftSchedule extends LitElement {
                                     <c-box
                                       w-full
                                       h-full
-                                      style="opacity:${this.viewerRole === 'staff' &&
-                                      indexUser === 0
+                                      style="opacity:${(this.viewerRole === 'staff' &&
+                                        indexUser === 0) ||
+                                      this.viewerRole === 'manager'
                                         ? '1'
                                         : '0.6'}">
                                       <!-- if have request date then render request -->
