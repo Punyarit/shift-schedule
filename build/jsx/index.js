@@ -14,7 +14,7 @@ export const CxShiftSchedule = createComponent({
         onSaveOff: 'save-off',
         onSaveVac: 'save-vac',
         onSaveWoff: 'save-woff',
-        onRemoveREquest: 'remove-request',
+        onRemoveRequest: 'remove-request',
         onSelectRequest: 'select-request',
         onRemoveOrigin: 'remove-origin',
         onFocusRequest: 'focus-request',

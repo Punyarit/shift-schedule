@@ -143,6 +143,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     break;
             }
             this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
+            this.datepickerData = undefined;
             this.selectedDate = undefined;
             ModalCaller.popover().clear();
         };
@@ -489,7 +490,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             indexUser === 0) ||
                             this.viewerRole === 'manager'
                             ? '1'
-                            : '0.6'}">
+                            : '0.6'} max-width:88px; word-break:break-all">
                                       <!-- if have request date then render request -->
                                       <!-- when saving -->
                                       ${disableDate
@@ -1124,6 +1125,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <c-box mt-12>หมายเหตุ</c-box>
           <c-box class="remark-input" mt-6 input-box="primary-200">
             <input
+              @input="${(e) => {
+            const input = e.target;
+            if (input.value.length > 25) {
+                input.value = input.value.slice(0, 25);
+            }
+        }}"
               ${ref(this.remarkRef)}
               type="text"
               style="border:none;outline:none;width:200px"
