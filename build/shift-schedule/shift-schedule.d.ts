@@ -132,6 +132,7 @@ export declare class ShiftSchedule extends LitElement {
         type?: RequestType['abbr'];
         title?: string;
         remark?: string;
+        indexUser?: number;
     }): TemplateResult<1> | undefined;
     saveWithDateData: (practitioner: SchedulePractitionerEntity, dateString: string) => void;
     renderDatepickerBox(data: {
@@ -153,8 +154,8 @@ export declare class ShiftSchedule extends LitElement {
     renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, initialSr?: Record<number, ScheduleShiftsEntity>): TemplateResult<1>;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string): void;
     groupShiftsByLetter(arr: any): any;
-    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string): TemplateResult<1>;
-    saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string): void;
+    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string, indexUser?: number): TemplateResult<1>;
+    saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string, indexUser?: number): void;
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;

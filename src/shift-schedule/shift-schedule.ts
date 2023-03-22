@@ -844,37 +844,48 @@ export class ShiftSchedule extends LitElement {
     practitioner: SchedulePractitionerEntity,
     indexUser: number
   ) {
-    const planEntries = Object.entries(planRequest?.request[dateString].shiftPlan);
+    const planEntries = Object.entries(planRequest?.request?.[dateString]?.shiftPlan || {});
 
     const shiftPlan = this.shiftSrRequestSaved?.[practitioner.id]?.request?.[dateString]?.shiftPlan;
     const cellId = 'sr-saved-shift-cell';
     const date = new Date(dateString);
+
+    console.log('shift-schedule.js |planEntries| = ', planEntries);
     return html`
       <c-box
         w-full
         h-full
         id="${cellId}-${dateString}"
         @click="${() =>
-          this.appendPopover(
-            'sr',
-            cellId,
-            {
-              date,
-              dateString,
-              indexUser,
-              practitioner,
-            },
-            this.getPopoverByRequest({
-              date,
-              practitioner,
-              cellId,
-              request: shiftPlan,
-              dateString,
-            })!,
+          planEntries.length
+            ? this.appendPopover(
+                'sr',
+                cellId,
+                {
+                  date,
+                  dateString,
+                  indexUser,
+                  practitioner,
+                },
+                this.getPopoverByRequest({
+                  date,
+                  practitioner,
+                  cellId,
+                  request: shiftPlan,
+                  dateString,
+                })!,
 
-            this.renderSrSavedHost(dateString, practitioner, planEntries)
-          )}">
-        ${this.renderSrSavedHost(dateString, practitioner, planEntries)}
+                this.renderSrSavedHost(dateString, practitioner, planEntries)
+              )
+            : null}">
+        ${planEntries.length
+          ? this.renderSrSavedHost(dateString, practitioner, planEntries)
+          : this.renderEmptyDateForSelect(
+              new Date(dateString),
+              practitioner,
+              dateString,
+              indexUser
+            )}
       </c-box>
     `;
   }
@@ -1340,10 +1351,17 @@ export class ShiftSchedule extends LitElement {
     type?: RequestType['abbr'];
     title?: string;
     remark?: string;
+    indexUser?: number;
   }) {
     switch (this.requestSelected?.abbr) {
       case 'sr':
-        return this.renderSrPopover(data.date, data.practitioner, data.request, data.cellId);
+        return this.renderSrPopover(
+          data.date,
+          data.practitioner,
+          data.request,
+          data.cellId,
+          data.indexUser
+        );
 
       case 'off':
       case 'sem':
@@ -1612,7 +1630,7 @@ export class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
             arrowpoint: true,
-            focusout: 'close',
+            focusout: 'none',
             mouseleave: 'none',
             transform: 'center',
           } as CXPopover.Set}">
@@ -1657,6 +1675,7 @@ export class ShiftSchedule extends LitElement {
                   practitioner,
                   cellId,
                   dateString: this.convertDateToString(date),
+                  indexUser,
                 })!,
                 this.renderEmptyBox(date, 'select')
               )}">
@@ -1778,9 +1797,14 @@ export class ShiftSchedule extends LitElement {
 
       if (Object.keys(this.shiftSrRequestCache[dateString][dayPart]).length === 0) {
         delete this.shiftSrRequestCache[dateString][dayPart];
-
+        console.log('shift-schedule.js |this.shiftSrRequestCache| = ', this.shiftSrRequestCache);
         if (Object.keys(this.shiftSrRequestCache[dateString]).length === 0) {
           delete this.shiftSrRequestCache[dateString];
+
+          console.log('shift-schedule.js |this.shiftSrRequestCache| = ', this.shiftSrRequestCache);
+          if (Object.keys(this.shiftSrRequestCache).length === 0) {
+            console.log('shift-schedule.js |5555| = ', 5555);
+          }
         }
       }
     } else {
@@ -1804,7 +1828,8 @@ export class ShiftSchedule extends LitElement {
     date: Date,
     practitioner: SchedulePractitionerEntity,
     request?: SrShiftPlan,
-    cellId?: string
+    cellId?: string,
+    indexUser?: number
   ) {
     const shiftGroup = this.groupShiftsByLetter(this.scheduleData?.scheduleShifts) as Record<
       'a' | 'm' | 'n',
@@ -1857,7 +1882,7 @@ export class ShiftSchedule extends LitElement {
                 >
                 <cx-button
                   .var="${{ width: 'size-0' }}"
-                  @click="${() => this.saveSrRequestPlan(date, practitioner, cellId)}"
+                  @click="${() => this.saveSrRequestPlan(date, practitioner, cellId, indexUser)}"
                   >บันทึก</cx-button
                 >
               </c-box>
@@ -1879,7 +1904,12 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
-  saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string) {
+  saveSrRequestPlan(
+    date: Date,
+    practitioner: SchedulePractitionerEntity,
+    cellId?: string,
+    indexUser?: number
+  ) {
     const dateString = this.convertDateToString(date);
 
     if (!this.shiftSrRequestSaved[practitioner.id]) {
@@ -1911,9 +1941,16 @@ export class ShiftSchedule extends LitElement {
     if (cellId) {
       const boxTarget = this.querySelector(`#${cellId}-${dateString}`) as HTMLElement;
       setTimeout(() => {
-        const planEntries = Object.entries(this.shiftSrRequestCache[dateString]);
-        render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
-        this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
+        if (Object.keys(this.shiftSrRequestCache).length === 0) {
+          render(
+            this.renderEmptyDateForSelect(date, practitioner, dateString, indexUser!),
+            boxTarget
+          );
+        } else {
+          const planEntries = Object.entries(this.shiftSrRequestCache[dateString]);
+          render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
+          this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
+        }
       }, 0);
     }
     const dateBetween = getDateBetweenArrayDate(
