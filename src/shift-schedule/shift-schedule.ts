@@ -67,10 +67,10 @@ export class ShiftSchedule extends LitElement {
   private sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
   private titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
   private tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
-  private iconTitleWrapper =
-    'iconTitleWrapper: inline-flex round-24 border-1 border-primary-200 border-solid items-center col-gap-6 pr-12';
-  private iconTitle =
-    'iconTitle: round-full w-32 h-32 bg-primary-100 flex justify-center items-center';
+  private iconTitleWrapper = (color: string) =>
+    `iconTitleWrapper: inline-flex round-24 border-1 border-${color} border-solid items-center col-gap-6 pr-12`;
+  private iconTitle = (color: string) =>
+    `iconTitle: round-full w-32 h-32 bg-${color} flex justify-center items-center`;
 
   private weekendBg = 'weekendBg: bg-pinky-25! w-full h-full';
 
@@ -334,6 +334,9 @@ export class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   border-pinky-100
+                  ui-active="${this.isRemoveMode
+                    ? 'bg: bg-' + 'pinky-300' + '!'
+                    : 'bg: bg-' + 'pinky-50' + '!'}"
                   bg="${this.isRemoveMode ? 'pinky-300' : 'white'}">
                   <c-box
                     flex-center
@@ -1443,13 +1446,18 @@ export class ShiftSchedule extends LitElement {
       off: 'ขอลาหยุด',
       vac: 'ขอลาพักร้อน',
     };
+    const iconBgColor = requestTypeStyles[this.requestSelected?.abbr!].iconBgColor;
+    const accentColor = requestTypeStyles[this.requestSelected?.abbr!].accentColor;
     return html`
       <c-box slot="popover">
         <c-box content>
           <!-- title -->
           <c-box>
-            <c-box ui="${this.iconTitleWrapper}">
-              <c-box icon-prefix="16 circle-line primary-500" ui="${this.iconTitle}"></c-box>
+            <c-box ui="${this.iconTitleWrapper('primary-200')}">
+              <c-box
+                icon-prefix="16 ${requestTypeStyles[this.requestSelected?.abbr!]
+                  .iconSrc} ${accentColor}"
+                ui="${this.iconTitle(iconBgColor)}"></c-box>
               <c-box tx-14> ${title[this.requestSelected?.abbr!]} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
@@ -1774,8 +1782,10 @@ export class ShiftSchedule extends LitElement {
         <c-box content>
           <!-- title -->
           <c-box>
-            <c-box ui="${this.iconTitleWrapper}">
-              <c-box icon-prefix="16 emoji-wink-custom primary-500" ui="${this.iconTitle}"></c-box>
+            <c-box ui="${this.iconTitleWrapper('primary-200')}">
+              <c-box
+                icon-prefix="16 emoji-wink-custom primary-500"
+                ui="${this.iconTitle('primary-100')}"></c-box>
               <c-box tx-14> ขอเข้าเวร </c-box>
             </c-box>
             <c-box ui="titleSrWrapper:mt-12 flex items-center flex justify-between col-gap-12">

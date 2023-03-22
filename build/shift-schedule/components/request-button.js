@@ -32,7 +32,10 @@ let MyElement = class MyElement extends LitElement {
         tx="16 regular ${isSelected ? 'white' : this.accentColor}"
         ui="${this.btnWrapper}"
         transition="all 0.2s ease"
-        bg="${isSelected ? this.accentColor : 'white'}">
+        bg="${isSelected ? this.accentColor : 'white'}"
+        ui-active="${isSelected
+            ? 'bg: bg-' + this.accentColor + '!'
+            : 'bg: bg-' + this.iconBgColor + '!'}">
         <c-box
           id="icon-head"
           ui="${this.btnContent}"
