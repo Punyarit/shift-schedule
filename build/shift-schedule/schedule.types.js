@@ -58,4 +58,9 @@ export const genderType = {
     M: 'ช',
     F: 'ญ',
 };
+export const shiftPlanIcon = {
+    sem: 'exit-right-custom',
+    off: 'block-custom',
+    vac: 'vacation-custom',
+};
 //# sourceMappingURL=schedule.types.js.map

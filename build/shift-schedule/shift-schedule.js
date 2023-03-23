@@ -18,7 +18,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { requestTypeStyles, dayPortValue, genderType, } from './schedule.types';
+import { requestTypeStyles, dayPortValue, genderType, shiftPlanIcon, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
@@ -500,11 +500,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             : srSaved && srSaved?.request?.[dateString]
                                 ? this.renderSrShiftPlanSaved(srSaved, dateString, practitioner, indexUser)
                                 : semSaved?.request?.[dateString]
-                                    ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner)
+                                    ? this.renderShiftPlanSaved(semSaved?.request?.[dateString], 'sem', practitioner, day, indexUser)
                                     : offSaved?.request?.[dateString]
-                                        ? this.renderShiftPlanSaved(offSaved?.request?.[dateString], 'off', practitioner)
+                                        ? this.renderShiftPlanSaved(offSaved?.request?.[dateString], 'off', practitioner, day, indexUser)
                                         : vacSaved?.request?.[dateString]
-                                            ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner)
+                                            ? this.renderShiftPlanSaved(vacSaved?.request?.[dateString], 'vac', practitioner, day, indexUser)
                                             : woffSaved?.[dateString]
                                                 ? this.renderWoffSaved(dateString, practitioner, undefined, 'woff', day, indexUser)
                                                 : requestInitial
@@ -645,7 +645,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     renderSrSavedHost(dateString, practitioner, planEntries) {
-        return html ` <c-box w-full h-full slot="host">
+        return html ` <c-box
+      w-full
+      h-full
+      slot="host"
+      cursor="${this.requestSelected ? 'pointer' : 'default'}">
       ${planEntries
             ?.sort((a, b) => {
             const indexMap = { m: 0, a: 1, n: 2 };
@@ -763,39 +767,57 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     findRequestType(abbr) {
         return this.requestTypes?.find((res) => res.abbr === abbr);
     }
-    renderShiftPlanSaved(data, type, practitioner) {
-        const shiftPlanIcon = {
-            sem: 'exit-right-custom',
-            off: 'block-custom',
-            vac: 'vacation-custom',
-        };
+    renderShiftPlanHost(data, type) {
+        return html `${data?.remark
+            ? html `<c-box
+          slot="host"
+          flex
+          flex-col
+          icon-prefix="16 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
+          ${data.remark}
+        </c-box>`
+            : html `<c-box
+          slot="host"
+          flex
+          justify-center
+          items-center
+          h-full
+          icon-prefix="26 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
+        </c-box>`}`;
+    }
+    renderShiftPlanSaved(data, type, practitioner, date, indexUser) {
+        const cellId = 'sem-saved-shift-cell';
         return html `<c-box p-4 border-box h-full w-full slot="host">
       <c-box
+        id="${cellId}-${data.dateString}"
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
             ? 'hover-request'
             : ''}"
         bg-modern-green-100
         bg="${requestTypeStyles?.[type]?.iconBgColor}"
         h-full
+        provide="host"
         w-full
         round-6
         p-6
         border-box
-        @click="${() => this.removeShiftDatePicker(data, type, practitioner)}">
-        ${data?.remark
-            ? html `<c-box
-              flex
-              flex-col
-              icon-prefix="16 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
-              ${data.remark}
-            </c-box>`
-            : html `<c-box
-              flex
-              justify-center
-              items-center
-              h-full
-              icon-prefix="26 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
-            </c-box>`}
+        @click="${this.isRemoveMode
+            ? () => this.removeShiftDatePicker(data, type, practitioner)
+            : this.requestSelected
+                ? () => this.appendPopover(type, cellId, {
+                    date: date,
+                    dateString: data.dateString,
+                    indexUser: indexUser,
+                    practitioner: practitioner,
+                }, this.getPopoverByRequest({
+                    date: date,
+                    practitioner: practitioner,
+                    dateString: data.dateString,
+                    cellId,
+                    type,
+                }), this.renderShiftPlanHost(data, type))
+                : null}">
+        ${this.renderShiftPlanHost(data, type)}
       </c-box>
     </c-box>`;
     }
@@ -840,7 +862,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     renderSrInitialHost(request, practitioner, dateString) {
-        return html ` <c-box w-full h-full slot="host">
+        return html ` <c-box
+      w-full
+      h-full
+      slot="host"
+      cursor="${this.requestSelected ? 'pointer' : 'default'}">
       ${Object.entries(request.arrangedRequest).map(([dayPart, plans]) => {
             const plansEntries = Object.entries(plans);
             return html `
@@ -947,13 +973,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         dateString,
                         remark: request.remark,
                         initial: true,
-                    }, request.requestType.abbr, practitioner))
+                    }, request.requestType.abbr, practitioner, date, indexUser))
                     : null}">
             ${this.renderShiftPlanSaved({
                     dateString,
                     remark: request.remark,
                     initial: true,
-                }, request.requestType.abbr, practitioner)}
+                }, request.requestType.abbr, practitioner, date, indexUser)}
           </c-box>
         `;
             default:
@@ -1056,6 +1082,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     dateString: data.dateString,
                     remark: data.remark,
                     type: data.type,
+                    indexUser: data.indexUser,
                 });
         }
     }
@@ -1094,7 +1121,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         dateString: data.dateString,
                         remark: data.remark,
                         initial: true,
-                    }, data.type, data.practitioner), boxTarget);
+                    }, data.type, data.practitioner, data.date, data.indexUser), boxTarget);
                     this.shiftSrRequestCache[data.dateString] = {};
                 }, 0);
             }

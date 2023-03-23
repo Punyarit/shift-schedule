@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@cortex-ui/core@^0.0.230":
-  version "0.0.230"
-  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.230.tgz#fefb70864074a57712f9fa56d294617232515ec6"
-  integrity sha512-HxZfwv4iSfXpwOBRKdTcLKEBerrUjzLcYDAXL7KvQrW/Wk8gl/R03ovQUUDkq7haJ8QfL53EGradEjUWNUvigg==
+"@cortex-ui/core@^0.0.237":
+  version "0.0.237"
+  resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.237.tgz#d9bdf7e2316b1fe6a753f588b944be031acfeae8"
+  integrity sha512-Mz1of1m96JdsDqRaJgv9ZKrn29RPf+y5IBWR+IYfQG18x9dfJwhFvRX4f98WzkzmP3GYoJL7lflqrFC3ei5kGg==
   dependencies:
     "@types/react" "^18.0.27"
     lit "^2.6.1"

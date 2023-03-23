@@ -200,3 +200,9 @@ export const genderType = {
   M: 'ช',
   F: 'ญ',
 };
+
+export const shiftPlanIcon: Record<string, string> = {
+  sem: 'exit-right-custom',
+  off: 'block-custom',
+  vac: 'vacation-custom',
+};

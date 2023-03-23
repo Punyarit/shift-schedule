@@ -161,3 +161,4 @@ export declare const genderType: {
     M: string;
     F: string;
 };
+export declare const shiftPlanIcon: Record<string, string>;
