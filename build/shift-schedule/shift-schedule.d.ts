@@ -43,6 +43,8 @@ export declare class ShiftSchedule extends LitElement {
     srState: never[];
     maxHeightOfUserTable?: number;
     private shiftSrRequestCache;
+    private shiftSrShipCache;
+    private shiftDatepickerCache;
     userImgDefault?: string;
     shiftSrRequestSaved: {
         [id: string]: {
@@ -138,8 +140,9 @@ export declare class ShiftSchedule extends LitElement {
         title?: string;
         remark?: string;
         indexUser?: number;
+        event?: PointerEvent;
     }): TemplateResult<1> | undefined;
-    saveWithDateData: (practitioner: SchedulePractitionerEntity, dateString: string) => void;
+    saveShiftPlanDatePicker: (practitioner: SchedulePractitionerEntity, dateString: string, ceillId: string, remark: string, type: RequestType['abbr']) => void;
     renderDatepickerBox(data: {
         title: string;
         practitioner: SchedulePractitionerEntity;
@@ -149,6 +152,7 @@ export declare class ShiftSchedule extends LitElement {
         remark: string;
         type: RequestType['abbr'];
         indexUser: number;
+        request?: SrShiftPlan;
     }): TemplateResult<1>;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
@@ -156,11 +160,12 @@ export declare class ShiftSchedule extends LitElement {
         dateString: string;
         indexUser: number;
     }, popoverContent: TemplateResult, popoverHost: TemplateResult): void;
-    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number): TemplateResult<1> | undefined;
+    renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number, request?: SrShiftPlan): TemplateResult<1> | undefined;
     renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, initialSr?: Record<number, ScheduleShiftsEntity>): TemplateResult<1>;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string): void;
     groupShiftsByLetter(arr: any): any;
-    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string, indexUser?: number): TemplateResult<1>;
+    renderContentBack(type: RequestType['abbr'], date: Date, dateString: string, practitioner: SchedulePractitionerEntity, boxTarget: HTMLElement, indexUser?: number, renderType?: 'init' | 'saved', request?: SrShiftPlan): void;
+    renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string, indexUser?: number, event?: PointerEvent): TemplateResult<1>;
     saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string, indexUser?: number): void;
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;

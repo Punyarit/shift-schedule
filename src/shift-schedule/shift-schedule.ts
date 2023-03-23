@@ -105,6 +105,22 @@ export class ShiftSchedule extends LitElement {
     [date: string]: SrShiftPlan;
   };
 
+  private shiftSrShipCache = {} as {
+    [date: string]: SrShiftPlan;
+  };
+
+  private shiftDatepickerCache = {} as {
+    [type: string]: {
+      dateString: string;
+      remark: string | undefined;
+      initial: boolean;
+      requestType: 'sem' | 'off' | 'vac';
+      practitioner: SchedulePractitionerEntity;
+      date: Date;
+      indexUser: number;
+    };
+  };
+
   @property({ type: String })
   userImgDefault?: string;
 
@@ -260,6 +276,9 @@ export class ShiftSchedule extends LitElement {
   render() {
     return html`
       <style>
+        c-box[_ui='inputShortUI'] {
+          width: 100%;
+        }
         :host {
           --cbox-divider-width: 100%;
           --cbox-divider-top: 0;
@@ -482,7 +501,7 @@ export class ShiftSchedule extends LitElement {
                             : ''}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
-                            <img src="${this.userImgDefault || ''}" alt="" />
+                            <img width="" height="" src="${this.userImgDefault || ''}" alt="" />
                             <c-box ui="${this.genderBox}">
                               ${genderType[gender as 'M' | 'F']}
                             </c-box>
@@ -715,7 +734,7 @@ export class ShiftSchedule extends LitElement {
     date?: Date,
     indexUser?: number
   ) {
-    const cellId = 'woff-saved-shift-cell';
+    const cellId = `woff-saved-shift-cell-${indexUser}`;
 
     return html`
       <c-box
@@ -723,7 +742,7 @@ export class ShiftSchedule extends LitElement {
         h-full
         id="${cellId}-${dateString}"
         @click="${this.requestSelected
-          ? () =>
+          ? (e: PointerEvent) =>
               this.appendPopover(
                 type!,
                 cellId,
@@ -739,6 +758,7 @@ export class ShiftSchedule extends LitElement {
                   dateString,
                   cellId,
                   type,
+                  event: e,
                 })!,
                 this.renderWoffSavedHost(
                   dateString,
@@ -770,6 +790,7 @@ export class ShiftSchedule extends LitElement {
         icon-prefix="26 pause-circle-line ${requestTypeStyles[type!].accentColor}"
         w-full
         h-full
+        shift-type="woff-saved"
         flex
         justify-center
         round-6
@@ -802,6 +823,7 @@ export class ShiftSchedule extends LitElement {
     return html` <c-box
       w-full
       h-full
+      shift-type="sr-saved"
       slot="host"
       cursor="${this.requestSelected ? 'pointer' : 'default'}">
       ${planEntries
@@ -858,16 +880,15 @@ export class ShiftSchedule extends LitElement {
     const planEntries = Object.entries(planRequest?.request?.[dateString]?.shiftPlan || {});
 
     const shiftPlan = this.shiftSrRequestSaved?.[practitioner.id]?.request?.[dateString]?.shiftPlan;
-    const cellId = 'sr-saved-shift-cell';
+    const cellId = `sr-saved-shift-cell-${indexUser}`;
     const date = new Date(dateString);
 
-    console.log('shift-schedule.js |planEntries| = ', planEntries);
     return html`
       <c-box
         w-full
         h-full
         id="${cellId}-${dateString}"
-        @click="${() =>
+        @click="${(e: PointerEvent) =>
           planEntries.length
             ? this.appendPopover(
                 'sr',
@@ -884,6 +905,7 @@ export class ShiftSchedule extends LitElement {
                   cellId,
                   request: shiftPlan,
                   dateString,
+                  event: e,
                 })!,
 
                 this.renderSrSavedHost(dateString, practitioner, planEntries)
@@ -980,18 +1002,20 @@ export class ShiftSchedule extends LitElement {
     return html`${data?.remark
       ? html`<c-box
           slot="host"
+          shift-type="${type}-saved"
           flex
           flex-col
-          icon-prefix="16 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
+          icon-prefix="16 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
           ${data.remark}
         </c-box>`
       : html`<c-box
           slot="host"
           flex
+          shift-type="${type}-saved"
           justify-center
           items-center
           h-full
-          icon-prefix="26 ${shiftPlanIcon[type]} ${requestTypeStyles[type].accentColor}">
+          icon-prefix="26 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
         </c-box>`}`;
   }
 
@@ -1002,9 +1026,9 @@ export class ShiftSchedule extends LitElement {
     date: Date,
     indexUser: number
   ) {
-    const cellId = 'sem-saved-shift-cell';
+    const cellId = `sem-saved-shift-cell-${indexUser}`;
 
-    return html`<c-box p-4 border-box h-full w-full slot="host">
+    return html`<c-box p-4 border-box h-full w-full slot="host" shift-type="${type}-saved">
       <c-box
         id="${cellId}-${data.dateString}"
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
@@ -1013,7 +1037,6 @@ export class ShiftSchedule extends LitElement {
         bg-modern-green-100
         bg="${requestTypeStyles?.[type]?.iconBgColor}"
         h-full
-        provide="host"
         w-full
         round-6
         p-6
@@ -1021,7 +1044,7 @@ export class ShiftSchedule extends LitElement {
         @click="${this.isRemoveMode
           ? () => this.removeShiftDatePicker(data, type, practitioner)
           : this.requestSelected
-          ? () =>
+          ? (e: PointerEvent) =>
               this.appendPopover(
                 type!,
                 cellId,
@@ -1037,6 +1060,7 @@ export class ShiftSchedule extends LitElement {
                   dateString: data.dateString,
                   cellId,
                   type,
+                  event: e,
                 })!,
                 this.renderShiftPlanHost(data, type)
               )
@@ -1106,6 +1130,7 @@ export class ShiftSchedule extends LitElement {
     return html` <c-box
       w-full
       h-full
+      shift-type="sr-init"
       slot="host"
       cursor="${this.requestSelected ? 'pointer' : 'default'}">
       ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
@@ -1153,7 +1178,7 @@ export class ShiftSchedule extends LitElement {
     indexUser: number
   ) {
     const dateString = this.convertDateToString(date);
-    const cellId = 'initial-data-shift-cell';
+    const cellId = `initial-data-shift-cell-${indexUser}`;
     const title = {
       sem: 'ขออบรม, สัมนา, ไปราชการ',
       off: 'ขอลาหยุด',
@@ -1178,7 +1203,7 @@ export class ShiftSchedule extends LitElement {
             h-full
             id="${cellId}-${dateString}"
             @click="${this.requestSelected
-              ? () =>
+              ? (e: PointerEvent) =>
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1188,7 +1213,7 @@ export class ShiftSchedule extends LitElement {
                       indexUser,
                       practitioner,
                     },
-                    this.getPopoverByRequest(popoverObj)!,
+                    this.getPopoverByRequest({ ...popoverObj, event: e })!,
 
                     this.renderSrInitialHost(request, practitioner, dateString)
                   )
@@ -1203,8 +1228,9 @@ export class ShiftSchedule extends LitElement {
             w-full
             h-full
             id="${cellId}-${dateString}"
+            shift-type="woff-init"
             @click="${this.requestSelected
-              ? () =>
+              ? (e: PointerEvent) =>
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1214,7 +1240,7 @@ export class ShiftSchedule extends LitElement {
                       indexUser,
                       practitioner,
                     },
-                    this.getPopoverByRequest(popoverObj)!,
+                    this.getPopoverByRequest({ ...popoverObj, event: e })!,
                     this.renderWoffSavedHost(
                       dateString,
                       practitioner,
@@ -1239,13 +1265,25 @@ export class ShiftSchedule extends LitElement {
       case 'sem':
       case 'vac':
       case 'off':
+        this.shiftDatepickerCache[request.requestType.abbr] = {
+          dateString,
+          remark: request.remark,
+          initial: true,
+
+          requestType: request.requestType.abbr,
+          practitioner,
+          date,
+          indexUser,
+        };
+
         return html`
           <c-box
+            shift-type="${request.requestType.abbr}-init"
             w-full
             h-full
             id="${cellId}-${dateString}"
             @click="${this.requestSelected
-              ? () =>
+              ? (e: PointerEvent) =>
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1255,7 +1293,7 @@ export class ShiftSchedule extends LitElement {
                       indexUser,
                       practitioner,
                     },
-                    this.getPopoverByRequest(popoverObj)!,
+                    this.getPopoverByRequest({ ...popoverObj, event: e })!,
                     this.renderShiftPlanSaved(
                       {
                         dateString,
@@ -1289,7 +1327,6 @@ export class ShiftSchedule extends LitElement {
   }
 
   saveDatepicker(e: CXDatePicker.SelectDate.DateRange) {
-    console.log('shift-schedule.js |e.detail| = ', e.detail);
     this.datepickerData = e.detail;
   }
 
@@ -1404,6 +1441,7 @@ export class ShiftSchedule extends LitElement {
     title?: string;
     remark?: string;
     indexUser?: number;
+    event?: PointerEvent;
   }) {
     switch (this.requestSelected?.abbr) {
       case 'sr':
@@ -1412,7 +1450,8 @@ export class ShiftSchedule extends LitElement {
           data.practitioner,
           data.request,
           data.cellId,
-          data.indexUser
+          data.indexUser,
+          data.event
         );
 
       case 'off':
@@ -1427,11 +1466,18 @@ export class ShiftSchedule extends LitElement {
           remark: data.remark!,
           type: data.type!,
           indexUser: data.indexUser!,
+          request: data.request,
         });
     }
   }
 
-  saveWithDateData = (practitioner: SchedulePractitionerEntity, dateString: string) => {
+  saveShiftPlanDatePicker = (
+    practitioner: SchedulePractitionerEntity,
+    dateString: string,
+    ceillId: string,
+    remark: string,
+    type: RequestType['abbr']
+  ) => {
     const dateBetween = getDateBetweenArrayDate(
       this.datepickerData?.startdate!,
       this.datepickerData?.enddate!
@@ -1540,6 +1586,23 @@ export class ShiftSchedule extends LitElement {
     this.datepickerData = undefined;
     this.selectedDate = undefined;
     ModalCaller.popover().clear();
+
+    if (ceillId) {
+      const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
+      setTimeout(() => {
+        render(
+          this.renderShiftPlanHost(
+            {
+              dateString,
+              initial: undefined,
+              remark,
+            },
+            this.requestSelected?.abbr!
+          ),
+          boxTarget
+        );
+      }, 0);
+    }
   };
 
   renderDatepickerBox(data: {
@@ -1551,6 +1614,7 @@ export class ShiftSchedule extends LitElement {
     remark: string;
     type: RequestType['abbr'];
     indexUser: number;
+    request?: SrShiftPlan;
   }) {
     const title: Record<string, string> = {
       sem: 'ขออบรม, สัมนา, ไปราชการ',
@@ -1584,29 +1648,29 @@ export class ShiftSchedule extends LitElement {
                         `#${data.cellId}-${data.dateString}`
                       ) as HTMLElement;
 
-                      setTimeout(() => {
-                        render(
-                          this.renderShiftPlanSaved(
-                            {
-                              dateString: data.dateString,
-                              remark: data.remark,
-                              initial: true,
-                            },
-                            data.type,
-                            data.practitioner,
-                            data.date,
-                            data.indexUser
-                          ),
-                          boxTarget
-                        );
-                        this.shiftSrRequestCache[data.dateString] = {} as SrShiftPlan;
-                      }, 0);
+                      this.renderContentBack(
+                        data.type,
+                        data.date,
+                        data.dateString,
+                        data.practitioner,
+                        boxTarget,
+                        data.indexUser,
+                        undefined,
+                        data.request
+                      );
                     }
                   }}"
                   >ยกเลิก</cx-button
                 >
                 <cx-button
-                  @click="${() => this.saveWithDateData(data.practitioner, data.dateString)}"
+                  @click="${() =>
+                    this.saveShiftPlanDatePicker(
+                      data.practitioner,
+                      data.dateString,
+                      data.cellId,
+                      data.remark,
+                      data.type
+                    )}"
                   .var="${{ width: 'size-0' } as CXButton.Var}"
                   >บันทึก</cx-button
                 >
@@ -1630,7 +1694,11 @@ export class ShiftSchedule extends LitElement {
                 inputStyle: 'short',
                 min: new Date(this.scheduleData?.startDate!),
                 max: new Date(this.scheduleData?.endDate!),
-              } as CXDatePicker.Set}"></cx-datepicker>
+              } as CXDatePicker.Set}"
+              .var="${{
+                heightInput: '44',
+                widthInput: '312',
+              } as CXDatePicker.Var}"></cx-datepicker>
           </c-box>
 
           <c-box mt-12>หมายเหตุ</c-box>
@@ -1638,8 +1706,8 @@ export class ShiftSchedule extends LitElement {
             <input
               @input="${(e: InputEvent) => {
                 const input = e.target as HTMLInputElement;
-                if (input.value.length > 25) {
-                  input.value = input.value.slice(0, 25);
+                if (input.value.length > 10) {
+                  input.value = input.value.slice(0, 10);
                 }
               }}"
               ${ref(this.remarkRef)}
@@ -1706,9 +1774,11 @@ export class ShiftSchedule extends LitElement {
     date: Date,
     practitioner: SchedulePractitionerEntity,
     dateString: string,
-    indexUser: number
+    indexUser: number,
+    request?: SrShiftPlan
   ) {
-    const cellId = 'empty-shift-cell';
+    const requestClone = structuredClone(request);
+    const cellId = `empty-shift-cell-${indexUser}`;
     switch (this.requestSelected?.abbr) {
       case 'sr':
         return html`
@@ -1716,7 +1786,7 @@ export class ShiftSchedule extends LitElement {
             id="${cellId}-${dateString}"
             w-full
             h-full
-            @click="${() =>
+            @click="${(event: PointerEvent) =>
               this.appendPopover(
                 this.requestSelected?.abbr!,
                 cellId,
@@ -1727,11 +1797,13 @@ export class ShiftSchedule extends LitElement {
                   indexUser,
                 },
                 this.getPopoverByRequest({
+                  request: requestClone,
                   date,
                   practitioner,
                   cellId,
                   dateString: this.convertDateToString(date),
                   indexUser,
+                  event,
                 })!,
                 this.renderEmptyBox(date, 'select')
               )}">
@@ -1746,7 +1818,7 @@ export class ShiftSchedule extends LitElement {
           id="empty-shift-cell-${dateString}"
           w-full
           h-full
-          @click="${() =>
+          @click="${(e: PointerEvent) =>
             this.appendPopover(
               this.requestSelected?.abbr!,
               cellId,
@@ -1757,7 +1829,7 @@ export class ShiftSchedule extends LitElement {
                 indexUser,
               },
               // fix
-              this.getPopoverByRequest({ date, practitioner, cellId, dateString })!,
+              this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e })!,
 
               this.renderEmptyBox(date, 'select')
             )}">
@@ -1853,13 +1925,11 @@ export class ShiftSchedule extends LitElement {
 
       if (Object.keys(this.shiftSrRequestCache[dateString][dayPart]).length === 0) {
         delete this.shiftSrRequestCache[dateString][dayPart];
-        console.log('shift-schedule.js |this.shiftSrRequestCache| = ', this.shiftSrRequestCache);
         if (Object.keys(this.shiftSrRequestCache[dateString]).length === 0) {
           delete this.shiftSrRequestCache[dateString];
 
-          console.log('shift-schedule.js |this.shiftSrRequestCache| = ', this.shiftSrRequestCache);
           if (Object.keys(this.shiftSrRequestCache).length === 0) {
-            console.log('shift-schedule.js |5555| = ', 5555);
+            this.shiftSrRequestCache = {};
           }
         }
       }
@@ -1880,12 +1950,71 @@ export class ShiftSchedule extends LitElement {
     return result;
   }
 
+  renderContentBack(
+    type: RequestType['abbr'],
+    date: Date,
+    dateString: string,
+    practitioner: SchedulePractitionerEntity,
+    boxTarget: HTMLElement,
+    indexUser?: number,
+    renderType?: 'init' | 'saved',
+    request?: SrShiftPlan
+  ) {
+    switch (type) {
+      case 'sr':
+        setTimeout(() => {
+          // this.shiftSrRequestCache = {} as any;
+          const planEntries = Object.entries(request || this.shiftSrShipCache);
+          render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
+          // this.shiftSrShipCache = {};
+        }, 0);
+        break;
+
+      case 'off':
+      case 'sem':
+      case 'vac':
+        setTimeout(() => {
+          render(
+            this.renderShiftPlanSaved(
+              {
+                dateString: this.shiftDatepickerCache[type].dateString,
+                remark: this.shiftDatepickerCache[type].remark,
+                initial: this.shiftDatepickerCache[type].initial,
+              },
+              this.shiftDatepickerCache[type].requestType,
+              this.shiftDatepickerCache[type].practitioner,
+              this.shiftDatepickerCache[type].date,
+              this.shiftDatepickerCache[type].indexUser
+            ),
+            boxTarget
+          );
+        }, 0);
+
+        break;
+
+      default:
+        render(
+          this.renderEmptyDateForSelect(date, practitioner, dateString, indexUser!, request),
+          boxTarget
+        );
+        break;
+    }
+    // if (Object.keys(this.shiftSrRequestCache).length === 0) {
+    //   render(this.renderEmptyDateForSelect(date, practitioner, dateString, indexUser!), boxTarget);
+    // } else {
+    //   const planEntries = Object.entries(this.shiftSrRequestCache[dateString]);
+    //   render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
+    //   this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
+    // }
+  }
+
   renderSrPopover(
     date: Date,
     practitioner: SchedulePractitionerEntity,
     request?: SrShiftPlan,
     cellId?: string,
-    indexUser?: number
+    indexUser?: number,
+    event?: PointerEvent
   ) {
     const shiftGroup = this.groupShiftsByLetter(this.scheduleData?.scheduleShifts) as Record<
       'a' | 'm' | 'n',
@@ -1894,10 +2023,12 @@ export class ShiftSchedule extends LitElement {
 
     const dateString = this.convertDateToString(date);
 
+    this.shiftSrShipCache = structuredClone(request);
+
     if (request) {
       this.shiftSrRequestCache[dateString] = {
         ...(this.shiftSrRequestCache[dateString] || {}),
-        ...request,
+        ...structuredClone(request),
       };
     }
 
@@ -1925,13 +2056,26 @@ export class ShiftSchedule extends LitElement {
                         `#${cellId}-${dateString}`
                       ) as HTMLElement;
 
-                      const popoverHost = boxTarget.querySelector("c-box[slot='host']");
+                      const targetElement = event?.target as HTMLElement;
+                      const shiftType = targetElement.closest('c-box[shift-type]') as HTMLElement;
+                      const requestHostType = shiftType.getAttribute('shift-type');
 
-                      setTimeout(() => {
-                        const planEntries = Object.entries(request || {});
-                        this.shiftSrRequestCache[dateString] = {} as SrShiftPlan;
-                        boxTarget.appendChild(popoverHost!);
-                      }, 500);
+                      if (cellId) {
+                        const [requestType, renderType] = requestHostType?.split('-') as [
+                          RequestType['abbr'],
+                          'init' | 'saved' | undefined
+                        ];
+                        this.renderContentBack(
+                          requestType,
+                          date,
+                          dateString,
+                          practitioner,
+                          boxTarget,
+                          indexUser,
+                          renderType,
+                          request
+                        );
+                      }
                     }
                   }}"
                   >ยกเลิก</cx-button
@@ -2096,6 +2240,7 @@ export class ShiftSchedule extends LitElement {
         border-box
         w-full
         h-full
+        shift-type="empty"
         slot="host"
         @click="${state === 'select'
           ? () => this.selectDateRequest(date, type, practitioner)
