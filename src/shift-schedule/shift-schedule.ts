@@ -297,7 +297,7 @@ export class ShiftSchedule extends LitElement {
         }
 
         .focus-divider {
-          border-bottom: 2px solid var(--primary-500);
+          border-bottom: 2px solid var(--primary-500) !important;
         }
 
         input::placeholder {
@@ -501,7 +501,7 @@ export class ShiftSchedule extends LitElement {
                             : ''}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
-                            <img width="" height="" src="${this.userImgDefault || ''}" alt="" />
+                            <img width="24" height="24" src="${this.userImgDefault || ''}" alt="" />
                             <c-box ui="${this.genderBox}">
                               ${genderType[gender as 'M' | 'F']}
                             </c-box>
@@ -565,7 +565,7 @@ export class ShiftSchedule extends LitElement {
                                       ${disableDate
                                         ? html` <div class="diagonal-pattern"></div> `
                                         : srSaved && srSaved?.request?.[dateString]
-                                        ? this.renderSrShiftPlanSaved(
+                                        ? this.renderSrShiftSaved(
                                             srSaved,
                                             dateString,
                                             practitioner,
@@ -741,8 +741,8 @@ export class ShiftSchedule extends LitElement {
         w-full
         h-full
         id="${cellId}-${dateString}"
-        @click="${this.requestSelected
-          ? (e: PointerEvent) =>
+        @click="${this.requestSelected?.abbr !== 'woff'
+          ? (e: PointerEvent) => {
               this.appendPopover(
                 type!,
                 cellId,
@@ -768,7 +768,8 @@ export class ShiftSchedule extends LitElement {
                   date!,
                   indexUser
                 )
-              )
+              );
+            }
           : null}">
         ${this.renderWoffSavedHost(dateString, practitioner, data, type, date, indexUser)}
       </c-box>
@@ -785,7 +786,9 @@ export class ShiftSchedule extends LitElement {
   ): TemplateResult {
     return html`<c-box h-full w-full p-4 border-box slot="host">
       <c-box
-        class="woff-saved ${this.requestSelected || this.isRemoveMode ? 'hover-request' : ''}"
+        class="woff-saved ${this.requestSelected?.abbr !== 'woff' || this.isRemoveMode
+          ? 'hover-request'
+          : ''}"
         bg="gray-300"
         icon-prefix="26 pause-circle-line ${requestTypeStyles[type!].accentColor}"
         w-full
@@ -801,12 +804,7 @@ export class ShiftSchedule extends LitElement {
     </c-box>`;
   }
 
-  removeSrPlan(
-    dayPart: DayPart,
-    dateString: string,
-    practitioner: SchedulePractitionerEntity,
-    removeMode?: boolean
-  ) {
+  removeSrPlan(dateString: string, practitioner: SchedulePractitionerEntity, removeMode?: boolean) {
     if (this.isRemoveMode || removeMode) {
       delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
       this.removeRequestSelected = this.findRequestType('sr');
@@ -821,11 +819,12 @@ export class ShiftSchedule extends LitElement {
     planEntries: [string, Record<number, ScheduleShiftsEntity>][]
   ) {
     return html` <c-box
+      @click="${() => this.removeSrPlan(dateString, practitioner)}"
       w-full
       h-full
       shift-type="sr-saved"
       slot="host"
-      cursor="${this.requestSelected ? 'pointer' : 'default'}">
+      cursor="${this.requestSelected || this.isRemoveMode ? 'pointer' : 'default'}">
       ${planEntries
         ?.sort((a, b) => {
           const indexMap = { m: 0, a: 1, n: 2 };
@@ -841,7 +840,6 @@ export class ShiftSchedule extends LitElement {
                 border-box
                 round-6
                 h-44
-                @click="${() => this.removeSrPlan(dayPart as DayPart, dateString, practitioner)}"
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
                   <c-box
@@ -864,7 +862,7 @@ export class ShiftSchedule extends LitElement {
     </c-box>`;
   }
 
-  renderSrShiftPlanSaved(
+  renderSrShiftSaved(
     planRequest: {
       practitioner: SchedulePractitionerEntity;
       request: {
@@ -888,29 +886,35 @@ export class ShiftSchedule extends LitElement {
         w-full
         h-full
         id="${cellId}-${dateString}"
-        @click="${(e: PointerEvent) =>
-          planEntries.length
-            ? this.appendPopover(
-                'sr',
-                cellId,
-                {
-                  date,
-                  dateString,
-                  indexUser,
-                  practitioner,
-                },
-                this.getPopoverByRequest({
-                  date,
-                  practitioner,
-                  cellId,
-                  request: shiftPlan,
-                  dateString,
-                  event: e,
-                })!,
+        @click="${this.requestSelected?.abbr !== 'woff'
+          ? (e: PointerEvent) => {
+              planEntries.length
+                ? this.appendPopover(
+                    'sr',
+                    cellId,
+                    {
+                      date,
+                      dateString,
+                      indexUser,
+                      practitioner,
+                    },
+                    this.getPopoverByRequest({
+                      date,
+                      practitioner,
+                      cellId,
+                      request: shiftPlan,
+                      dateString,
+                      event: e,
+                    })!,
 
-                this.renderSrSavedHost(dateString, practitioner, planEntries)
-              )
-            : null}">
+                    this.renderSrSavedHost(dateString, practitioner, planEntries)
+                  )
+                : null;
+            }
+          : () => {
+              this.saveWoffRequest(date, practitioner, dateString);
+              this.requestUpdate();
+            }}">
         ${planEntries.length
           ? this.renderSrSavedHost(dateString, practitioner, planEntries)
           : this.renderEmptyDateForSelect(
@@ -1043,8 +1047,8 @@ export class ShiftSchedule extends LitElement {
         border-box
         @click="${this.isRemoveMode
           ? () => this.removeShiftDatePicker(data, type, practitioner)
-          : this.requestSelected
-          ? (e: PointerEvent) =>
+          : this.requestSelected?.abbr !== 'woff'
+          ? (e: PointerEvent) => {
               this.appendPopover(
                 type!,
                 cellId,
@@ -1063,14 +1067,18 @@ export class ShiftSchedule extends LitElement {
                   event: e,
                 })!,
                 this.renderShiftPlanHost(data, type)
-              )
-          : null}">
+              );
+            }
+          : () => {
+              this.saveWoffRequest(date, practitioner, data.dateString!);
+              this.requestUpdate();
+            }}">
         ${this.renderShiftPlanHost(data, type)}
       </c-box>
     </c-box>`;
   }
 
-  removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string) {
+  removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string) {
     if (!this.isRemoveMode) return;
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.id === practitioner.id
@@ -1132,20 +1140,13 @@ export class ShiftSchedule extends LitElement {
       h-full
       shift-type="sr-init"
       slot="host"
-      cursor="${this.requestSelected ? 'pointer' : 'default'}">
+      cursor="${this.requestSelected || this.isRemoveMode ? 'pointer' : 'default'}"
+      @click="${this.isRemoveMode ? () => this.removeInitialSr(practitioner, dateString) : null}">
       ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
         const plansEntries = Object.entries(plans);
         return html`
           <c-box p-4 border-box flex flex-col row-gap-4>
-            <c-box
-              @click="${this.isRemoveMode
-                ? () => this.removeInitialSr(practitioner, dateString, dayPart)
-                : null}"
-              p-4
-              border-box
-              round-6
-              h-44
-              bg="${this.setColorRequestType(dayPart as DayPart)}">
+            <c-box p-4 border-box round-6 h-44 bg="${this.setColorRequestType(dayPart as DayPart)}">
               <div
                 style="cursor:${this.requestSelected || this.isRemoveMode
                   ? 'pointer'
@@ -1202,8 +1203,8 @@ export class ShiftSchedule extends LitElement {
             w-full
             h-full
             id="${cellId}-${dateString}"
-            @click="${this.requestSelected
-              ? (e: PointerEvent) =>
+            @click="${this.requestSelected?.abbr !== 'woff'
+              ? (e: PointerEvent) => {
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1216,8 +1217,12 @@ export class ShiftSchedule extends LitElement {
                     this.getPopoverByRequest({ ...popoverObj, event: e })!,
 
                     this.renderSrInitialHost(request, practitioner, dateString)
-                  )
-              : null}">
+                  );
+                }
+              : () => {
+                  this.saveWoffRequest(date, practitioner, dateString);
+                  this.requestUpdate();
+                }}">
             ${this.renderSrInitialHost(request, practitioner, dateString)}
           </c-box>
         `;
@@ -1229,8 +1234,8 @@ export class ShiftSchedule extends LitElement {
             h-full
             id="${cellId}-${dateString}"
             shift-type="woff-init"
-            @click="${this.requestSelected
-              ? (e: PointerEvent) =>
+            @click="${this.requestSelected?.abbr !== 'woff'
+              ? (e: PointerEvent) => {
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1249,7 +1254,8 @@ export class ShiftSchedule extends LitElement {
                       date,
                       indexUser
                     )
-                  )
+                  );
+                }
               : null}">
             ${this.renderWoffSavedHost(
               dateString,
@@ -1282,7 +1288,7 @@ export class ShiftSchedule extends LitElement {
             w-full
             h-full
             id="${cellId}-${dateString}"
-            @click="${this.requestSelected
+            @click="${this.requestSelected?.abbr !== 'woff'
               ? (e: PointerEvent) =>
                   this.appendPopover(
                     request.requestType.abbr,
@@ -1306,7 +1312,10 @@ export class ShiftSchedule extends LitElement {
                       indexUser
                     )
                   )
-              : null}">
+              : () => {
+                  this.saveWoffRequest(date, practitioner, dateString);
+                  this.requestUpdate();
+                }}">
             ${this.renderShiftPlanSaved(
               {
                 dateString,
@@ -1734,17 +1743,15 @@ export class ShiftSchedule extends LitElement {
   ) {
     if (this.isRemoveMode) return;
     this.userSelectedIndex = data.indexUser;
-    console.log('shift-schedule.js |cellId| = ', cellId);
-    console.log('shift-schedule.js |type| = ', type);
     this.dispatchEvent(
       new CustomEvent('focus-request', {
         detail: { practitioner: data.practitioner },
       })
     );
-    console.log('shift-schedule.js |type| = ', type);
+
+    if (this.requestSelected?.abbr === 'woff') return;
 
     const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`) as HTMLElement;
-    console.log('shift-schedule.js |boxTarget| = ', boxTarget);
     if (boxTarget) {
       const firstElement = boxTarget.firstElementChild;
       if (firstElement?.tagName !== 'CX-POPOVER') {
@@ -1808,9 +1815,21 @@ export class ShiftSchedule extends LitElement {
                   indexUser,
                   event,
                 })!,
-                this.renderEmptyBox(date, 'select')
+                this.renderEmptyBox(
+                  date,
+                  'select',
+                  this.requestSelected?.abbr,
+                  practitioner,
+                  dateString
+                )
               )}">
-            ${this.renderEmptyBox(date, 'display')}
+            ${this.renderEmptyBox(
+              date,
+              'display',
+              this.requestSelected?.abbr,
+              practitioner,
+              dateString
+            )}
           </c-box>
         `;
 
@@ -1833,14 +1852,26 @@ export class ShiftSchedule extends LitElement {
               },
               this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e })!,
 
-              this.renderEmptyBox(date, 'select')
+              this.renderEmptyBox(
+                date,
+                'select',
+                this.requestSelected?.abbr,
+                practitioner,
+                dateString
+              )
             );
           }}">
-          ${this.renderEmptyBox(date, 'display')}
+          ${this.renderEmptyBox(
+            date,
+            'display',
+            this.requestSelected?.abbr,
+            practitioner,
+            dateString
+          )}
         </c-box>`;
 
       case 'woff':
-        return html` ${this.renderEmptyBox(date, 'select', 'woff', practitioner)} `;
+        return html` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString)} `;
 
       default:
         return undefined;
@@ -2198,16 +2229,17 @@ export class ShiftSchedule extends LitElement {
   selectDateRequest(
     date: Date,
     type?: RequestType['abbr'],
-    practitioner?: SchedulePractitionerEntity
+    practitioner?: SchedulePractitionerEntity,
+    dateString?: string
   ) {
     this.selectedDate = date;
 
     if (type === 'woff') {
-      this.saveWoffRequest(date, practitioner!);
+      this.saveWoffRequest(date, practitioner!, dateString!);
     }
   }
 
-  saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity) {
+  saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string) {
     if (!this.shiftWoffRequestSaved?.[practitioner.id]) {
       this.shiftWoffRequestSaved![practitioner.id] = {} as {
         practitioner: SchedulePractitionerEntity;
@@ -2227,6 +2259,13 @@ export class ShiftSchedule extends LitElement {
       ...this.shiftWoffRequestSaved[practitioner.id],
       practitioner,
     };
+    const dateBetween = getDateBetweenArrayDate(
+      this.datepickerData?.startdate!,
+      this.datepickerData?.enddate!
+    );
+
+    console.log('shift-schedule.js |dateBetween| = ', dateBetween);
+    this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
 
     this.dispatchEvent(
       new CustomEvent('save-woff', {
@@ -2248,7 +2287,8 @@ export class ShiftSchedule extends LitElement {
     date: Date,
     state?: 'display' | 'select',
     type?: RequestType['abbr'],
-    practitioner?: SchedulePractitionerEntity
+    practitioner?: SchedulePractitionerEntity,
+    dateString?: string
   ) {
     const isSameDate = this.selectedDate === date;
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -2261,7 +2301,7 @@ export class ShiftSchedule extends LitElement {
         shift-type="empty"
         slot="host"
         @click="${state === 'select'
-          ? () => this.selectDateRequest(date, type, practitioner)
+          ? () => this.selectDateRequest(date, type, practitioner, dateString)
           : null}">
         <c-box
           transition="all 0.2s ease"

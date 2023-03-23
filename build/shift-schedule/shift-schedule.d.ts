@@ -98,9 +98,9 @@ export declare class ShiftSchedule extends LitElement {
     renderWoffSavedHost(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
     }, type?: RequestType['abbr'], date?: Date, indexUser?: number): TemplateResult;
-    removeSrPlan(dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, removeMode?: boolean): void;
+    removeSrPlan(dateString: string, practitioner: SchedulePractitionerEntity, removeMode?: boolean): void;
     renderSrSavedHost(dateString: string, practitioner: SchedulePractitionerEntity, planEntries: [string, Record<number, ScheduleShiftsEntity>][]): TemplateResult<1>;
-    renderSrShiftPlanSaved(planRequest: {
+    renderSrShiftSaved(planRequest: {
         practitioner: SchedulePractitionerEntity;
         request: {
             [date: string]: {
@@ -124,7 +124,7 @@ export declare class ShiftSchedule extends LitElement {
         remark?: string;
         initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1>;
-    removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string, dayPart: string): void;
+    removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate.DateRange): void;
@@ -168,9 +168,9 @@ export declare class ShiftSchedule extends LitElement {
     renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string, indexUser?: number, event?: PointerEvent): TemplateResult<1>;
     saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string, indexUser?: number): void;
     closePopover(): void;
-    selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): void;
-    saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity): void;
-    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity): TemplateResult<1>;
+    selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): void;
+    saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): void;
+    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
