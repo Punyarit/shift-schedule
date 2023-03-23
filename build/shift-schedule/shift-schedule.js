@@ -1207,10 +1207,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         if (this.isRemoveMode)
             return;
         this.userSelectedIndex = data.indexUser;
+        console.log('shift-schedule.js |cellId| = ', cellId);
+        console.log('shift-schedule.js |type| = ', type);
         this.dispatchEvent(new CustomEvent('focus-request', {
             detail: { practitioner: data.practitioner },
         }));
+        console.log('shift-schedule.js |type| = ', type);
         const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`);
+        console.log('shift-schedule.js |boxTarget| = ', boxTarget);
         if (boxTarget) {
             const firstElement = boxTarget.firstElementChild;
             if (firstElement?.tagName !== 'CX-POPOVER') {
@@ -1269,17 +1273,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             case 'off':
             case 'sem':
                 return html ` <c-box
-          id="empty-shift-cell-${dateString}"
+          id="${cellId}-${dateString}"
           w-full
           h-full
-          @click="${(e) => this.appendPopover(this.requestSelected?.abbr, cellId, {
-                    date,
-                    practitioner,
-                    dateString,
-                    indexUser,
-                }, 
-                // fix
-                this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select'))}">
+          @click="${(e) => {
+                    this.appendPopover(this.requestSelected?.abbr, cellId, {
+                        date,
+                        practitioner,
+                        dateString,
+                        indexUser,
+                    }, this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select'));
+                }}">
           ${this.renderEmptyBox(date, 'display')}
         </c-box>`;
             case 'woff':
@@ -1389,6 +1393,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     render(this.renderSrSavedHost(dateString, practitioner, planEntries), boxTarget);
                     // this.shiftSrShipCache = {};
                 }, 0);
+                break;
+            case 'woff':
+                render(this.renderWoffSavedHost(dateString, practitioner, { initial: true }, 'woff', date, indexUser), boxTarget);
                 break;
             case 'off':
             case 'sem':
