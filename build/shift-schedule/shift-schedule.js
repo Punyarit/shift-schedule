@@ -253,21 +253,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return html `
       <style>
         c-box {
-          transition: all 0.2 ease;
+          transition: all 0.2 ease !important;
         }
-        c-box[_ui='inputShortUI'] {
-          width: 100%;
-        }
+
         :host {
           --cbox-divider-width: 100%;
           --cbox-divider-top: 0;
         }
 
-        c-box[is-visible='true'] {
+        .element-visible {
           opacity: 1;
         }
 
-        c-box[is-visible='false'] {
+        .element-hidden {
           opacity: 0.4;
         }
 
@@ -453,7 +451,21 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
-                      <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
+                      <c-box
+                        visible="open"
+                        @visible="${(e) => {
+                if (e.detail?.visibleEntry?.isIntersecting) {
+                    console.log('1');
+                    (e.detail?.visibleEntry.target).classList.add('element-visible');
+                    (e.detail?.visibleEntry.target).classList.remove('element-hidden');
+                }
+                else {
+                    (e.detail?.visibleEntry.target).classList.add('element-hidden');
+                    (e.detail?.visibleEntry.target).classList.remove('element-visible');
+                }
+            }}"
+                        flex
+                        ui="targetUser: ${targetUser ? 'order-first' : ''}">
                         <c-box
                           min-w="260"
                           class="${(this.viewerRole === 'staff' && indexUser === 0) ||
