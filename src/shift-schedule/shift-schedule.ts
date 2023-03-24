@@ -43,7 +43,7 @@ export class ShiftSchedule extends LitElement {
   private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
   private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
   private monthUI = 'monthUI: flex items-center';
-  private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 bg-primary-500 tx-white! flex justify-center items-center round-full z-1`;
+  private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 tx-white! flex justify-center items-center round-full z-1`;
   private requestBox = 'requestBox: min-w-90 inline-flex flex-col';
   private userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
   private weekDayUI = 'weekDayUI: py-6 min-w-90 pl-12 border-box';
@@ -225,9 +225,7 @@ export class ShiftSchedule extends LitElement {
     setTimeout(() => {
       const heightOfTheme = theme?.getBoundingClientRect();
       const userTableTop = userTable?.getBoundingClientRect();
-      const maxHeight = this.maxHeight?.replace(/\D+/g, '') || '';
-      this.maxHeightOfUserTable =
-        +maxHeight ?? Math.floor(heightOfTheme?.height! - userTableTop?.top!);
+      this.maxHeightOfUserTable = Math.floor(heightOfTheme?.height! - userTableTop?.top!);
     }, 250);
   }
 
@@ -255,12 +253,14 @@ export class ShiftSchedule extends LitElement {
       { variable: 'modern-green-100', css: '#DEFFF9' },
       { variable: 'warning-500', css: '#F7773E' },
       { variable: 'warning-100', css: '#FDE4D8' },
+      { variable: 'color-9-500', css: '#E33396' },
+      { variable: 'color-12-500', css: '#FEBA0C' },
     ] as const;
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -350,7 +350,7 @@ export class ShiftSchedule extends LitElement {
           width: var(--size-284) !important;
         }
       </style>
-      <c-box style="height:${this.maxHeight}" relative overflow-hidden>
+      <c-box style="height:${this.maxHeight || '100%'}" relative overflow-hidden>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
@@ -505,8 +505,20 @@ export class ShiftSchedule extends LitElement {
                             : ''}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
-                            <img width="24" height="24" src="${this.userImgDefault || ''}" alt="" />
-                            <c-box ui="${this.genderBox}">
+                            <c-box
+                              round-full
+                              flex-center
+                              border="3 solid ${gender === 'M' ? 'primary-500' : 'color-9-500'}">
+                              <img
+                                style="border-radius: 50%;border: 2px solid white;"
+                                width="32px"
+                                height="32px"
+                                src="${this.userImgDefault || ''}"
+                                alt="" />
+                            </c-box>
+                            <c-box
+                              ui="${this.genderBox}"
+                              bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
                               ${genderType[gender as 'M' | 'F']}
                             </c-box>
                           </c-box>
@@ -1013,6 +1025,7 @@ export class ShiftSchedule extends LitElement {
           shift-type="${type}-saved"
           flex
           flex-col
+          tx-12
           icon-prefix="16 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
           ${data.remark}
         </c-box>`
@@ -1149,8 +1162,14 @@ export class ShiftSchedule extends LitElement {
       ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
         const plansEntries = Object.entries(plans);
         return html`
-          <c-box p-4 border-box flex flex-col row-gap-4>
-            <c-box p-4 border-box round-6 h-44 bg="${this.setColorRequestType(dayPart as DayPart)}">
+          <c-box p-4 border-box flex flex-col row-gap-4 border-box>
+            <c-box
+              border-box
+              p-4
+              border-box
+              round-6
+              h-44
+              bg="${this.setColorRequestType(dayPart as DayPart)}">
               <div
                 style="cursor:${this.requestSelected || this.isRemoveMode
                   ? 'pointer'
@@ -1163,7 +1182,9 @@ export class ShiftSchedule extends LitElement {
                     flex
                     flex-col>
                     <c-box
-                      >${plansEntries.map(([plan]) => html`<c-box inline>${plan}</c-box> `)}</c-box
+                      >${plansEntries.map(
+                        ([plan]) => html`<c-box inline tx-12>${plan}</c-box> `
+                      )}</c-box
                     >
                   </c-box>
                 </c-box>
@@ -1899,7 +1920,7 @@ export class ShiftSchedule extends LitElement {
           flex-center
           round-8
           icon-prefix="16 ${dayPortValue[dayPart].src} ${dayPortValue[dayPart].iconColor}"></c-box>
-        <c-box>${dayPortValue[dayPart].text}</c-box>
+        <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
       </c-box>
       <c-box w-full>
         <c-box flex col-gap-6 justify-between>
@@ -1940,6 +1961,7 @@ export class ShiftSchedule extends LitElement {
                 justify-center
                 items-center
                 cursor-pointer
+                tx-14
                 >${plan}</c-box
               >
               <c-box tx-12

@@ -172,7 +172,7 @@ export const dayPortValue = {
     text: 'กลางวัน',
     bgColor: 'warning-100',
     mediumColor: 'warning-200',
-    iconColor: 'warning-500',
+    iconColor: 'color-12-500',
     softColor: 'warning-50',
     lowColor: 'warning-25',
   },
