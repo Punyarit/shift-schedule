@@ -69,7 +69,7 @@ export declare class ShiftSchedule extends LitElement {
             };
         };
     };
-    maxHeight?: number;
+    maxHeight?: string;
     datepickerData?: CXDatePicker.SelectDate.DateRange['detail'];
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;

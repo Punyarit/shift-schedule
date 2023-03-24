@@ -213,8 +213,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         setTimeout(() => {
             const heightOfTheme = theme?.getBoundingClientRect();
             const userTableTop = userTable?.getBoundingClientRect();
+            const maxHeight = this.maxHeight?.replace(/\D+/g, '') || '';
             this.maxHeightOfUserTable =
-                this.maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
+                +maxHeight ?? Math.floor(heightOfTheme?.height - userTableTop?.top);
         }, 250);
     }
     async connectedCallback() {
@@ -251,6 +252,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     render() {
         return html `
       <style>
+        c-box {
+          transition: all 0.2 ease;
+        }
         c-box[_ui='inputShortUI'] {
           width: 100%;
         }
@@ -321,7 +325,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           width: var(--size-284) !important;
         }
       </style>
-      <c-box style="height:100vh" relative overflow-hidden>
+      <c-box style="height:${this.maxHeight}" relative overflow-hidden>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
@@ -348,7 +352,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   <c-box
                     flex-center
                     icon-prefix="20 close-circle-line ${this.isRemoveMode
-                ? 'white'
+                ? 'white!'
                 : 'neutral-500'}"
                     w-44
                     h-44
@@ -357,7 +361,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   </c-box>
                   <c-box
                     transition="all 0.2s ease"
-                    ui="_:${this.isRemoveMode ? 'tx-white!' : 'tx-gray-800'}"
+                    ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-gray-800'}"
                     >ลบ</c-box
                   >
                 </c-box>
@@ -1244,7 +1248,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
                 arrowpoint: true,
-                focusout: 'none',
+                focusout: 'close',
                 mouseleave: 'none',
                 transform: 'center',
             }}">
@@ -1560,7 +1564,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             practitioner,
         };
         const dateBetween = getDateBetweenArrayDate(this.datepickerData?.startdate, this.datepickerData?.enddate);
-        console.log('shift-schedule.js |dateBetween| = ', dateBetween);
         this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
         this.dispatchEvent(new CustomEvent('save-woff', {
             detail: this.shiftWoffRequestSaved,
@@ -1591,7 +1594,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           ui-hover="_1: bg-primary-100!"
           ui-active="_2: bg-primary-200!"
           bg="${isSameDate ? 'primary-100' : isWeekend ? 'pinky-25' : 'white'}"
-          icon-prefix="16 ${isSameDate ? 'plus-line' : 'none'} ${type ? 'gray-600' : 'primary-300'}"
+          icon-prefix="${isSameDate
+            ? '16 plus-line' + ' ' + type
+                ? 'gray-600'
+                : 'primary-300'
+            : 'none'}"
           w-full
           h-full
           round-8
@@ -1894,7 +1901,7 @@ __decorate([
 ], ShiftSchedule.prototype, "shiftWoffRequestSaved", void 0);
 __decorate([
     property({ type: String }),
-    __metadata("design:type", Number)
+    __metadata("design:type", String)
 ], ShiftSchedule.prototype, "maxHeight", void 0);
 __decorate([
     state(),
