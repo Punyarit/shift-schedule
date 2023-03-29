@@ -30,6 +30,7 @@ import {
   dayPortValue,
   genderType,
   shiftPlanIcon,
+  DateObject as HolidayObject,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
@@ -88,6 +89,9 @@ export class ShiftSchedule extends LitElement {
 
   @state()
   dateBetween?: DateBetweenData[];
+
+  @property({ type: Object })
+  holidays: HolidayObject[] = [];
 
   @property()
   requestSelected?: RequestType;
@@ -241,12 +245,14 @@ export class ShiftSchedule extends LitElement {
       { variable: 'gray-100', css: '#eaedf2' },
       { variable: 'gray-300', css: '#E7EEFF' },
       { variable: 'gray-600', css: '#556E97' },
+      { variable: 'gray-500', css: '#A5B7DA' },
       { variable: 'gray-800', css: '#2A3959' },
       { variable: 'pinky-25', css: '#F8F9FC' },
       { variable: 'neutral-200', css: '#F1F1F1' },
       { variable: 'neutral-500', css: '#7A7A7A' },
       { variable: 'color-1-100', css: '#DDEBFF' },
       { variable: 'color-12-100', css: '#FFF1CE' },
+      { variable: 'color-4-100', css: '#E2F6FF' },
       { variable: 'alarm-orange-100', css: '#FFE9EA' },
       { variable: 'alarm-orange-500', css: '#FA4453' },
       { variable: 'modern-green-500', css: '#05CBA7' },
@@ -254,19 +260,26 @@ export class ShiftSchedule extends LitElement {
       { variable: 'warning-500', css: '#F7773E' },
       { variable: 'warning-100', css: '#FDE4D8' },
       { variable: 'color-9-500', css: '#E33396' },
+      { variable: 'color-5-200', css: '#A7CBFF' },
+      { variable: 'color-7-500', css: '#745FF2' },
+      { variable: 'color-7-100', css: '#EDEAFF' },
       { variable: 'color-12-500', css: '#FEBA0C' },
     ] as const;
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
     this.requestSelected = undefined;
     this.isRemoveMode = true;
   }
+
+  private holidayWithKeyMap: {
+    [date: string]: HolidayObject;
+  } = {};
 
   @state()
   isRemoveMode = false;
@@ -300,6 +313,11 @@ export class ShiftSchedule extends LitElement {
 
         .focus-divider {
           border-bottom: 2px solid var(--primary-500) !important;
+        }
+
+        .user-border-focus {
+          transition: outline 0.25s ease;
+          outline: 4px solid var(--color-5-200);
         }
 
         input::placeholder {
@@ -367,7 +385,7 @@ export class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   cursor-pointer
-                  border-pinky-100
+                  style="border-color: var(--neutral-200)"
                   ui-active="${this.isRemoveMode
                     ? 'bg: bg-' + 'neutral-500' + '!'
                     : 'bg: bg-' + 'neutral-200' + '!'}"
@@ -391,8 +409,13 @@ export class ShiftSchedule extends LitElement {
               </c-box>`
             : undefined}
 
-          <c-box overflow-x-auto overflow-y-hidden ${ref(this.tableWrapperRef)}>
-            <c-box ui="${this.tableWrapperUI}, ${this.tableLineUI}">
+          <c-box
+            overflow-x-auto
+            overflow-y-hidden
+            ${ref(this.tableWrapperRef)}
+            ui="${this.tableLineUI}"
+            style="border-radius:8px">
+            <c-box ui="${this.tableWrapperUI}, ">
               <c-box ui="${this.scheduleTitleUI}">
                 <!-- FIXME: should titleSticky below -->
                 <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
@@ -402,7 +425,6 @@ export class ShiftSchedule extends LitElement {
 
                 <c-box flex id="week-month-title">
                   ${this.dateBetween?.map((dateBet) => {
-                    const a: CXIcon.Set['src'] = 'arrow-left-line';
                     return html`
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
@@ -435,20 +457,27 @@ export class ShiftSchedule extends LitElement {
                                     const isSunday =
                                       date.getDay() === 0 ? this.sundayBorderRightUI : '';
 
+                                    const isHoliday =
+                                      this.holidayWithKeyMap?.[this.convertDateToString(date)];
+
                                     const isWeekend =
-                                      date.getDay() === 0 || date.getDay() === 6
+                                      isHoliday || date.getDay() === 0 || date.getDay() === 6
                                         ? this.weekendBg
                                         : '';
 
                                     return html` <c-box
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
                                         .weekDayUI}, ${isWeekend}">
-                                      <c-box tx-12>
+                                      <c-box tx-12 tx-gray-500>
                                         ${this.dateFormat(date, {
                                           weekday: 'short',
                                         })}
                                       </c-box>
-                                      <c-box tx-14>
+                                      <c-box
+                                        tx-14
+                                        style="color:${isWeekend || isHoliday
+                                          ? 'var(--gray-500)'
+                                          : 'var(--color-9-500)'}">
                                         ${this.dateFormat(date, {
                                           day: 'numeric',
                                         })}
@@ -496,7 +525,6 @@ export class ShiftSchedule extends LitElement {
                         visible="open"
                         @visible="${(e: CustomEvent) => {
                           if (e.detail?.visibleEntry?.isIntersecting) {
-                            console.log('1');
                             (e.detail?.visibleEntry.target as HTMLElement).classList.add(
                               'element-visible'
                             );
@@ -527,14 +555,25 @@ export class ShiftSchedule extends LitElement {
                             <c-box
                               round-full
                               flex-center
-                              border="3 solid ${gender === 'M' ? 'primary-500' : 'color-9-500'}">
-                              <img
-                                style="border-radius: 50%;border: 2px solid white;"
-                                width="32px"
-                                height="32px"
-                                src="${this.userImgDefault || ''}"
-                                alt="" />
+                              class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                              (this.viewerRole === 'manager' &&
+                                indexUser === this.userSelectedIndex &&
+                                this.requestSelected)
+                                ? 'user-border-focus'
+                                : ''}">
+                              <c-box
+                                round-full
+                                flex-center
+                                border="2 solid ${gender === 'M' ? 'primary-500' : 'color-9-500'}">
+                                <img
+                                  style="border-radius: 50%"
+                                  width="32px"
+                                  height="32px"
+                                  src="${this.userImgDefault || ''}"
+                                  alt="" />
+                              </c-box>
                             </c-box>
+
                             <c-box
                               ui="${this.genderBox}"
                               bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
@@ -557,6 +596,8 @@ export class ShiftSchedule extends LitElement {
                                   const borderRight =
                                     day.getDay() === 0 ? this.sundayBorderRightUI : '';
 
+                                  const isHoliday =
+                                    this.holidayWithKeyMap?.[this.convertDateToString(day)];
                                   const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
                                   const dateString = this.convertDateToString(day);
@@ -586,7 +627,7 @@ export class ShiftSchedule extends LitElement {
                                       indexUser === this.userSelectedIndex &&
                                       this.requestSelected)
                                       ? 'focus-divider'
-                                      : ''} ${isWeekend ? 'bg-pinky' : ''}">
+                                      : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
                                     <c-box
                                       w-full
                                       h-full
@@ -883,7 +924,7 @@ export class ShiftSchedule extends LitElement {
                     ].iconColor}"
                     flex
                     flex-col>
-                    <c-box flex col-gap-4
+                    <c-box flex col-gap-4 tx-12 mt-4
                       >${Object.keys(plans).map((plan) => {
                         return html`<c-box inline>${plan}</c-box>`;
                       })}</c-box
@@ -2335,6 +2376,7 @@ export class ShiftSchedule extends LitElement {
     dateString?: string
   ) {
     const isSameDate = this.selectedDate === date;
+    const isHoliday = this.holidayWithKeyMap?.[this.convertDateToString(date)];
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     return html`
       <c-box
@@ -2351,7 +2393,7 @@ export class ShiftSchedule extends LitElement {
           transition="all 0.2s ease"
           ui-hover="_1: bg-primary-100!"
           ui-active="_2: bg-primary-200!"
-          bg="${isSameDate ? 'primary-100' : isWeekend ? 'pinky-25' : 'white'}"
+          bg="${isSameDate ? 'primary-100' : isWeekend || isHoliday ? 'pinky-25' : 'white'}"
           icon-prefix="${isSameDate
             ? '16 plus-line' + ' ' + type
               ? 'gray-600'
@@ -2470,8 +2512,9 @@ export class ShiftSchedule extends LitElement {
       case 'a':
         return 'color-12-100';
       case 'n':
+        return 'color-7-100';
       case 'm':
-        return 'color-1-100';
+        return 'color-4-100';
     }
   }
 
@@ -2533,15 +2576,17 @@ export class ShiftSchedule extends LitElement {
       });
     }
 
-    this.disableDateArranged = this.getHolidayOccurrences(
+    this.disableDateArranged = this.getDateDisabled(
       this.disableDates,
       this.scheduleData?.startDate,
       this.scheduleData?.endDate
     );
+
+    this.holidayWithKeyMap = this.getHolidayObject(this.holidays);
   }
 
   // @ts-ignore
-  getHolidayOccurrences(holidays, startDate, endDate) {
+  getDateDisabled(holidays, startDate, endDate) {
     const result = {};
 
     // Loop through each holiday object in the array
@@ -2595,6 +2640,16 @@ export class ShiftSchedule extends LitElement {
     });
 
     return result;
+  }
+
+  getHolidayObject(inputArray: HolidayObject[]): { [key: string]: HolidayObject } {
+    const outputObject: { [key: string]: HolidayObject } = {};
+
+    inputArray.forEach((item) => {
+      outputObject[item.date] = item;
+    });
+
+    return outputObject;
   }
 
   getDateBetween(startDate: Date, endDate: Date): DateBetweenData[] {

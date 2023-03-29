@@ -166,6 +166,11 @@ export type DisabledDate = {
   repetition: 'once' | 'every-week' | 'every-month' | 'every-year';
 };
 
+export type DateObject = {
+  date: string;
+  name: string;
+};
+
 export const dayPortValue = {
   a: {
     src: 'sunset-u',
@@ -181,8 +186,8 @@ export const dayPortValue = {
     text: 'เย็น',
     bgColor: 'primary-100',
     mediumColor: 'primary-200',
-    iconColor: 'primary-500',
-    softColor: 'primary-50',
+    iconColor: 'color-7-500',
+    softColor: 'color-7-100',
     lowColor: 'primary-25',
   },
   m: {

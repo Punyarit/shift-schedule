@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate, DateObject as HolidayObject } from './schedule.types';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import '@lit-labs/virtualizer';
 export declare class ShiftSchedule extends LitElement {
@@ -38,6 +38,7 @@ export declare class ShiftSchedule extends LitElement {
     private removeOriginCache;
     requestTypes?: RequestType[] | ScheduleRequestType[];
     dateBetween?: DateBetweenData[];
+    holidays: HolidayObject[];
     requestSelected?: RequestType;
     selectedDate?: Date;
     srState: never[];
@@ -84,6 +85,7 @@ export declare class ShiftSchedule extends LitElement {
     private disableDateArranged;
     connectedCallback(): Promise<void>;
     private setRemoveMode;
+    private holidayWithKeyMap;
     isRemoveMode: boolean;
     dividerTop: number;
     render(): TemplateResult<1>;
@@ -180,7 +182,10 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;
-    getHolidayOccurrences(holidays: any, startDate: any, endDate: any): {};
+    getDateDisabled(holidays: any, startDate: any, endDate: any): {};
+    getHolidayObject(inputArray: HolidayObject[]): {
+        [key: string]: HolidayObject;
+    };
     getDateBetween(startDate: Date, endDate: Date): DateBetweenData[];
     createRenderRoot(): this;
 }

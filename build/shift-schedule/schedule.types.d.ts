@@ -128,6 +128,10 @@ export type DisabledDate = {
     date: string;
     repetition: 'once' | 'every-week' | 'every-month' | 'every-year';
 };
+export type DateObject = {
+    date: string;
+    name: string;
+};
 export declare const dayPortValue: {
     a: {
         src: string;

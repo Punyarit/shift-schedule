@@ -40,8 +40,8 @@ export const dayPortValue = {
         text: 'เย็น',
         bgColor: 'primary-100',
         mediumColor: 'primary-200',
-        iconColor: 'primary-500',
-        softColor: 'primary-50',
+        iconColor: 'color-7-500',
+        softColor: 'color-7-100',
         lowColor: 'primary-25',
     },
     m: {
