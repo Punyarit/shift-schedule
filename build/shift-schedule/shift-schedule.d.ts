@@ -182,6 +182,7 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;
+    private currentScrollX;
     getDateDisabled(holidays: any, startDate: any, endDate: any): {};
     getHolidayObject(inputArray: HolidayObject[]): {
         [key: string]: HolidayObject;

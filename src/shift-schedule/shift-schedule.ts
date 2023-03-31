@@ -274,8 +274,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -298,6 +298,22 @@ export class ShiftSchedule extends LitElement {
       <style>
         c-box {
           transition: all 0.2 ease !important;
+        }
+
+        #table-header-wrapper::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
+          background: transparent;
+        }
+
+        lit-virtualizer {
+          overflow: auto;
+        }
+
+        lit-virtualizer::-webkit-scrollbar {
+          width: 0px;
+          height: 0px;
+          background: transparent;
         }
 
         :host {
@@ -418,16 +434,13 @@ export class ShiftSchedule extends LitElement {
               </c-box>`
             : undefined}
 
-          <c-box
-            overflow-x-auto
-            overflow-y-hidden
-            ${ref(this.tableWrapperRef)}
-            ui="${this.tableLineUI}"
-            style="border-radius:8px">
-            <c-box ui="${this.tableWrapperUI}, ">
-              <c-box ui="${this.scheduleTitleUI}">
+          <c-box ${ref(this.tableWrapperRef)} ui="${this.tableLineUI}" style="border-radius:8px">
+            <c-box ui="${this.tableWrapperUI}" style="width: var(--table-width)">
+              <c-box ui="${this.scheduleTitleUI}" overflow-x-auto id="table-header-wrapper">
                 <!-- FIXME: should titleSticky below -->
-                <c-box UI="${this.tableLineUI}, ${this.titleLeftTopUI} " min-w="260">
+                <c-box
+                  UI="${this.tableLineUI}, ${this.titleLeftTopUI}, ${this.titleSticky} "
+                  min-w="260">
                   <c-box semiBold>รายชื่อเจ้าหน้าที่</c-box>
                   <c-box>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
                 </c-box>
@@ -512,9 +525,7 @@ export class ShiftSchedule extends LitElement {
                 inline-flex
                 flex-col
                 id="week-month-user"
-                overflow-y-auto
-                overflow-x-hidden
-                style="height:${this.maxHeightOfUserTable!}px">
+                style="height:${this.maxHeightOfUserTable!}px; width:var(--table-width)">
                 <lit-virtualizer
                   .items=${(this.scheduleData as SchedulingData)?.schedulePractitioner!}
                   .renderItem="${(practitioner: SchedulePractitionerEntity, indexUser: number) => {
@@ -2615,7 +2626,29 @@ export class ShiftSchedule extends LitElement {
     );
 
     this.holidayWithKeyMap = this.getHolidayObject(this.holidays);
+
+    //
+    if (this.tableWrapperRef.value) {
+      const tableRect = this.tableWrapperRef.value.getBoundingClientRect();
+      const width = tableRect.width;
+      this.style.setProperty('--table-width', `${width}px`);
+
+      const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
+      const litVirtualizer = this.querySelector('lit-virtualizer');
+
+      if (tableHeaderWrapper && litVirtualizer) {
+        tableHeaderWrapper.addEventListener('scroll', (e) => {
+          tableHeaderWrapper.scrollLeft = this.currentScrollX;
+        });
+        litVirtualizer.addEventListener('scroll', (e) => {
+          this.currentScrollX = litVirtualizer.scrollLeft;
+          tableHeaderWrapper.scrollLeft = this.currentScrollX;
+        });
+      }
+    }
   }
+
+  private currentScrollX = 0;
 
   // @ts-ignore
   getDateDisabled(holidays, startDate, endDate) {
