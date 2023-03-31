@@ -7,6 +7,7 @@ import '@cortex-ui/core/cx/theme';
 import '@cortex-ui/core/cx/icon';
 import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
+import { CX } from '@cortex-ui/core/cx';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
 import { CBoxUiAttribute } from '@cortex-ui/core/cx/components/c-box/types/attribute-changed.types';
@@ -167,7 +168,10 @@ export class ShiftSchedule extends LitElement {
   maxHeight?: string;
 
   @state()
-  datepickerData?: CXDatePicker.SelectDate.DateRange['detail'];
+  datepickerData?: CXDatePicker.SelectDate.Range['detail'] = {
+    endDate: undefined,
+    startDate: undefined,
+  };
 
   private removeRequestSelected?: RequestType;
 
@@ -244,6 +248,7 @@ export class ShiftSchedule extends LitElement {
       { variable: 'primary-100', css: '#DDEBFF' },
       { variable: 'gray-100', css: '#eaedf2' },
       { variable: 'gray-300', css: '#E7EEFF' },
+      { variable: 'gray-400', css: '#C9D4F1' },
       { variable: 'gray-600', css: '#556E97' },
       { variable: 'gray-500', css: '#A5B7DA' },
       { variable: 'gray-800', css: '#2A3959' },
@@ -253,6 +258,7 @@ export class ShiftSchedule extends LitElement {
       { variable: 'color-1-100', css: '#DDEBFF' },
       { variable: 'color-12-100', css: '#FFF1CE' },
       { variable: 'color-4-100', css: '#E2F6FF' },
+      { variable: 'color-4-700', css: '#004461' },
       { variable: 'alarm-orange-100', css: '#FFE9EA' },
       { variable: 'alarm-orange-500', css: '#FA4453' },
       { variable: 'modern-green-500', css: '#05CBA7' },
@@ -316,13 +322,16 @@ export class ShiftSchedule extends LitElement {
         }
 
         .user-border-focus {
-          transition: outline 0.25s ease;
+          transition: outline 0.15s ease;
           outline: 4px solid var(--color-5-200);
         }
 
         input::placeholder {
           font-family: Sarabun-Regular;
           font-size: 16px;
+        }
+        c-box[icon-prefix].icon-daypart-sr::before {
+          height: 18px;
         }
 
         .bg-pinky {
@@ -373,7 +382,7 @@ export class ShiftSchedule extends LitElement {
             ? html` <c-box ui="${this.buttonGroupUI}">
                 <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
                 ${this.renderRequestButton()}
-                <c-box inline h-40 w-1 bg-pinky-100></c-box>
+                <c-box inline h-40 w-1 bg-gray-400></c-box>
                 <c-box
                   @click="${this.setRemoveMode}"
                   shadow-hover="shadow-3"
@@ -429,8 +438,8 @@ export class ShiftSchedule extends LitElement {
                       <c-box>
                         <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
                           <c-box
-                            icon-prefix="16 arrow-left-line gray-800"
-                            icon-suffix="16 arrow-right-line gray-800"
+                            icon-prefix="8 angle-left-u gray-800"
+                            icon-suffix="8 angle-right-u gray-800"
                             tx-12
                             py-6>
                             ${this.dateFormat(dateBet.currentMonth, {
@@ -475,9 +484,13 @@ export class ShiftSchedule extends LitElement {
                                       </c-box>
                                       <c-box
                                         tx-14
-                                        style="color:${isWeekend || isHoliday
+                                        style="color:${isHoliday
+                                          ? 'var(--color-9-500)'
+                                          : isWeekend
                                           ? 'var(--gray-500)'
-                                          : 'var(--color-9-500)'}">
+                                          : 'var(--gray-800)'}; font-weight: ${isHoliday
+                                          ? '600'
+                                          : '400'}">
                                         ${this.dateFormat(date, {
                                           day: 'numeric',
                                         })}
@@ -521,28 +534,12 @@ export class ShiftSchedule extends LitElement {
                     );
                     const targetUser = practitioner?.practitionerId === this.practitionerId!;
                     return html`
-                      <c-box
-                        visible="open"
-                        @visible="${(e: CustomEvent) => {
-                          if (e.detail?.visibleEntry?.isIntersecting) {
-                            (e.detail?.visibleEntry.target as HTMLElement).classList.add(
-                              'element-visible'
-                            );
-                            (e.detail?.visibleEntry.target as HTMLElement).classList.remove(
-                              'element-hidden'
-                            );
-                          } else {
-                            (e.detail?.visibleEntry.target as HTMLElement).classList.add(
-                              'element-hidden'
-                            );
-                            (e.detail?.visibleEntry.target as HTMLElement).classList.remove(
-                              'element-visible'
-                            );
-                          }
-                        }}"
-                        flex
-                        ui="targetUser: ${targetUser ? 'order-first' : ''}">
+                      <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
                         <c-box
+                          @mouseenter="${this.viewerRole === 'manager'
+                            ? (e: MouseEvent) => this.managerHoverUser(indexUser, e)
+                            : null}"
+                          style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
                           min-w="260"
                           class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                           (this.viewerRole === 'manager' &&
@@ -550,6 +547,16 @@ export class ShiftSchedule extends LitElement {
                             this.requestSelected)
                             ? 'focus-divider'
                             : ''}"
+                          @click="${() => {
+                            if (!this.requestSelected) return;
+                            if (this.viewerRole !== 'manager') return;
+                            this.userSelectedIndex = indexUser;
+                            this.dispatchEvent(
+                              new CustomEvent('focus-request', {
+                                detail: { practitioner: practitioner },
+                              })
+                            );
+                          }}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
                             <c-box
@@ -919,9 +926,10 @@ export class ShiftSchedule extends LitElement {
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
                   <c-box
-                    icon-prefix="16 ${dayPortValue[dayPart as DayPart].src} ${dayPortValue[
+                    class="icon-daypart-sr"
+                    icon-prefix="${dayPortValue[dayPart as DayPart].size} ${dayPortValue[
                       dayPart as DayPart
-                    ].iconColor}"
+                    ].src} ${dayPortValue[dayPart as DayPart].iconColor}"
                     flex
                     flex-col>
                     <c-box flex col-gap-4 tx-12 mt-4
@@ -1236,9 +1244,10 @@ export class ShiftSchedule extends LitElement {
                   : ''}; width:100%; height:100%">
                 <c-box>
                   <c-box
-                    icon-prefix="16 ${dayPortValue[dayPart as DayPart].src} ${dayPortValue[
+                    class="icon-daypart-sr"
+                    icon-prefix="${dayPortValue[dayPart as DayPart].size} ${dayPortValue[
                       dayPart as DayPart
-                    ].iconColor}"
+                    ].src} ${dayPortValue[dayPart as DayPart].iconColor}"
                     flex
                     flex-col>
                     <c-box
@@ -1420,8 +1429,12 @@ export class ShiftSchedule extends LitElement {
     }
   }
 
-  saveDatepicker(e: CXDatePicker.SelectDate.DateRange) {
+  saveDatepicker(e: CXDatePicker.SelectDate.Range) {
     this.datepickerData = e.detail;
+    (e.target as CXDatePicker.Ref)
+      .fix()
+      .rangeValue({ startDate: e.detail.startDate, endDate: e.detail.endDate })
+      .exec();
   }
 
   removeInitialSameData(practitionerId: string, dateString?: string) {
@@ -1572,9 +1585,15 @@ export class ShiftSchedule extends LitElement {
     remark: string,
     type: RequestType['abbr']
   ) => {
+    if (!this.datepickerData?.startDate && !this.datepickerData?.endDate) {
+      this.datepickerData = {
+        startDate: new Date(dateString),
+        endDate: new Date(dateString),
+      };
+    }
     const dateBetween = getDateBetweenArrayDate(
-      this.datepickerData?.startdate!,
-      this.datepickerData?.enddate!
+      this.datepickerData?.startDate!,
+      this.datepickerData?.endDate!
     );
 
     const dataDate = {} as { [key: string]: DatePickerShiftPlan };
@@ -1775,15 +1794,13 @@ export class ShiftSchedule extends LitElement {
           <c-box mt-18>
             <c-box mb-12>Date</c-box>
             <cx-datepicker
-              @select-date="${(e: CXDatePicker.SelectDate.DateRange) => this.saveDatepicker(e)}"
+              @select-date="${(e: CXDatePicker.SelectDate.Range) => this.saveDatepicker(e)}"
               .set="${{
                 date: data.date,
-                daterange: true,
-                value: {
-                  startdate: this.datepickerData?.startdate
-                    ? this.datepickerData?.startdate
-                    : data.date,
-                  enddate: this.datepickerData?.enddate,
+                dateRange: true,
+                rangeValue: {
+                  endDate: data.date,
+                  startDate: data.date,
                 },
                 inputStyle: 'short',
                 min: new Date(this.scheduleData?.startDate!),
@@ -1977,9 +1994,12 @@ export class ShiftSchedule extends LitElement {
           p-2
           w-24
           h-24
+          border-box
           flex-center
           round-8
-          icon-prefix="16 ${dayPortValue[dayPart].src} ${dayPortValue[dayPart].iconColor}"></c-box>
+          icon-prefix="${dayPortValue[dayPart].size} ${dayPortValue[dayPart].src} ${dayPortValue[
+            dayPart
+          ].iconColor}"></c-box>
         <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
       </c-box>
       <c-box w-full>
@@ -2002,26 +2022,37 @@ export class ShiftSchedule extends LitElement {
 
                   const bgAttr = hasInitialSr
                     ? target.uiToggled
-                      ? `${softColor}!`
+                      ? `${'primary-25'}!`
                       : `${bgColor}!`
                     : target.uiToggled
                     ? `${bgColor}!`
-                    : `${lowColor}!`;
+                    : `${'primary-25'}!`;
+
+                  const colorAttr = hasInitialSr
+                    ? target.uiToggled
+                      ? `gray-500`
+                      : `color-4-700`
+                    : target.uiToggled
+                    ? `color-4-700`
+                    : `gray-500`;
 
                   target.setAttribute('bg', bgAttr);
+                  target.style.color = `var(--${colorAttr})`;
                 }}"
                 shadow-hover="shadow-3"
                 ui-active="_1:bg-${mediumColor}!"
                 transition="all 0.2s ease"
                 w-80
                 h-30
-                bg="${hasInitialSr ? bgColor : lowColor}"
+                bg="${hasInitialSr ? bgColor : 'primary-25'}"
                 round-8
                 flex
                 justify-center
                 items-center
                 cursor-pointer
                 tx-14
+                bold
+                style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
                 >${plan}</c-box
               >
               <c-box tx-12
@@ -2289,8 +2320,8 @@ export class ShiftSchedule extends LitElement {
       }, 0);
     }
     const dateBetween = getDateBetweenArrayDate(
-      this.datepickerData?.startdate!,
-      this.datepickerData?.enddate!
+      this.datepickerData?.startDate!,
+      this.datepickerData?.endDate!
     );
 
     this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
@@ -2346,8 +2377,8 @@ export class ShiftSchedule extends LitElement {
       practitioner,
     };
     const dateBetween = getDateBetweenArrayDate(
-      this.datepickerData?.startdate!,
-      this.datepickerData?.enddate!
+      this.datepickerData?.startDate!,
+      this.datepickerData?.endDate!
     );
 
     this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
@@ -2538,6 +2569,7 @@ export class ShiftSchedule extends LitElement {
   };
 
   updated(changedProp: Map<string, unknown>) {
+    console.log('shift-schedule.js |this.datepickerData| = ', this.datepickerData);
     // remove borderRight last element
     const weekMonthTitle = this.querySelector('#week-month-title');
     const weekMonthUser = this.querySelector('#week-month-user');

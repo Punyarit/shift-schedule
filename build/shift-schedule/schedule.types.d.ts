@@ -141,6 +141,7 @@ export declare const dayPortValue: {
         iconColor: string;
         softColor: string;
         lowColor: string;
+        size: string;
     };
     n: {
         src: string;
@@ -150,6 +151,7 @@ export declare const dayPortValue: {
         iconColor: string;
         softColor: string;
         lowColor: string;
+        size: string;
     };
     m: {
         src: string;
@@ -159,6 +161,7 @@ export declare const dayPortValue: {
         iconColor: string;
         softColor: string;
         lowColor: string;
+        size: string;
     };
 };
 export declare const genderType: {

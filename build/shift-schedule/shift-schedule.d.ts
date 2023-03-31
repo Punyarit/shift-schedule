@@ -71,7 +71,7 @@ export declare class ShiftSchedule extends LitElement {
         };
     };
     maxHeight?: string;
-    datepickerData?: CXDatePicker.SelectDate.DateRange['detail'];
+    datepickerData?: CXDatePicker.SelectDate.Range['detail'];
     private removeRequestSelected?;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
@@ -129,7 +129,7 @@ export declare class ShiftSchedule extends LitElement {
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
-    saveDatepicker(e: CXDatePicker.SelectDate.DateRange): void;
+    saveDatepicker(e: CXDatePicker.SelectDate.Range): void;
     removeInitialSameData(practitionerId: string, dateString?: string): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
