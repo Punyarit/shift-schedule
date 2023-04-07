@@ -39,6 +39,7 @@ import { createRef, ref } from 'lit/directives/ref.js';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
+import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name';
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -182,6 +183,8 @@ export class ShiftSchedule extends LitElement {
 
   private removeRequestSelected?: RequestType;
 
+  private currentMonthTitleIndex = 0;
+
   public tableWrapperRef = createRef<HTMLDivElement>();
   public dividerRef = createRef<HTMLDivElement>();
   public remarkRef = createRef<HTMLInputElement>();
@@ -300,6 +303,12 @@ export class ShiftSchedule extends LitElement {
   @state()
   dividerTop = 0;
 
+  private currentMonthTitle: string[] = [];
+  private monthTitleNav?: NodeListOf<HTMLElement>;
+
+  @state()
+  currentMonthTitleDisplay?: string;
+
   render() {
     return html`
       <style>
@@ -390,7 +399,7 @@ export class ShiftSchedule extends LitElement {
           width: var(--cbox-divider-width);
           translate: 0 var(--cbox-divider-top);
           height: 2px;
-          background-color: var(--primary-200);
+          background-color: var(--primary-100);
           z-index: 1;
         }
 
@@ -453,19 +462,45 @@ export class ShiftSchedule extends LitElement {
                 </c-box>
 
                 <c-box flex id="week-month-title">
+                  <c-box
+                    absolute
+                    top-73
+                    left="274"
+                    w-200
+                    h-26
+                    pt-4
+                    bg-white
+                    flex
+                    items-center
+                    col-gap-12>
+                    <c-box
+                      ui="_: w-24 h-24 round-full flex-center"
+                      ui-active="_1: bg-primary-100"
+                      icon-suffix="12 angle-left-u black"
+                      transition-200
+                      cursor-pointer
+                      @click="${() => this.goToMonth('previous')}"></c-box>
+                    <c-box w-90 flex justify-center>
+                      ${this.dateFormat(this.currentMonthTitleDisplay, { month: 'long' })}
+                    </c-box>
+                    <c-box
+                      ui="_: w-24 h-24 round-full flex-center"
+                      ui-active="_1: bg-primary-100"
+                      transition-200
+                      icon-suffix="12 angle-right-u black"
+                      cursor-pointer
+                      @click="${() => this.goToMonth('next')}"></c-box>
+                  </c-box>
                   ${this.dateBetween?.map((dateBet) => {
                     return html`
                       <c-box>
-                        <c-box ui="${this.monthUI}, ${this.tableLineUI}" pl-12 border-box>
-                          <c-box
-                            icon-prefix="8 angle-left-u gray-800"
-                            icon-suffix="8 angle-right-u gray-800"
-                            tx-12
-                            py-6>
-                            ${this.dateFormat(dateBet.currentMonth, {
-                              month: 'short',
-                            })}
-                          </c-box>
+                        <c-box
+                          border-bottom-gray-300
+                          border-bottom-solid
+                          border-bottom-1
+                          pl-12
+                          border-box>
+                          <c-box h-30></c-box>
                         </c-box>
 
                         <c-box ui=${this.weekDayWRapperUI}>
@@ -494,7 +529,18 @@ export class ShiftSchedule extends LitElement {
                                         ? this.weekendBg
                                         : '';
 
+                                    const timezoneOffset =
+                                      date.getDate() === 1
+                                        ? date.getTimezoneOffset() * 60000
+                                        : null;
+                                    const localISOTime = timezoneOffset
+                                      ? new Date(date.getTime() - timezoneOffset)
+                                          .toISOString()
+                                          .split('T')[0]
+                                      : '';
                                     return html` <c-box
+                                      data-first-date="${localISOTime}"
+                                      class="${date.getDate() === 1 ? 'first-date-of-month' : ''}"
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
                                         .weekDayUI}, ${isWeekend}">
                                       <c-box tx-12 tx-gray-500>
@@ -1235,6 +1281,31 @@ export class ShiftSchedule extends LitElement {
         );
 
         this.requestUpdate();
+      }
+    }
+  }
+
+  goToMonth(type: 'next' | 'previous') {
+    const litVirtualizer = this.querySelector('lit-virtualizer');
+    if (litVirtualizer) {
+      this.currentMonthTitleIndex =
+        this.currentMonthTitleIndex === this.monthTitleNav!.length - 1
+          ? type === 'next'
+            ? this.currentMonthTitleIndex
+            : this.currentMonthTitleIndex - 1
+          : this.currentMonthTitleIndex +
+            (type === 'next' ? 1 : this.currentMonthTitleIndex > 0 ? -1 : 0);
+
+      const nextElement = this.monthTitleNav![this.currentMonthTitleIndex];
+
+      if (this.monthTitleNav![this.currentMonthTitleIndex]) {
+        litVirtualizer.scrollTo({
+          top: 0,
+          left: nextElement.offsetLeft - this.monthTitleNav![0].offsetLeft,
+          behavior: 'smooth',
+        });
+        this.currentMonthTitleDisplay =
+          this.monthTitleNav![this.currentMonthTitleIndex].dataset.firstDate;
       }
     }
   }
@@ -2756,6 +2827,12 @@ export class ShiftSchedule extends LitElement {
           tableHeaderWrapper.scrollLeft = this.currentScrollX;
         });
       }
+
+      if (!this.monthTitleNav) {
+        this.monthTitleNav = this.querySelectorAll('.first-date-of-month');
+
+        this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+      }
     }
 
     const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
@@ -2901,6 +2978,7 @@ export class ShiftSchedule extends LitElement {
   }
 }
 
+// test
 declare global {
   namespace CXShiftSchedule {
     type Ref = ShiftSchedule;

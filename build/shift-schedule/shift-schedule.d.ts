@@ -74,6 +74,7 @@ export declare class ShiftSchedule extends LitElement {
     maxHeight?: string;
     datepickerData?: CXDatePicker.SelectDate.Range['detail'];
     private removeRequestSelected?;
+    private currentMonthTitleIndex;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     remarkRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
@@ -89,6 +90,9 @@ export declare class ShiftSchedule extends LitElement {
     private holidayWithKeyMap;
     isRemoveMode: boolean;
     dividerTop: number;
+    private currentMonthTitle;
+    private monthTitleNav?;
+    currentMonthTitleDisplay?: string;
     render(): TemplateResult<1>;
     managerHoverUser(indexUser: number, e: MouseEvent): void;
     sentRemoveEvent(): void;
@@ -128,6 +132,7 @@ export declare class ShiftSchedule extends LitElement {
         initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1>;
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string): void;
+    goToMonth(type: 'next' | 'previous'): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity): void;
