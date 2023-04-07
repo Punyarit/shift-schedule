@@ -49,8 +49,6 @@ export interface SchedulePractitionerEntity {
     id: string;
     practitionerId: string;
     hardConstraints?: null;
-    dayOff: number;
-    vacation: number;
     organizationId?: null;
     schedulePractitionerPlan?: null[] | null;
     schedulePractitionerRequest?: (SchedulePractitionerRequestEntity | null)[] | null;
@@ -65,13 +63,6 @@ export interface SchedulePractitionerRequestEntity {
     organizationId?: null;
     requestType: RequestType;
     remark?: string;
-}
-export interface Practitioner {
-    nameGiven: string;
-    nameFamily: string;
-    gender: string;
-    practitionerLevel: PractitionerLevelOrPractitionerRole;
-    practitionerRole: PractitionerLevelOrPractitionerRole;
 }
 export interface PractitionerLevelOrPractitionerRole {
     name: string;
@@ -169,3 +160,66 @@ export declare const genderType: {
     F: string;
 };
 export declare const shiftPlanIcon: Record<string, string>;
+export interface Practitioner {
+    id: string;
+    createdAt: string;
+    createdBy: string;
+    updatedAt: string;
+    updatedBy: string;
+    username: string;
+    nameGiven: string;
+    nameFamily: string;
+    nameMiddle: any;
+    namePrefixId: any;
+    practitionerLevelId: string;
+    birthdate: any;
+    gender: string;
+    photo: any;
+    tel: any;
+    email: string;
+    defaultHardConstraints: string;
+    organizationId: string;
+    roleId: string;
+    contractEnumId: string;
+    mainZoneId: string;
+    practitionerRoleId: string;
+    practitionerCompetencyId: string;
+    workingMethod: string;
+    isActive: boolean;
+    practitionerLevel: PractitionerLevel;
+    practitionerRole: PractitionerRole;
+    mainZone: MainZone;
+    leave: Leave;
+    vacations: Vacation[];
+}
+export interface PractitionerLevel {
+    id: string;
+    name: string;
+    practitionerRoleId: string;
+}
+export interface PractitionerRole {
+    id: string;
+    name: string;
+    abbr: string;
+}
+export interface MainZone {
+    id: string;
+    abbr: string;
+    fullName: string;
+    organizationId: any;
+}
+export interface Leave {
+    id: string;
+    practitionerId: string;
+    updatedAt: string;
+    dayOff: number;
+    organizationId: string;
+}
+export interface Vacation {
+    id: string;
+    practitionerId: string;
+    updatedAt: string;
+    year: number;
+    vacation: number;
+    organizationId: string;
+}

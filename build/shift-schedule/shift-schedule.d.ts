@@ -28,6 +28,7 @@ export declare class ShiftSchedule extends LitElement {
     private iconTitleWrapper;
     private iconTitle;
     private weekendBg;
+    currentTime: Date;
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
     disableDates: DisabledDate[];
@@ -129,7 +130,7 @@ export declare class ShiftSchedule extends LitElement {
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
-    saveDatepicker(e: CXDatePicker.SelectDate.Range): void;
+    saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity): void;
     removeInitialSameData(practitionerId: string, dateString?: string): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
@@ -175,6 +176,7 @@ export declare class ShiftSchedule extends LitElement {
     renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
+    findDuplicationDate: (arrayDate1: (string | Date)[], arrayDate2: (string | Date)[]) => string[];
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;
     };
@@ -182,12 +184,16 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;
+    private mayDayOffLength;
     private currentScrollX;
     getDateDisabled(holidays: any, startDate: any, endDate: any): {};
     getHolidayObject(inputArray: HolidayObject[]): {
         [key: string]: HolidayObject;
     };
+    increaseDate(days: number, date: Date): Date;
     getDateBetween(startDate: Date, endDate: Date): DateBetweenData[];
+    reduceDate: (date: Date, n: number) => Date;
+    daysBetween: (startDate: Date, endDate: Date) => number;
     createRenderRoot(): this;
 }
 declare global {
