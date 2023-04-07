@@ -39,7 +39,6 @@ import { createRef, ref } from 'lit/directives/ref.js';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import '@lit-labs/virtualizer';
-import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name';
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -462,17 +461,7 @@ export class ShiftSchedule extends LitElement {
                 </c-box>
 
                 <c-box flex id="week-month-title">
-                  <c-box
-                    absolute
-                    top-73
-                    left="274"
-                    w-200
-                    h-26
-                    pt-4
-                    bg-white
-                    flex
-                    items-center
-                    col-gap-12>
+                  <c-box absolute top-73 left="274" h-26 pt-4 flex items-center col-gap-6>
                     <c-box
                       ui="_: w-24 h-24 round-full flex-center"
                       ui-active="_1: bg-primary-100"
@@ -480,8 +469,11 @@ export class ShiftSchedule extends LitElement {
                       transition-200
                       cursor-pointer
                       @click="${() => this.goToMonth('previous')}"></c-box>
-                    <c-box w-90 flex justify-center>
-                      ${this.dateFormat(this.currentMonthTitleDisplay, { month: 'long' })}
+                    <c-box w-90 flex justify-center tx-12 tx-gray-600>
+                      ${this.dateFormat(this.currentMonthTitleDisplay, {
+                        month: 'long',
+                        year: 'numeric',
+                      })}
                     </c-box>
                     <c-box
                       ui="_: w-24 h-24 round-full flex-center"
