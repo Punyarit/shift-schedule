@@ -1239,17 +1239,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 .map((res) => res?.requestDate) || [];
             let dayOffSavedExist = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
             let dayOff = Math.abs(initialDayOFfExist.length + dayOffSavedExist.length - practitioner.practitioner.leave.dayOff);
-            e.detail.endDate = this.increaseDate(dayOff - 1, e.detail.startDate);
-            const dayBetween = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
-            if (dayBetween > dayOff) {
-                let dayOffReducer = dayBetween - dayOff;
-                const dateBetweenArray = getDateBetweenArrayDate(e.detail.startDate, e.detail.endDate);
-                let uniqueDayOffExist = [
+            const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
+            if (dayBetweenStartEnd > dayOff) {
+                const uniqueDayOffExist = [
                     ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
                 ];
-                const findDuplicationDate = this.findDuplicationDate(uniqueDayOffExist, dateBetweenArray) || [];
-                const dateReducer = dayOffReducer - findDuplicationDate.length;
-                e.detail.endDate = this.reduceDate(e.detail.endDate, dateReducer);
+                const generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff);
+                e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
             }
         }
         // prepare vacation off
@@ -1260,17 +1256,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             let dayOffSavedExist = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
             const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
             let dayOff = Math.abs(initialDayOFfExist.length + dayOffSavedExist.length - (15 - findVacation.vacation));
-            e.detail.endDate = this.increaseDate(dayOff - 1, e.detail.startDate);
-            const dayBetween = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
-            if (dayBetween > dayOff) {
-                let dayOffReducer = dayBetween - dayOff;
-                const dateBetweenArray = getDateBetweenArrayDate(e.detail.startDate, e.detail.endDate);
-                let uniqueDayOffExist = [
+            const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
+            if (dayBetweenStartEnd > dayOff) {
+                const uniqueDayOffExist = [
                     ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
                 ];
-                const findDuplicationDate = this.findDuplicationDate(uniqueDayOffExist, dateBetweenArray) || [];
-                const dateReducer = dayOffReducer - findDuplicationDate.length;
-                e.detail.endDate = this.reduceDate(e.detail.endDate, dateReducer);
+                const generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff);
+                e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
             }
         }
         this.datepickerData = e.detail;
@@ -2014,6 +2006,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.mayDayOffLength[practitioner.id] = {};
             }
             this.mayDayOffLength[practitioner.id].dayOff = initialOff.length + savedOff.length;
+            console.log('shift-schedule.js |this.mayDayOffLength| = ', this.mayDayOffLength);
         }
     }
     // @ts-ignore
@@ -2068,6 +2061,25 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 }
             }
         });
+        return result;
+    }
+    formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    generateDayOff(startDate, endDate, dayOffAlreadySpent, availableDayOff) {
+        const result = [...dayOffAlreadySpent];
+        let currentDate = new Date(startDate);
+        while (availableDayOff > 0 && currentDate <= endDate) {
+            const dateString = this.formatDate(currentDate);
+            if (!result.includes(dateString) && currentDate.getMonth() === startDate.getMonth()) {
+                result.push(dateString);
+                availableDayOff--;
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
         return result;
     }
     getHolidayObject(inputArray) {

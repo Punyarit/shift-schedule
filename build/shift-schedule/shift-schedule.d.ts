@@ -192,6 +192,8 @@ export declare class ShiftSchedule extends LitElement {
     private mayDayOffLength;
     private currentScrollX;
     getDateDisabled(holidays: any, startDate: any, endDate: any): {};
+    formatDate(date: Date): string;
+    generateDayOff(startDate: Date, endDate: Date, dayOffAlreadySpent: string[], availableDayOff: number): string[];
     getHolidayObject(inputArray: HolidayObject[]): {
         [key: string]: HolidayObject;
     };

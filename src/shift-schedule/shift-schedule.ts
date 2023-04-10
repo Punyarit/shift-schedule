@@ -1533,21 +1533,19 @@ export class ShiftSchedule extends LitElement {
         initialDayOFfExist.length + dayOffSavedExist.length - practitioner.practitioner.leave.dayOff
       );
 
-      e.detail.endDate = this.increaseDate(dayOff - 1, e.detail.startDate!);
-      const dayBetween = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
-      if (dayBetween > dayOff) {
-        let dayOffReducer = dayBetween - dayOff;
+      const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
 
-        const dateBetweenArray = getDateBetweenArrayDate(e.detail.startDate!, e.detail.endDate!);
-        let uniqueDayOffExist = [
+      if (dayBetweenStartEnd > dayOff) {
+        const uniqueDayOffExist = [
           ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
         ] as string[];
-        const findDuplicationDate =
-          this.findDuplicationDate(uniqueDayOffExist, dateBetweenArray) || [];
-
-        const dateReducer = dayOffReducer - findDuplicationDate.length;
-
-        e.detail.endDate = this.reduceDate(e.detail.endDate, dateReducer);
+        const generateDayOffValue = this.generateDayOff(
+          e.detail.startDate!,
+          e.detail.endDate,
+          uniqueDayOffExist,
+          dayOff
+        );
+        e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
       }
     }
 
@@ -1569,21 +1567,18 @@ export class ShiftSchedule extends LitElement {
         initialDayOFfExist.length + dayOffSavedExist.length - (15 - findVacation!.vacation)
       );
 
-      e.detail.endDate = this.increaseDate(dayOff - 1, e.detail.startDate!);
-      const dayBetween = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
-      if (dayBetween > dayOff) {
-        let dayOffReducer = dayBetween - dayOff;
-
-        const dateBetweenArray = getDateBetweenArrayDate(e.detail.startDate!, e.detail.endDate!);
-        let uniqueDayOffExist = [
+      const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
+      if (dayBetweenStartEnd > dayOff) {
+        const uniqueDayOffExist = [
           ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
         ] as string[];
-        const findDuplicationDate =
-          this.findDuplicationDate(uniqueDayOffExist, dateBetweenArray) || [];
-
-        const dateReducer = dayOffReducer - findDuplicationDate.length;
-
-        e.detail.endDate = this.reduceDate(e.detail.endDate, dateReducer);
+        const generateDayOffValue = this.generateDayOff(
+          e.detail.startDate!,
+          e.detail.endDate,
+          uniqueDayOffExist,
+          dayOff
+        );
+        e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
       }
     }
 
@@ -2842,6 +2837,7 @@ export class ShiftSchedule extends LitElement {
       }
 
       this.mayDayOffLength[practitioner.id].dayOff = initialOff.length + savedOff.length;
+      console.log('shift-schedule.js |this.mayDayOffLength| = ', this.mayDayOffLength);
     }
   }
 
@@ -2902,6 +2898,35 @@ export class ShiftSchedule extends LitElement {
         }
       }
     });
+
+    return result;
+  }
+
+  formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  generateDayOff(
+    startDate: Date,
+    endDate: Date,
+    dayOffAlreadySpent: string[],
+    availableDayOff: number
+  ): string[] {
+    const result: string[] = [...dayOffAlreadySpent];
+    let currentDate = new Date(startDate);
+
+    while (availableDayOff > 0 && currentDate <= endDate) {
+      const dateString = this.formatDate(currentDate);
+
+      if (!result.includes(dateString) && currentDate.getMonth() === startDate.getMonth()) {
+        result.push(dateString);
+        availableDayOff--;
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
 
     return result;
   }
@@ -2970,8 +2995,6 @@ export class ShiftSchedule extends LitElement {
     return this;
   }
 }
-
-// test
 declare global {
   namespace CXShiftSchedule {
     type Ref = ShiftSchedule;
