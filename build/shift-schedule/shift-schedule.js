@@ -401,6 +401,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 
         c-box[input-box].remark-input {
           width: var(--size-284) !important;
+          border: 2px solid var(--gray-400) !important;
         }
       </style>
       <c-box style="height:${this.maxHeight || '100%'}" relative overflow-hidden>
@@ -1480,7 +1481,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
                 arrowpoint: true,
-                focusout: 'close',
+                focusout: 'none',
                 mouseleave: 'none',
                 transform: 'center',
             }}">
