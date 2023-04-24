@@ -508,13 +508,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 </c-box>
 
                                 <c-box flex>
-                                  ${weekday.map((date) => {
+                                  ${weekday.map((date, dateIndex) => {
                     const isSunday = date.getDay() === 0 ? this.sundayBorderRightUI : '';
                     const isHoliday = this.holidayWithKeyMap?.[this.convertDateToString(date)];
                     const isWeekend = isHoliday || date.getDay() === 0 || date.getDay() === 6
                         ? this.weekendBg
                         : '';
-                    const timezoneOffset = date.getDate() === 1
+                    const timezoneOffset = date.getDate() === 1 || dateIndex === 0
                         ? date.getTimezoneOffset() * 60000
                         : null;
                     const localISOTime = timezoneOffset
@@ -522,9 +522,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             .toISOString()
                             .split('T')[0]
                         : '';
+                    console.log('date:', date);
                     return html ` <c-box
                                       data-first-date="${localISOTime}"
-                                      class="${date.getDate() === 1 ? 'first-date-of-month' : ''}"
+                                      class="${date.getDate() === 1
+                        ? 'first-date-of-month'
+                        : dateIndex === 0
+                            ? 'start-date-of-month'
+                            : ''}"
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
                         .weekDayUI}, ${isWeekend}">
                                       <c-box tx-12 tx-gray-500>
@@ -2037,7 +2042,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
             if (!this.monthTitleNav) {
                 this.monthTitleNav = this.querySelectorAll('.first-date-of-month');
-                this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+                if (this.monthTitleNav.length) {
+                    this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+                }
+                else {
+                    this.monthTitleNav = this.querySelectorAll('.start-date-of-month');
+                    this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+                }
             }
         }
         //
