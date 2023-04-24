@@ -177,7 +177,7 @@ export declare class ShiftSchedule extends LitElement {
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): void;
-    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): TemplateResult<1>;
+    renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string, indexUser?: number): TemplateResult<1>;
     firstUpdated(): void;
     resetRequestSelect(): void;
     findDuplicationDate: (arrayDate1: (string | Date)[], arrayDate2: (string | Date)[]) => string[];

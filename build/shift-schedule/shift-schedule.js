@@ -321,8 +321,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 
         .lit-virtualizer {
           overflow: auto;
-          display: flex;
-          flex-direction: column;
         }
 
         .lit-virtualizer::-webkit-scrollbar {
@@ -1573,8 +1571,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     dateString: this.convertDateToString(date),
                     indexUser,
                     event,
-                }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString))}">
-            ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString)}
+                }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString, indexUser))}">
+            ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString, indexUser)}
           </c-box>
         `;
             case 'vac':
@@ -1601,15 +1599,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         practitioner,
                         dateString,
                         indexUser,
-                    }, this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString));
+                    }, this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString, indexUser));
                 }}">
             <!-- ${this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation}
               ${this.vacDayOff?.[practitioner.practitioner.id]} -->
-            ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString)}
+            ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString, indexUser)}
           </c-box>
         `;
             case 'woff':
-                return html ` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString)} `;
+                return html ` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)} `;
             default:
                 return undefined;
         }
@@ -1901,7 +1899,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }));
         this.selectedDate = undefined;
     }
-    renderEmptyBox(date, state, type, practitioner, dateString) {
+    renderEmptyBox(date, state, type, practitioner, dateString, indexUser) {
         const isSameDate = this.selectedDate === date;
         const isHoliday = this.holidayWithKeyMap?.[this.convertDateToString(date)];
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -1914,7 +1912,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         shift-type="empty"
         slot="host"
         @click="${state === 'select'
-            ? () => this.selectDateRequest(date, type, practitioner, dateString)
+            ? () => {
+                if (this.requestSelected?.abbr === 'woff' && typeof indexUser === "number") {
+                    this.userSelectedIndex = indexUser;
+                }
+                this.selectDateRequest(date, type, practitioner, dateString);
+            }
             : null}">
         <c-box
           transition="all 0.2s ease"

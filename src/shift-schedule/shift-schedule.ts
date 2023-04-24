@@ -328,8 +328,6 @@ export class ShiftSchedule extends LitElement {
 
         .lit-virtualizer {
           overflow: auto;
-          display: flex;
-          flex-direction: column;
         }
 
         .lit-virtualizer::-webkit-scrollbar {
@@ -2161,7 +2159,8 @@ export class ShiftSchedule extends LitElement {
                   'select',
                   this.requestSelected?.abbr,
                   practitioner,
-                  dateString
+                  dateString,
+                  indexUser
                 )
               )}">
             ${this.renderEmptyBox(
@@ -2169,7 +2168,8 @@ export class ShiftSchedule extends LitElement {
               'display',
               this.requestSelected?.abbr,
               practitioner,
-              dateString
+              dateString,
+              indexUser
             )}
           </c-box>
         `;
@@ -2209,7 +2209,8 @@ export class ShiftSchedule extends LitElement {
                   'select',
                   this.requestSelected?.abbr,
                   practitioner,
-                  dateString
+                  dateString,
+                  indexUser
                 )
               );
             }}">
@@ -2220,13 +2221,13 @@ export class ShiftSchedule extends LitElement {
               'display',
               this.requestSelected?.abbr,
               practitioner,
-              dateString
+              dateString,indexUser
             )}
           </c-box>
         `;
 
       case 'woff':
-        return html` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString)} `;
+        return html` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString,indexUser)} `;
 
       default:
         return undefined;
@@ -2692,7 +2693,8 @@ export class ShiftSchedule extends LitElement {
     state?: 'display' | 'select',
     type?: RequestType['abbr'],
     practitioner?: SchedulePractitionerEntity,
-    dateString?: string
+    dateString?: string,
+    indexUser?: number
   ) {
     const isSameDate = this.selectedDate === date;
     const isHoliday = this.holidayWithKeyMap?.[this.convertDateToString(date)];
@@ -2706,7 +2708,12 @@ export class ShiftSchedule extends LitElement {
         shift-type="empty"
         slot="host"
         @click="${state === 'select'
-          ? () => this.selectDateRequest(date, type, practitioner, dateString)
+          ? () => {
+              if (this.requestSelected?.abbr === 'woff' && typeof indexUser === "number") {
+                this.userSelectedIndex = indexUser;
+              }
+              this.selectDateRequest(date, type, practitioner, dateString);
+            }
           : null}">
         <c-box
           transition="all 0.2s ease"
