@@ -543,7 +543,6 @@ export class ShiftSchedule extends LitElement {
                                           .toISOString()
                                           .split('T')[0]
                                       : '';
-                                    console.log('date:', date);
                                     return html` <c-box
                                       data-first-date="${localISOTime}"
                                       class="${date.getDate() === 1
@@ -2219,84 +2218,97 @@ export class ShiftSchedule extends LitElement {
     shifts: ScheduleShiftsEntity[],
     dayPart: DayPart,
     dateString: string,
+    practitioner: SchedulePractitionerEntity,
     initialSr?: Record<number, ScheduleShiftsEntity>
   ) {
-    return html` <c-box flex col-gap-24>
-      <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
-        <c-box
-          bg="${dayPortValue[dayPart].bgColor}"
-          p-2
-          w-24
-          h-24
-          border-box
-          flex-center
-          round-8
-          icon-prefix="${dayPortValue[dayPart].size} ${dayPortValue[dayPart].src} ${dayPortValue[
-            dayPart
-          ].iconColor}"></c-box>
-        <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
-      </c-box>
-      <c-box w-full>
-        <c-box flex col-gap-6 justify-between>
-          ${shifts?.map((requestPlan) => {
-            const [dayPart, plan] = requestPlan.shiftName.split('');
-            const hasInitialSr = initialSr?.[+plan];
+    const shouldRender = shifts.flatMap((res) =>
+      res.scheduleStaffings?.filter(
+        (res) =>
+          res.planDate === dateString &&
+          res.practitionerLevel.id === practitioner.practitioner.practitionerLevel.id &&
+          res.practitionerLevel.practitionerRole.id ===
+            practitioner.practitioner.practitionerRole.id
+      )
+    );
 
-            const softColor = dayPortValue[dayPart as DayPart].softColor;
-            const bgColor = dayPortValue[dayPart as DayPart].bgColor;
-            const lowColor = dayPortValue[dayPart as DayPart].lowColor;
-            const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
-            return html` <c-box flex items-center flex-col>
-              <c-box
-                @click="${(e: PointerEvent) => {
-                  this.addSrShiftRequest(requestPlan, dateString);
+    return shouldRender.length
+      ? html` <c-box flex col-gap-24>
+          <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
+            <c-box
+              bg="${dayPortValue[dayPart].bgColor}"
+              p-2
+              w-24
+              h-24
+              border-box
+              flex-center
+              round-8
+              icon-prefix="${dayPortValue[dayPart].size} ${dayPortValue[dayPart]
+                .src} ${dayPortValue[dayPart].iconColor}"></c-box>
+            <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
+          </c-box>
+          <c-box w-full>
+            <c-box flex col-gap-6 justify-between>
+              ${shifts?.map((requestPlan) => {
+                const [dayPart, plan] = requestPlan.shiftName.split('');
+                const hasInitialSr = initialSr?.[+plan];
 
-                  const target = e.target as CBoxUiAttribute;
-                  target.uiToggled = !target.uiToggled;
+                const bgColor = dayPortValue[dayPart as DayPart].bgColor;
+                const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
 
-                  const bgAttr = hasInitialSr
-                    ? target.uiToggled
-                      ? `${'primary-25'}!`
-                      : `${bgColor}!`
-                    : target.uiToggled
-                    ? `${bgColor}!`
-                    : `${'primary-25'}!`;
 
-                  const colorAttr = hasInitialSr
-                    ? target.uiToggled
-                      ? `gray-500`
-                      : `color-4-700`
-                    : target.uiToggled
-                    ? `color-4-700`
-                    : `gray-500`;
+                return html` <c-box flex items-center flex-col>
+                  <c-box
+                    @click="${(e: PointerEvent) => {
+                      this.addSrShiftRequest(requestPlan, dateString);
 
-                  target.setAttribute('bg', bgAttr);
-                  target.style.color = `var(--${colorAttr})`;
-                }}"
-                shadow-hover="shadow-3"
-                ui-active="_1:bg-${mediumColor}!"
-                transition="all 0.2s ease"
-                w-80
-                h-30
-                bg="${hasInitialSr ? bgColor : 'primary-25'}"
-                round-8
-                flex
-                justify-center
-                items-center
-                cursor-pointer
-                tx-14
-                bold
-                style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
-                >${plan}</c-box
-              >
-              <c-box tx-12
-                >${requestPlan.startTime.slice(0, -3)} - ${requestPlan.endTime.slice(0, -3)}</c-box
-              >
-            </c-box>`;
-          })}
-        </c-box>
-      </c-box>
-    </c-box>`;
+                      const target = e.target as CBoxUiAttribute;
+                      target.uiToggled = !target.uiToggled;
+
+                      const bgAttr = hasInitialSr
+                        ? target.uiToggled
+                          ? `${'primary-25'}!`
+                          : `${bgColor}!`
+                        : target.uiToggled
+                        ? `${bgColor}!`
+                        : `${'primary-25'}!`;
+
+                      const colorAttr = hasInitialSr
+                        ? target.uiToggled
+                          ? `gray-500`
+                          : `color-4-700`
+                        : target.uiToggled
+                        ? `color-4-700`
+                        : `gray-500`;
+
+                      target.setAttribute('bg', bgAttr);
+                      target.style.color = `var(--${colorAttr})`;
+                    }}"
+                    shadow-hover="shadow-3"
+                    ui-active="_1:bg-${mediumColor}!"
+                    transition="all 0.2s ease"
+                    w-80
+                    h-30
+                    bg="${hasInitialSr ? bgColor : 'primary-25'}"
+                    round-8
+                    flex
+                    justify-center
+                    items-center
+                    cursor-pointer
+                    tx-14
+                    bold
+                    style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
+                    >${plan}</c-box
+                  >
+                  <c-box tx-12
+                    >${requestPlan.startTime.slice(0, -3)} -
+                    ${requestPlan.endTime.slice(0, -3)}</c-box
+                  >
+                </c-box>`;
+              })}
+            </c-box>
+          </c-box>
+        </c-box>`
+      : undefined;
   }
 
   addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string) {
@@ -2425,76 +2437,106 @@ export class ShiftSchedule extends LitElement {
       };
     }
 
-    return html`
-      <c-box slot="popover">
-        <c-box content>
-          <!-- title -->
-          <c-box>
-            <c-box ui="${this.iconTitleWrapper('primary-200')}">
-              <c-box
-                icon-prefix="16 emoji-wink-custom primary-500"
-                ui="${this.iconTitle('primary-100')}"></c-box>
-              <c-box tx-14> ขอเข้าเวร </c-box>
-            </c-box>
-            <c-box ui="titleSrWrapper:mt-12 flex items-center flex justify-between col-gap-12">
-              <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการ</c-box>
+    const shouldAllowedPointer = this.scheduleData?.scheduleShifts
+      // @ts-ignore
+      ?.flatMap((res: ScheduleShiftsEntity) =>
+        res.scheduleStaffings?.find(
+          (res) =>
+            new Date(res.planDate).getDate() === date.getDate() &&
+            res.practitionerLevelId === practitioner.practitioner.practitionerLevelId &&
+            res.practitionerLevel.practitionerRoleId ===
+              practitioner.practitioner.practitionerRoleId
+        )
+      )
+      .filter(Boolean);
+
+    const hasSrPlan = !!shouldAllowedPointer?.length && this.requestSelected?.abbr === 'sr';
+
+    return hasSrPlan
+      ? html`
+          <c-box slot="popover">
+            <c-box content>
+              <!-- title -->
               <c-box>
-                <cx-button
-                  .var="${{ width: 'size-0' }}"
-                  .set="${{ type: 'secondary' } as CXButton.Set}"
-                  @click="${() => {
-                    this.closePopover();
-                    if (cellId) {
-                      const boxTarget = this.querySelector(
-                        `#${cellId}-${dateString}`
-                      ) as HTMLElement;
+                <c-box ui="${this.iconTitleWrapper('primary-200')}">
+                  <c-box
+                    icon-prefix="16 emoji-wink-custom primary-500"
+                    ui="${this.iconTitle('primary-100')}"></c-box>
+                  <c-box tx-14> ขอเข้าเวร </c-box>
+                </c-box>
+                <c-box ui="titleSrWrapper:mt-12 flex items-center flex justify-between col-gap-12">
+                  <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการ</c-box>
+                  <c-box>
+                    <cx-button
+                      .var="${{ width: 'size-0' }}"
+                      .set="${{ type: 'secondary' } as CXButton.Set}"
+                      @click="${() => {
+                        this.closePopover();
+                        if (cellId) {
+                          const boxTarget = this.querySelector(
+                            `#${cellId}-${dateString}`
+                          ) as HTMLElement;
 
-                      const targetElement = event?.target as HTMLElement;
-                      const shiftType = targetElement.closest('c-box[shift-type]') as HTMLElement;
-                      const requestHostType = shiftType.getAttribute('shift-type');
+                          const targetElement = event?.target as HTMLElement;
+                          const shiftType = targetElement.closest(
+                            'c-box[shift-type]'
+                          ) as HTMLElement;
+                          const requestHostType = shiftType.getAttribute('shift-type');
 
-                      if (cellId) {
-                        const [requestType, renderType] = requestHostType?.split('-') as [
-                          RequestType['abbr'],
-                          'init' | 'saved' | undefined
-                        ];
-                        this.renderContentBack(
-                          requestType,
-                          date,
+                          if (cellId) {
+                            const [requestType, renderType] = requestHostType?.split('-') as [
+                              RequestType['abbr'],
+                              'init' | 'saved' | undefined
+                            ];
+                            this.renderContentBack(
+                              requestType,
+                              date,
+                              dateString,
+                              practitioner,
+                              boxTarget,
+                              indexUser,
+                              renderType,
+                              request
+                            );
+                          }
+                        }
+                      }}"
+                      >ยกเลิก</cx-button
+                    >
+                    <cx-button
+                      .var="${{ width: 'size-0' }}"
+                      @click="${() =>
+                        this.saveSrRequestPlan(date, practitioner, cellId, indexUser)}"
+                      >บันทึก</cx-button
+                    >
+                  </c-box>
+                </c-box>
+              </c-box>
+
+              <!-- selected request -->
+              <c-box mt-12 flex flex-col row-gap-24>
+                <!-- morning -->
+                ${(['m', 'a', 'n'] as const).map(
+                  (dayPart) =>
+                    html`${shiftGroup[dayPart]
+                      ? this.renderShipSrRequest(
+                          shiftGroup[dayPart],
+                          dayPart,
                           dateString,
                           practitioner,
-                          boxTarget,
-                          indexUser,
-                          renderType,
-                          request
-                        );
-                      }
-                    }
-                  }}"
-                  >ยกเลิก</cx-button
-                >
-                <cx-button
-                  .var="${{ width: 'size-0' }}"
-                  @click="${() => this.saveSrRequestPlan(date, practitioner, cellId, indexUser)}"
-                  >บันทึก</cx-button
-                >
+                          request?.[dayPart]
+                        )
+                      : undefined}`
+                )}
               </c-box>
             </c-box>
           </c-box>
-
-          <!-- selected request -->
-          <c-box mt-12 flex flex-col row-gap-24>
-            <!-- morning -->
-            ${(['m', 'a', 'n'] as const).map(
-              (res) =>
-                html`${shiftGroup[res]
-                  ? this.renderShipSrRequest(shiftGroup[res], res, dateString, request?.[res])
-                  : undefined}`
-            )}
+        `
+      : html`
+          <c-box slot="popover">
+            <c-box content> ไม่มีเวรให้เลือก </c-box>
           </c-box>
-        </c-box>
-      </c-box>
-    `;
+        `;
   }
 
   saveSrRequestPlan(
@@ -3119,4 +3161,4 @@ declare global {
   namespace CXShiftSchedule {
     type Ref = ShiftSchedule;
   }
-} 
+}

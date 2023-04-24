@@ -242,6 +242,7 @@ export interface Practitioner {
 export interface PractitionerLevel {
   id: string;
   name: string;
+  practitionerRole: PractitionerRole;
   practitionerRoleId: string;
 }
 

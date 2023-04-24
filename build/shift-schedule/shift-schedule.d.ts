@@ -169,7 +169,7 @@ export declare class ShiftSchedule extends LitElement {
         indexUser: number;
     }, popoverContent: TemplateResult, popoverHost: TemplateResult): void;
     renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number, request?: SrShiftPlan): TemplateResult<1> | undefined;
-    renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, initialSr?: Record<number, ScheduleShiftsEntity>): TemplateResult<1>;
+    renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, initialSr?: Record<number, ScheduleShiftsEntity>): TemplateResult<1> | undefined;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string): void;
     groupShiftsByLetter(arr: any): any;
     renderContentBack(type: RequestType['abbr'], date: Date, dateString: string, practitioner: SchedulePractitionerEntity, boxTarget: HTMLElement, indexUser?: number, renderType?: 'init' | 'saved', request?: SrShiftPlan): void;
