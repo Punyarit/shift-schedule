@@ -188,6 +188,7 @@ export declare class ShiftSchedule extends LitElement {
     setColorRequestType(requestTime: DayPart): string;
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
+    isOneMonth?: boolean;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;
     private maxDayOffLength;

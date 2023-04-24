@@ -461,26 +461,32 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 
                 <c-box flex id="week-month-title">
                   <c-box absolute top-73 left="274" h-26 pt-4 flex items-center col-gap-6>
-                    <c-box
-                      ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
-                      icon-suffix="12 angle-left-u black"
-                      transition-200
-                      cursor-pointer
-                      @click="${() => this.goToMonth('previous')}"></c-box>
-                    <c-box w-90 flex justify-center tx-12 tx-gray-600>
+                    ${this.isOneMonth
+            ? undefined
+            : html ` <c-box
+                          ui="_: w-24 h-24 round-full flex-center"
+                          ui-active="_1: bg-primary-100"
+                          icon-suffix="12 angle-left-u black"
+                          transition-200
+                          cursor-pointer
+                          @click="${() => this.goToMonth('previous')}"></c-box>`}
+
+                    <c-box w-90 flex style="${this.isOneMonth ? '' : 'justify-content: center'}" tx-12 tx-gray-600>
                       ${this.dateFormat(this.currentMonthTitleDisplay, {
             month: 'long',
             year: 'numeric',
         })}
                     </c-box>
-                    <c-box
-                      ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
-                      transition-200
-                      icon-suffix="12 angle-right-u black"
-                      cursor-pointer
-                      @click="${() => this.goToMonth('next')}"></c-box>
+
+                    ${this.isOneMonth
+            ? undefined
+            : html `<c-box
+                          ui="_: w-24 h-24 round-full flex-center"
+                          ui-active="_1: bg-primary-100"
+                          transition-200
+                          icon-suffix="12 angle-right-u black"
+                          cursor-pointer
+                          @click="${() => this.goToMonth('next')}"></c-box>`}
                   </c-box>
                   ${this.dateBetween?.map((dateBet) => {
             return html `
@@ -1988,6 +1994,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return `${year}-${month}-${day}`;
     }
     updated(changedProp) {
+        if (typeof this.isOneMonth === 'undefined' && this.scheduleData) {
+            const start = new Date(this.scheduleData.startDate);
+            const end = new Date(this.scheduleData.endDate);
+            this.isOneMonth =
+                start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+        }
         // remove borderRight last element
         const weekMonthTitle = this.querySelector('#week-month-title');
         const weekMonthUser = this.querySelector('#week-month-user');
@@ -2310,6 +2322,10 @@ __decorate([
     state(),
     __metadata("design:type", String)
 ], ShiftSchedule.prototype, "currentMonthTitleDisplay", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Boolean)
+], ShiftSchedule.prototype, "isOneMonth", void 0);
 ShiftSchedule = __decorate([
     customElement('cx-shift-schedule')
 ], ShiftSchedule);
