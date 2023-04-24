@@ -35,6 +35,7 @@ import {
   shiftPlanIcon,
   DateObject as HolidayObject,
   Practitioner,
+  ScheduleErrorDayRequest,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
@@ -47,7 +48,6 @@ export class ShiftSchedule extends LitElement {
   private scheduleTitleUI = 'scheduleTitleUI: inline-flex';
   private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
   private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
-  private monthUI = 'monthUI: flex items-center';
   private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 tx-white! flex justify-center items-center round-full z-1`;
   private requestBox = 'requestBox: min-w-90 inline-flex flex-col';
   private userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
@@ -98,6 +98,9 @@ export class ShiftSchedule extends LitElement {
 
   @property({ type: Object })
   holidays: HolidayObject[] = [];
+
+  @property({ type: Object })
+  errorDayRequest: ScheduleErrorDayRequest[] = [];
 
   @property()
   requestSelected?: RequestType;
@@ -193,6 +196,8 @@ export class ShiftSchedule extends LitElement {
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     if (_changedProperties.has('scheduleData')) {
+      this.moveUserToFirstArray();
+
       this.dateBetween = this.getDateBetween(
         new Date((this.scheduleData as SchedulingData)?.startDate!),
         new Date((this.scheduleData as SchedulingData)?.endDate!)
@@ -303,7 +308,6 @@ export class ShiftSchedule extends LitElement {
   @state()
   dividerTop = 0;
 
-  private currentMonthTitle: string[] = [];
   private monthTitleNav?: NodeListOf<HTMLElement>;
 
   @state()
@@ -322,11 +326,13 @@ export class ShiftSchedule extends LitElement {
           background: transparent;
         }
 
-        lit-virtualizer {
+        .lit-virtualizer {
           overflow: auto;
+          display: flex;
+          flex-direction: column;
         }
 
-        lit-virtualizer::-webkit-scrollbar {
+        .lit-virtualizer::-webkit-scrollbar {
           width: 0px;
           height: 0px;
           background: transparent;
@@ -469,7 +475,7 @@ export class ShiftSchedule extends LitElement {
                       : html` <c-box
                           ui="_: w-24 h-24 round-full flex-center"
                           ui-active="_1: bg-primary-100"
-                          icon-suffix="12 angle-left-u black"
+                          icon-suffix="8 angle-left-u gray-600"
                           transition-200
                           cursor-pointer
                           @click="${() => this.goToMonth('previous')}"></c-box>`}
@@ -492,7 +498,7 @@ export class ShiftSchedule extends LitElement {
                           ui="_: w-24 h-24 round-full flex-center"
                           ui-active="_1: bg-primary-100"
                           transition-200
-                          icon-suffix="12 angle-right-u black"
+                          icon-suffix="8 angle-right-u gray-600"
                           cursor-pointer
                           @click="${() => this.goToMonth('next')}"></c-box>`}
                   </c-box>
@@ -588,234 +594,248 @@ export class ShiftSchedule extends LitElement {
                 flex-col
                 id="week-month-user"
                 style="height:${this.maxHeightOfUserTable!}px; width:var(--table-width)">
-                <lit-virtualizer
-                  .items=${(this.scheduleData as SchedulingData)?.schedulePractitioner!}
-                  .renderItem="${(practitioner: SchedulePractitionerEntity, indexUser: number) => {
-                    const {
-                      practitioner: {
-                        gender,
-                        nameFamily,
-                        nameGiven,
-                        practitionerLevel,
-                        practitionerRole,
-                      },
-                      schedulePractitionerRequest: request,
-                    } = practitioner;
+                <div class="lit-virtualizer">
+                  ${(this.scheduleData as SchedulingData)?.schedulePractitioner?.map(
+                    (practitioner, indexUser) => {
+                      const {
+                        practitioner: {
+                          gender,
+                          nameFamily,
+                          nameGiven,
+                          practitionerLevel,
+                          practitionerRole,
+                        },
+                        schedulePractitionerRequest: request,
+                      } = practitioner;
 
-                    const requestData = this.convertRequestDatesToObject(
-                      request as SchedulePractitionerRequestEntity[]
-                    );
-                    const targetUser = practitioner?.practitionerId === this.practitionerId!;
-                    return html`
-                      <c-box
-                        flex
-                        ui="targetUser: ${targetUser ? 'order-first' : ''}"
-                        @click="${() => {
-                          if (this.mode === 'view') {
-                            this.dispatchEvent(
-                              new CustomEvent('focus-request', {
-                                detail: { practitioner: practitioner },
-                              })
-                            );
-                          }
-                        }}">
+                      const requestData = this.convertRequestDatesToObject(
+                        request as SchedulePractitionerRequestEntity[]
+                      );
+                      const targetUser = practitioner?.practitionerId === this.practitionerId!;
+                      return html`
                         <c-box
-                          @mouseenter="${this.viewerRole === 'manager'
-                            ? (e: MouseEvent) => this.managerHoverUser(indexUser, e, practitioner)
-                            : null}"
-                          style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
-                          min-w="260"
-                          class="${(this.viewerRole === 'staff' && indexUser === 0) ||
-                          (this.viewerRole === 'manager' &&
-                            indexUser === this.userSelectedIndex &&
-                            this.requestSelected)
-                            ? 'focus-divider'
-                            : ''}"
+                          flex
+                          ui="targetUser: ${targetUser ? 'order-first' : ''}"
                           @click="${() => {
-                            if (this.viewerRole === 'manager' && this.requestSelected) {
-                              this.userSelectedIndex = indexUser;
+                            if (this.mode === 'view') {
                               this.dispatchEvent(
                                 new CustomEvent('focus-request', {
                                   detail: { practitioner: practitioner },
                                 })
                               );
                             }
-                          }}"
-                          ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
-                          <c-box relative top-0 left-0>
-                            <c-box
-                              round-full
-                              flex-center
-                              class="${(this.viewerRole === 'staff' && indexUser === 0) ||
-                              (this.viewerRole === 'manager' &&
-                                indexUser === this.userSelectedIndex &&
-                                this.requestSelected)
-                                ? 'user-border-focus'
-                                : ''}">
+                          }}">
+                          <c-box
+                            @mouseenter="${this.viewerRole === 'manager'
+                              ? (e: MouseEvent) => this.managerHoverUser(indexUser, e, practitioner)
+                              : null}"
+                            style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
+                            min-w="260"
+                            class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                            (this.viewerRole === 'manager' &&
+                              indexUser === this.userSelectedIndex &&
+                              this.requestSelected)
+                              ? 'focus-divider'
+                              : ''}"
+                            @click="${() => {
+                              if (this.viewerRole === 'manager' && this.requestSelected) {
+                                this.userSelectedIndex = indexUser;
+                                this.dispatchEvent(
+                                  new CustomEvent('focus-request', {
+                                    detail: { practitioner: practitioner },
+                                  })
+                                );
+                              }
+                            }}"
+                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
+                            <c-box relative top-0 left-0>
                               <c-box
                                 round-full
                                 flex-center
-                                border="2 solid ${gender === 'M' ? 'primary-500' : 'color-9-500'}">
-                                <img
-                                  style="border-radius: 50%"
-                                  width="32px"
-                                  height="32px"
-                                  src="${this.userImgDefault || ''}"
-                                  alt="" />
+                                class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                                (this.viewerRole === 'manager' &&
+                                  indexUser === this.userSelectedIndex &&
+                                  this.requestSelected)
+                                  ? 'user-border-focus'
+                                  : ''}">
+                                <c-box
+                                  round-full
+                                  flex-center
+                                  border="2 solid ${gender === 'M'
+                                    ? 'primary-500'
+                                    : 'color-9-500'}">
+                                  <img
+                                    style="border-radius: 50%"
+                                    width="32px"
+                                    height="32px"
+                                    src="${this.userImgDefault || ''}"
+                                    alt="" />
+                                </c-box>
+                              </c-box>
+
+                              <c-box
+                                ui="${this.genderBox}"
+                                bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
+                                ${genderType[gender as 'M' | 'F']}
                               </c-box>
                             </c-box>
 
-                            <c-box
-                              ui="${this.genderBox}"
-                              bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
-                              ${genderType[gender as 'M' | 'F']}
+                            <c-box>
+                              <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
+                              <c-box tx-12
+                                >${practitionerRole.name}, ${practitionerLevel.name}</c-box
+                              >
                             </c-box>
                           </c-box>
 
-                          <c-box>
-                            <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                            <c-box tx-12>${practitionerRole.name}, ${practitionerLevel.name}</c-box>
-                          </c-box>
-                        </c-box>
+                          ${this.dateBetween?.map((dateBet) => {
+                            return html`
+                              ${dateBet.dateBetween.map((week) => {
+                                return html`
+                                  ${week.map((day) => {
+                                    day.setHours(0, 0, 0, 0);
+                                    const borderRight =
+                                      day.getDay() === 0 ? this.sundayBorderRightUI : '';
 
-                        ${this.dateBetween?.map((dateBet) => {
-                          return html`
-                            ${dateBet.dateBetween.map((week) => {
-                              return html`
-                                ${week.map((day) => {
-                                  day.setHours(0, 0, 0, 0);
-                                  const borderRight =
-                                    day.getDay() === 0 ? this.sundayBorderRightUI : '';
+                                    const isHoliday =
+                                      this.holidayWithKeyMap?.[this.convertDateToString(day)];
+                                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
-                                  const isHoliday =
-                                    this.holidayWithKeyMap?.[this.convertDateToString(day)];
-                                  const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                                    const dateString = this.convertDateToString(day);
+                                    const srSaved = this.shiftSrRequestSaved[practitioner.id];
 
-                                  const dateString = this.convertDateToString(day);
-                                  const srSaved = this.shiftSrRequestSaved[practitioner.id];
+                                    const semSaved = this.shiftSemRequestSaved[practitioner.id];
+                                    const offSaved = this.shiftOffRequestSaved[practitioner.id];
+                                    const vacSaved = this.shiftVacRequestSaved[practitioner.id];
 
-                                  const semSaved = this.shiftSemRequestSaved[practitioner.id];
-                                  const offSaved = this.shiftOffRequestSaved[practitioner.id];
-                                  const vacSaved = this.shiftVacRequestSaved[practitioner.id];
+                                    const requestInitial = requestData[dateString];
 
-                                  const requestInitial = requestData[dateString];
+                                    const disableDate = this.disableDateArranged?.[dateString];
 
-                                  const disableDate = this.disableDateArranged?.[dateString];
+                                    const woffSaved =
+                                      this.shiftWoffRequestSaved?.[practitioner.id]?.request;
 
-                                  const woffSaved =
-                                    this.shiftWoffRequestSaved?.[practitioner.id]?.request;
+                                    const userTargetIndex =
+                                      this.viewerRole === 'manager' ? this.userHoverIndex : 0;
 
-                                  const userTargetIndex =
-                                    this.viewerRole === 'manager' ? this.userHoverIndex : 0;
+                                    const isErrorDayRequest =
+                                      this.errorDayRequest[0]?.date === dateString &&
+                                      practitioner.practitionerId ===
+                                        this.errorDayRequest[0]?.practitionerId;
 
-                                  return html` <c-box
-                                    @mouseenter="${this.viewerRole === 'manager'
-                                      ? (e: MouseEvent) =>
-                                          this.managerHoverUser(indexUser, e, practitioner)
-                                      : null}"
-                                    ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                    class="${(this.viewerRole === 'staff' && indexUser === 0) ||
-                                    (this.viewerRole === 'manager' &&
-                                      indexUser === this.userSelectedIndex &&
-                                      this.requestSelected)
-                                      ? 'focus-divider'
-                                      : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
-                                    <c-box
-                                      w-full
-                                      h-full
-                                      style="opacity:${(this.viewerRole === 'staff' &&
-                                        indexUser === 0) ||
-                                      this.viewerRole === 'manager'
-                                        ? '1'
-                                        : '0.6'}; max-width:88px; word-break:break-all;
-                                        ${(this.requestSelected?.abbr === 'off' &&
-                                        (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                                          this.maxDayOffLength?.[
-                                            (practitioner.practitioner as any).id
-                                          ]?.dayOff >=
-                                            practitioner?.practitioner?.leave?.dayOff)) ||
-                                      (this.requestSelected?.abbr === 'vac' &&
-                                        (this.vacDayOff?.[(practitioner.practitioner as any).id] ===
-                                          0 ||
-                                          this.maxDayOffLength?.[
-                                            (practitioner.practitioner as any).id
-                                          ]?.vacation >=
-                                            this.vacDayOff?.[
-                                              (practitioner.practitioner as any).id
-                                            ]))
-                                        ? 'cursor:not-allowed'
+                                    return html` <c-box
+                                      @mouseenter="${this.viewerRole === 'manager'
+                                        ? (e: MouseEvent) =>
+                                            this.managerHoverUser(indexUser, e, practitioner)
+                                        : null}"
+                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
+                                      class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                                      (this.viewerRole === 'manager' &&
+                                        indexUser === this.userSelectedIndex &&
+                                        this.requestSelected)
+                                        ? 'focus-divider'
+                                        : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}"
+                                      style="${isErrorDayRequest
+                                        ? 'border: 2px solid #F3655C'
                                         : ''}">
-                                      <!-- if have request date then render request -->
+                                      <c-box
+                                        w-full
+                                        h-full
+                                        style="opacity:${(this.viewerRole === 'staff' &&
+                                          indexUser === 0) ||
+                                        this.viewerRole === 'manager'
+                                          ? '1'
+                                          : '0.6'}; max-width:88px; word-break:break-all;
+                                          ${(this.requestSelected?.abbr === 'off' &&
+                                          (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                                            this.maxDayOffLength?.[
+                                              (practitioner.practitioner as any).id
+                                            ]?.dayOff >=
+                                              practitioner?.practitioner?.leave?.dayOff)) ||
+                                        (this.requestSelected?.abbr === 'vac' &&
+                                          (this.vacDayOff?.[
+                                            (practitioner.practitioner as any).id
+                                          ] === 0 ||
+                                            this.maxDayOffLength?.[
+                                              (practitioner.practitioner as any).id
+                                            ]?.vacation >=
+                                              this.vacDayOff?.[
+                                                (practitioner.practitioner as any).id
+                                              ]))
+                                          ? 'cursor:not-allowed'
+                                          : ''}">
+                                        <!-- if have request date then render request -->
 
-                                      <!-- when saving -->
-                                      ${disableDate
-                                        ? html` <div class="diagonal-pattern"></div> `
-                                        : srSaved && srSaved?.request?.[dateString]
-                                        ? this.renderSrShiftSaved(
-                                            srSaved,
-                                            dateString,
-                                            practitioner,
-                                            indexUser
-                                          )
-                                        : semSaved?.request?.[dateString]
-                                        ? this.renderShiftPlanSaved(
-                                            semSaved?.request?.[dateString],
-                                            'sem',
-                                            practitioner,
-                                            day,
-                                            indexUser
-                                          )
-                                        : offSaved?.request?.[dateString]
-                                        ? this.renderShiftPlanSaved(
-                                            offSaved?.request?.[dateString],
-                                            'off',
-                                            practitioner,
-                                            day,
-                                            indexUser
-                                          )
-                                        : vacSaved?.request?.[dateString]
-                                        ? this.renderShiftPlanSaved(
-                                            vacSaved?.request?.[dateString],
-                                            'vac',
-                                            practitioner,
-                                            day,
-                                            indexUser
-                                          )
-                                        : woffSaved?.[dateString]
-                                        ? this.renderWoffSaved(
-                                            dateString,
-                                            practitioner,
-                                            undefined,
-                                            'woff',
-                                            day,
-                                            indexUser
-                                          )
-                                        : requestInitial
-                                        ? this.renderInitialRequest(
-                                            requestInitial,
-                                            practitioner,
-                                            day,
-                                            indexUser
-                                          )
-                                        : indexUser === userTargetIndex
-                                        ? this.renderEmptyDateForSelect(
-                                            day,
-                                            practitioner,
-                                            dateString,
-                                            indexUser
-                                          )
-                                        : undefined}
-                                    </c-box>
-                                  </c-box>`;
-                                })}
-                              `;
-                            })}
-                          `;
-                        })}
-                      </c-box>
-                    `;
-                  }}">
-                </lit-virtualizer>
+                                        <!-- when saving -->
+                                        ${disableDate
+                                          ? html` <div class="diagonal-pattern"></div> `
+                                          : srSaved && srSaved?.request?.[dateString]
+                                          ? this.renderSrShiftSaved(
+                                              srSaved,
+                                              dateString,
+                                              practitioner,
+                                              indexUser
+                                            )
+                                          : semSaved?.request?.[dateString]
+                                          ? this.renderShiftPlanSaved(
+                                              semSaved?.request?.[dateString],
+                                              'sem',
+                                              practitioner,
+                                              day,
+                                              indexUser
+                                            )
+                                          : offSaved?.request?.[dateString]
+                                          ? this.renderShiftPlanSaved(
+                                              offSaved?.request?.[dateString],
+                                              'off',
+                                              practitioner,
+                                              day,
+                                              indexUser
+                                            )
+                                          : vacSaved?.request?.[dateString]
+                                          ? this.renderShiftPlanSaved(
+                                              vacSaved?.request?.[dateString],
+                                              'vac',
+                                              practitioner,
+                                              day,
+                                              indexUser
+                                            )
+                                          : woffSaved?.[dateString]
+                                          ? this.renderWoffSaved(
+                                              dateString,
+                                              practitioner,
+                                              undefined,
+                                              'woff',
+                                              day,
+                                              indexUser
+                                            )
+                                          : requestInitial
+                                          ? this.renderInitialRequest(
+                                              requestInitial,
+                                              practitioner,
+                                              day,
+                                              indexUser
+                                            )
+                                          : indexUser === userTargetIndex
+                                          ? this.renderEmptyDateForSelect(
+                                              day,
+                                              practitioner,
+                                              dateString,
+                                              indexUser
+                                            )
+                                          : undefined}
+                                      </c-box>
+                                    </c-box>`;
+                                  })}
+                                `;
+                              })}
+                            `;
+                          })}
+                        </c-box>
+                      `;
+                    }
+                  )}
+                </div>
               </c-box>
             </c-box>
           </c-box>
@@ -1332,7 +1352,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   goToMonth(type: 'next' | 'previous') {
-    const litVirtualizer = this.querySelector('lit-virtualizer');
+    const litVirtualizer = this.querySelector('.lit-virtualizer');
     if (litVirtualizer) {
       this.currentMonthTitleIndex =
         this.currentMonthTitleIndex === this.monthTitleNav!.length - 1
@@ -2085,7 +2105,7 @@ export class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
             arrowpoint: true,
-            focusout: 'none',
+            focusout: 'close',
             mouseleave: 'none',
             transform: 'center',
           } as CXPopover.Set}">
@@ -2254,7 +2274,6 @@ export class ShiftSchedule extends LitElement {
 
                 const bgColor = dayPortValue[dayPart as DayPart].bgColor;
                 const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
-
 
                 return html` <c-box flex items-center flex-col>
                   <c-box
@@ -2865,6 +2884,19 @@ export class ShiftSchedule extends LitElement {
     }
   };
 
+  private moveUserToFirstArray() {
+    const index = this.scheduleData?.schedulePractitioner?.findIndex(
+      (obj) => obj.practitionerId === this.practitionerId
+    );
+
+    if (index !== -1) {
+      const item = this.scheduleData?.schedulePractitioner?.splice(index!, 1)[0];
+      this.scheduleData?.schedulePractitioner?.unshift(item as any);
+    }
+
+    return true;
+  }
+
   @state()
   isOneMonth?: boolean;
 
@@ -2928,7 +2960,7 @@ export class ShiftSchedule extends LitElement {
       this.style.setProperty('--table-width', `${width}px`);
 
       const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
-      const litVirtualizer = this.querySelector('lit-virtualizer');
+      const litVirtualizer = this.querySelector('.lit-virtualizer');
 
       if (tableHeaderWrapper && litVirtualizer) {
         tableHeaderWrapper.addEventListener('scroll', (e) => {

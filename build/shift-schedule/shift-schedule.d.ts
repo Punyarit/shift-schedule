@@ -7,7 +7,7 @@ import '@cortex-ui/core/cx/button';
 import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
-import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate, DateObject as HolidayObject } from './schedule.types';
+import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate, DateObject as HolidayObject, ScheduleErrorDayRequest } from './schedule.types';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import '@lit-labs/virtualizer';
 export declare class ShiftSchedule extends LitElement {
@@ -15,7 +15,6 @@ export declare class ShiftSchedule extends LitElement {
     private scheduleTitleUI;
     private tableLineUI;
     private titleLeftTopUI;
-    private monthUI;
     private genderBox;
     private requestBox;
     private userTitle;
@@ -40,6 +39,7 @@ export declare class ShiftSchedule extends LitElement {
     requestTypes?: RequestType[] | ScheduleRequestType[];
     dateBetween?: DateBetweenData[];
     holidays: HolidayObject[];
+    errorDayRequest: ScheduleErrorDayRequest[];
     requestSelected?: RequestType;
     selectedDate?: Date;
     srState: never[];
@@ -90,7 +90,6 @@ export declare class ShiftSchedule extends LitElement {
     private holidayWithKeyMap;
     isRemoveMode: boolean;
     dividerTop: number;
-    private currentMonthTitle;
     private monthTitleNav?;
     currentMonthTitleDisplay?: string;
     render(): TemplateResult<1>;
@@ -188,6 +187,7 @@ export declare class ShiftSchedule extends LitElement {
     setColorRequestType(requestTime: DayPart): string;
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
+    private moveUserToFirstArray;
     isOneMonth?: boolean;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;

@@ -29,7 +29,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.scheduleTitleUI = 'scheduleTitleUI: inline-flex';
         this.tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
         this.titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
-        this.monthUI = 'monthUI: flex items-center';
         this.genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 tx-white! flex justify-center items-center round-full z-1`;
         this.requestBox = 'requestBox: min-w-90 inline-flex flex-col';
         this.userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
@@ -51,6 +50,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.userSelectedIndex = 0;
         this.removeOriginCache = [];
         this.holidays = [];
+        this.errorDayRequest = [];
         this.srState = [];
         this.shiftSrRequestCache = {};
         this.shiftSrShipCache = {};
@@ -72,7 +72,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.holidayWithKeyMap = {};
         this.isRemoveMode = false;
         this.dividerTop = 0;
-        this.currentMonthTitle = [];
         this.saveShiftPlanDatePicker = (practitioner, dateString, ceillId, remark, type) => {
             if (!this.datepickerData?.startDate && !this.datepickerData?.endDate) {
                 this.datepickerData = {
@@ -223,6 +222,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     willUpdate(_changedProperties) {
         if (_changedProperties.has('scheduleData')) {
+            this.moveUserToFirstArray();
             this.dateBetween = this.getDateBetween(new Date(this.scheduleData?.startDate), new Date(this.scheduleData?.endDate));
         }
         super.willUpdate(_changedProperties);
@@ -319,11 +319,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           background: transparent;
         }
 
-        lit-virtualizer {
+        .lit-virtualizer {
           overflow: auto;
+          display: flex;
+          flex-direction: column;
         }
 
-        lit-virtualizer::-webkit-scrollbar {
+        .lit-virtualizer::-webkit-scrollbar {
           width: 0px;
           height: 0px;
           background: transparent;
@@ -466,7 +468,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             : html ` <c-box
                           ui="_: w-24 h-24 round-full flex-center"
                           ui-active="_1: bg-primary-100"
-                          icon-suffix="12 angle-left-u black"
+                          icon-suffix="8 angle-left-u gray-600"
                           transition-200
                           cursor-pointer
                           @click="${() => this.goToMonth('previous')}"></c-box>`}
@@ -489,7 +491,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                           ui="_: w-24 h-24 round-full flex-center"
                           ui-active="_1: bg-primary-100"
                           transition-200
-                          icon-suffix="12 angle-right-u black"
+                          icon-suffix="8 angle-right-u gray-600"
                           cursor-pointer
                           @click="${() => this.goToMonth('next')}"></c-box>`}
                   </c-box>
@@ -578,36 +580,35 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 flex-col
                 id="week-month-user"
                 style="height:${this.maxHeightOfUserTable}px; width:var(--table-width)">
-                <lit-virtualizer
-                  .items=${this.scheduleData?.schedulePractitioner}
-                  .renderItem="${(practitioner, indexUser) => {
+                <div class="lit-virtualizer">
+                  ${this.scheduleData?.schedulePractitioner?.map((practitioner, indexUser) => {
             const { practitioner: { gender, nameFamily, nameGiven, practitionerLevel, practitionerRole, }, schedulePractitionerRequest: request, } = practitioner;
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
-                      <c-box
-                        flex
-                        ui="targetUser: ${targetUser ? 'order-first' : ''}"
-                        @click="${() => {
+                        <c-box
+                          flex
+                          ui="targetUser: ${targetUser ? 'order-first' : ''}"
+                          @click="${() => {
                 if (this.mode === 'view') {
                     this.dispatchEvent(new CustomEvent('focus-request', {
                         detail: { practitioner: practitioner },
                     }));
                 }
             }}">
-                        <c-box
-                          @mouseenter="${this.viewerRole === 'manager'
+                          <c-box
+                            @mouseenter="${this.viewerRole === 'manager'
                 ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                 : null}"
-                          style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
-                          min-w="260"
-                          class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                            style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
+                            min-w="260"
+                            class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&
                     this.requestSelected)
                 ? 'focus-divider'
                 : ''}"
-                          @click="${() => {
+                            @click="${() => {
                 if (this.viewerRole === 'manager' && this.requestSelected) {
                     this.userSelectedIndex = indexUser;
                     this.dispatchEvent(new CustomEvent('focus-request', {
@@ -615,48 +616,52 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     }));
                 }
             }}"
-                          ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
-                          <c-box relative top-0 left-0>
-                            <c-box
-                              round-full
-                              flex-center
-                              class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
+                            <c-box relative top-0 left-0>
+                              <c-box
+                                round-full
+                                flex-center
+                                class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&
                     this.requestSelected)
                 ? 'user-border-focus'
                 : ''}">
+                                <c-box
+                                  round-full
+                                  flex-center
+                                  border="2 solid ${gender === 'M'
+                ? 'primary-500'
+                : 'color-9-500'}">
+                                  <img
+                                    style="border-radius: 50%"
+                                    width="32px"
+                                    height="32px"
+                                    src="${this.userImgDefault || ''}"
+                                    alt="" />
+                                </c-box>
+                              </c-box>
+
                               <c-box
-                                round-full
-                                flex-center
-                                border="2 solid ${gender === 'M' ? 'primary-500' : 'color-9-500'}">
-                                <img
-                                  style="border-radius: 50%"
-                                  width="32px"
-                                  height="32px"
-                                  src="${this.userImgDefault || ''}"
-                                  alt="" />
+                                ui="${this.genderBox}"
+                                bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
+                                ${genderType[gender]}
                               </c-box>
                             </c-box>
 
-                            <c-box
-                              ui="${this.genderBox}"
-                              bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
-                              ${genderType[gender]}
+                            <c-box>
+                              <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
+                              <c-box tx-12
+                                >${practitionerRole.name}, ${practitionerLevel.name}</c-box
+                              >
                             </c-box>
                           </c-box>
 
-                          <c-box>
-                            <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                            <c-box tx-12>${practitionerRole.name}, ${practitionerLevel.name}</c-box>
-                          </c-box>
-                        </c-box>
-
-                        ${this.dateBetween?.map((dateBet) => {
+                          ${this.dateBetween?.map((dateBet) => {
                 return html `
-                            ${dateBet.dateBetween.map((week) => {
+                              ${dateBet.dateBetween.map((week) => {
                     return html `
-                                ${week.map((day) => {
+                                  ${week.map((day) => {
                         day.setHours(0, 0, 0, 0);
                         const borderRight = day.getDay() === 0 ? this.sundayBorderRightUI : '';
                         const isHoliday = this.holidayWithKeyMap?.[this.convertDateToString(day)];
@@ -670,40 +675,45 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const disableDate = this.disableDateArranged?.[dateString];
                         const woffSaved = this.shiftWoffRequestSaved?.[practitioner.id]?.request;
                         const userTargetIndex = this.viewerRole === 'manager' ? this.userHoverIndex : 0;
+                        const isErrorDayRequest = this.errorDayRequest[0]?.date === dateString &&
+                            practitioner.practitionerId ===
+                                this.errorDayRequest[0]?.practitionerId;
                         return html ` <c-box
-                                    @mouseenter="${this.viewerRole === 'manager'
+                                      @mouseenter="${this.viewerRole === 'manager'
                             ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                             : null}"
-                                    ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                    class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
+                                      class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
                                 indexUser === this.userSelectedIndex &&
                                 this.requestSelected)
                             ? 'focus-divider'
-                            : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
-                                    <c-box
-                                      w-full
-                                      h-full
-                                      style="opacity:${(this.viewerRole === 'staff' &&
+                            : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}"
+                                      style="${isErrorDayRequest
+                            ? 'border: 2px solid #F3655C'
+                            : ''}">
+                                      <c-box
+                                        w-full
+                                        h-full
+                                        style="opacity:${(this.viewerRole === 'staff' &&
                             indexUser === 0) ||
                             this.viewerRole === 'manager'
                             ? '1'
                             : '0.6'}; max-width:88px; word-break:break-all;
-                                        ${(this.requestSelected?.abbr === 'off' &&
+                                          ${(this.requestSelected?.abbr === 'off' &&
                             (practitioner?.practitioner?.leave?.dayOff === 0 ||
                                 this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
                                     practitioner?.practitioner?.leave?.dayOff)) ||
                             (this.requestSelected?.abbr === 'vac' &&
-                                (this.vacDayOff?.[practitioner.practitioner.id] ===
-                                    0 ||
+                                (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
                                         this.vacDayOff?.[practitioner.practitioner.id]))
                             ? 'cursor:not-allowed'
                             : ''}">
-                                      <!-- if have request date then render request -->
+                                        <!-- if have request date then render request -->
 
-                                      <!-- when saving -->
-                                      ${disableDate
+                                        <!-- when saving -->
+                                        ${disableDate
                             ? html ` <div class="diagonal-pattern"></div> `
                             : srSaved && srSaved?.request?.[dateString]
                                 ? this.renderSrShiftSaved(srSaved, dateString, practitioner, indexUser)
@@ -720,17 +730,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                                     : indexUser === userTargetIndex
                                                         ? this.renderEmptyDateForSelect(day, practitioner, dateString, indexUser)
                                                         : undefined}
-                                    </c-box>
-                                  </c-box>`;
+                                      </c-box>
+                                    </c-box>`;
                     })}
-                              `;
+                                `;
                 })}
-                          `;
+                            `;
             })}
-                      </c-box>
-                    `;
-        }}">
-                </lit-virtualizer>
+                        </c-box>
+                      `;
+        })}
+                </div>
               </c-box>
             </c-box>
           </c-box>
@@ -1104,7 +1114,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     goToMonth(type) {
-        const litVirtualizer = this.querySelector('lit-virtualizer');
+        const litVirtualizer = this.querySelector('.lit-virtualizer');
         if (litVirtualizer) {
             this.currentMonthTitleIndex =
                 this.currentMonthTitleIndex === this.monthTitleNav.length - 1
@@ -1525,7 +1535,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         <cx-popover
           .set="${{
                 arrowpoint: true,
-                focusout: 'none',
+                focusout: 'close',
                 mouseleave: 'none',
                 transform: 'center',
             }}">
@@ -2017,6 +2027,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
+    moveUserToFirstArray() {
+        const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => obj.practitionerId === this.practitionerId);
+        if (index !== -1) {
+            const item = this.scheduleData?.schedulePractitioner?.splice(index, 1)[0];
+            this.scheduleData?.schedulePractitioner?.unshift(item);
+        }
+        return true;
+    }
     updated(changedProp) {
         if (typeof this.isOneMonth === 'undefined' && this.scheduleData) {
             const start = new Date(this.scheduleData.startDate);
@@ -2066,7 +2084,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const width = tableRect.width;
             this.style.setProperty('--table-width', `${width}px`);
             const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
-            const litVirtualizer = this.querySelector('lit-virtualizer');
+            const litVirtualizer = this.querySelector('.lit-virtualizer');
             if (tableHeaderWrapper && litVirtualizer) {
                 tableHeaderWrapper.addEventListener('scroll', (e) => {
                     tableHeaderWrapper.scrollLeft = this.currentScrollX;
@@ -2286,6 +2304,10 @@ __decorate([
     property({ type: Object }),
     __metadata("design:type", Array)
 ], ShiftSchedule.prototype, "holidays", void 0);
+__decorate([
+    property({ type: Object }),
+    __metadata("design:type", Array)
+], ShiftSchedule.prototype, "errorDayRequest", void 0);
 __decorate([
     property(),
     __metadata("design:type", Object)

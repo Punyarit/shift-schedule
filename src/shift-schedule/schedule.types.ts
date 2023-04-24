@@ -1,6 +1,7 @@
 import { TemplateResult } from 'lit';
 import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { IconSrcTypes } from '@cortex-ui/core/cx/components/icon/types/icon.types';
+import { ScheduleRequestType } from './schedule-client.typess'
 
 export interface Weather {
   data: SchedulingData;
@@ -33,6 +34,16 @@ export interface ScheduleShiftsEntity {
   organizationId?: null;
   scheduleStaffings?: ScheduleStaffingsEntity[] | null;
 }
+
+export interface ScheduleErrorDayRequest {
+  id: string;
+  practitionerId: string;
+  date: string;
+  scheduleRequestTypeId: string;
+  scheduleRequestType: ScheduleRequestType;
+  scheduleId: string;
+  }
+
 export interface ScheduleStaffingsEntity {
   id: string;
   practitionerLevelId: string;
