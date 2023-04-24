@@ -474,7 +474,12 @@ export class ShiftSchedule extends LitElement {
                           cursor-pointer
                           @click="${() => this.goToMonth('previous')}"></c-box>`}
 
-                    <c-box w-90 flex style="${this.isOneMonth ? '' : 'justify-content: center'}" tx-12 tx-gray-600>
+                    <c-box
+                      w-90
+                      flex
+                      style="${this.isOneMonth ? '' : 'justify-content: center'}"
+                      tx-12
+                      tx-gray-600>
                       ${this.dateFormat(this.currentMonthTitleDisplay, {
                         month: 'long',
                         year: 'numeric',
@@ -3114,4 +3119,4 @@ declare global {
   namespace CXShiftSchedule {
     type Ref = ShiftSchedule;
   }
-}
+} 
