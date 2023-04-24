@@ -94,7 +94,7 @@ export declare class ShiftSchedule extends LitElement {
     private monthTitleNav?;
     currentMonthTitleDisplay?: string;
     render(): TemplateResult<1>;
-    managerHoverUser(indexUser: number, e: MouseEvent): void;
+    managerHoverUser(indexUser: number, e: MouseEvent, practitioner: SchedulePractitionerEntity): void;
     sentRemoveEvent(): void;
     removeWoffSaved(dateString?: string, practitioner?: SchedulePractitionerEntity, data?: {
         initial: boolean;
@@ -189,11 +189,13 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     updated(changedProp: Map<string, unknown>): void;
-    private mayDayOffLength;
+    private setVacDayOff;
+    private maxDayOffLength;
+    private vacDayOff;
     private currentScrollX;
     getDateDisabled(holidays: any, startDate: any, endDate: any): {};
     formatDate(date: Date): string;
-    generateDayOff(startDate: Date, endDate: Date, dayOffAlreadySpent: string[], availableDayOff: number): string[];
+    generateDayOff(startDate: Date, endDate: Date, dayOffExist: string[], dayOff: number): string[];
     getHolidayObject(inputArray: HolidayObject[]): {
         [key: string]: HolidayObject;
     };

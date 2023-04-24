@@ -207,7 +207,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.tableWrapperRef.value?.removeAttribute('ui');
             }
         };
-        this.mayDayOffLength = {};
+        this.maxDayOffLength = {};
+        this.vacDayOff = {};
         this.currentScrollX = 0;
         this.reduceDate = (date, n) => {
             const newDate = new Date(date);
@@ -569,10 +570,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
-                      <c-box flex ui="targetUser: ${targetUser ? 'order-first' : ''}">
+                      <c-box
+                        flex
+                        ui="targetUser: ${targetUser ? 'order-first' : ''}"
+                        @click="${() => {
+                if (this.mode === 'view') {
+                    this.dispatchEvent(new CustomEvent('focus-request', {
+                        detail: { practitioner: practitioner },
+                    }));
+                }
+            }}">
                         <c-box
                           @mouseenter="${this.viewerRole === 'manager'
-                ? (e) => this.managerHoverUser(indexUser, e)
+                ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                 : null}"
                           style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
                           min-w="260"
@@ -583,14 +593,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 ? 'focus-divider'
                 : ''}"
                           @click="${() => {
-                if (!this.requestSelected)
-                    return;
-                if (this.viewerRole !== 'manager')
-                    return;
-                this.userSelectedIndex = indexUser;
-                this.dispatchEvent(new CustomEvent('focus-request', {
-                    detail: { practitioner: practitioner },
-                }));
+                if (this.viewerRole === 'manager' && this.requestSelected) {
+                    this.userSelectedIndex = indexUser;
+                    this.dispatchEvent(new CustomEvent('focus-request', {
+                        detail: { practitioner: practitioner },
+                    }));
+                }
             }}"
                           ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
                           <c-box relative top-0 left-0>
@@ -649,7 +657,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         const userTargetIndex = this.viewerRole === 'manager' ? this.userHoverIndex : 0;
                         return html ` <c-box
                                     @mouseenter="${this.viewerRole === 'manager'
-                            ? (e) => this.managerHoverUser(indexUser, e)
+                            ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                             : null}"
                                     ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
                                     class="${(this.viewerRole === 'staff' && indexUser === 0) ||
@@ -665,13 +673,20 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             indexUser === 0) ||
                             this.viewerRole === 'manager'
                             ? '1'
-                            : '0.6'}; max-width:88px; word-break:break-all;${this
-                            .requestSelected?.abbr === 'off' &&
-                            this.mayDayOffLength?.[practitioner.id]?.dayOff ===
-                                practitioner?.practitioner?.leave?.dayOff
+                            : '0.6'}; max-width:88px; word-break:break-all;
+                                        ${(this.requestSelected?.abbr === 'off' &&
+                            (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                                this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                                    practitioner?.practitioner?.leave?.dayOff)) ||
+                            (this.requestSelected?.abbr === 'vac' &&
+                                (this.vacDayOff?.[practitioner.practitioner.id] ===
+                                    0 ||
+                                    this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
+                                        this.vacDayOff?.[practitioner.practitioner.id]))
                             ? 'cursor:not-allowed'
                             : ''}">
                                       <!-- if have request date then render request -->
+
                                       <!-- when saving -->
                                       ${disableDate
                             ? html ` <div class="diagonal-pattern"></div> `
@@ -708,7 +723,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     `;
     }
-    managerHoverUser(indexUser, e) {
+    managerHoverUser(indexUser, e, practitioner) {
         this.userHoverIndex = indexUser;
         const target = e.target;
         const weekMonthUser = this.querySelector('#week-month-user');
@@ -721,6 +736,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.dividerRef.value.style.setProperty('--cbox-divider-width', `${tableRect?.width}px`);
             }
         }
+        this.setVacDayOff(practitioner);
     }
     sentRemoveEvent() {
         this.dispatchEvent(new CustomEvent('remove-request', {
@@ -986,6 +1002,16 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return html `<c-box p-4 border-box h-full w-full slot="host" shift-type="${type}-saved">
       <c-box
         id="${cellId}-${data.dateString}"
+        style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
+            (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                    practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'vac' &&
+                (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
+                    this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
+                        this.vacDayOff?.[practitioner.practitioner.id]))
+            ? 'none'
+            : '   '}"
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
             ? 'hover-request'
             : ''}"
@@ -1238,7 +1264,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 ?.filter((res) => res?.requestType.abbr === 'off')
                 .map((res) => res?.requestDate) || [];
             let dayOffSavedExist = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
-            let dayOff = Math.abs(initialDayOFfExist.length + dayOffSavedExist.length - practitioner.practitioner.leave.dayOff);
+            let dayOff = practitioner.practitioner.leave.dayOff;
             const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
             if (dayBetweenStartEnd > dayOff) {
                 const uniqueDayOffExist = [
@@ -1255,7 +1281,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 .map((res) => res?.requestDate) || [];
             let dayOffSavedExist = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
             const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
-            let dayOff = Math.abs(initialDayOFfExist.length + dayOffSavedExist.length - (15 - findVacation.vacation));
+            let dayOff = Math.abs(15 - findVacation.vacation);
             const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
             if (dayBetweenStartEnd > dayOff) {
                 const uniqueDayOffExist = [
@@ -1454,10 +1480,21 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     appendPopover(type, cellId, data, popoverContent, popoverHost) {
         if (this.isRemoveMode)
             return;
+        if ((this.requestSelected?.abbr === 'off' &&
+            (data.practitioner.practitioner.leave.dayOff === 0 ||
+                this.maxDayOffLength?.[data.practitioner.practitioner.id]?.dayOff >=
+                    data.practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'vac' &&
+                (this.vacDayOff?.[data.practitioner.practitioner.id] === 0 ||
+                    this.maxDayOffLength?.[data.practitioner.practitioner.id]?.vacation >=
+                        this.vacDayOff?.[data.practitioner.practitioner.id])))
+            return;
         this.userSelectedIndex = data.indexUser;
-        this.dispatchEvent(new CustomEvent('focus-request', {
-            detail: { practitioner: data.practitioner },
-        }));
+        if (this.mode === 'edit') {
+            this.dispatchEvent(new CustomEvent('focus-request', {
+                detail: { practitioner: data.practitioner },
+            }));
+        }
         if (this.requestSelected?.abbr === 'woff')
             return;
         const boxTarget = this.querySelector(`#${cellId}-${data.dateString}`);
@@ -1523,10 +1560,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             id="${cellId}-${dateString}"
             w-full
             h-full
-            ui="_1:${this.requestSelected?.abbr === 'off' &&
-                    this.mayDayOffLength?.[practitioner.id]?.dayOff ===
-                        practitioner?.practitioner?.leave?.dayOff
-                    ? 'pointer-none'
+            style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
+                    (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                        this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                            practitioner?.practitioner?.leave?.dayOff)) ||
+                    (this.requestSelected?.abbr === 'vac' &&
+                        (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
+                            this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
+                                this.vacDayOff?.[practitioner.practitioner.id]))
+                    ? 'none'
                     : ''}"
             @click="${(e) => {
                     this.appendPopover(this.requestSelected?.abbr, cellId, {
@@ -1536,6 +1578,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         indexUser,
                     }, this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString));
                 }}">
+            <!-- ${this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation}
+              ${this.vacDayOff?.[practitioner.practitioner.id]} -->
             ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString)}
           </c-box>
         `;
@@ -1996,17 +2040,34 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
             }
         }
+        //
         const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
         // dayOff
         if (practitioner && this.requestSelected?.abbr === 'off') {
             const initialOff = practitioner.schedulePractitionerRequest.filter((res) => res.requestType.abbr === 'off');
             const savedOff = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
             // this.mayDayOffLength = initialOff.length + savedOff.length;
-            if (!this.mayDayOffLength?.[practitioner.id]) {
-                this.mayDayOffLength[practitioner.id] = {};
+            if (!this.maxDayOffLength?.[practitioner.practitioner.id]) {
+                this.maxDayOffLength[practitioner.practitioner.id] = {};
             }
-            this.mayDayOffLength[practitioner.id].dayOff = initialOff.length + savedOff.length;
-            console.log('shift-schedule.js |this.mayDayOffLength| = ', this.mayDayOffLength);
+            this.maxDayOffLength[practitioner.practitioner.id].dayOff =
+                initialOff.length + savedOff.length;
+        }
+        this.setVacDayOff(practitioner);
+    }
+    setVacDayOff(practitioner) {
+        if (practitioner && this.requestSelected?.abbr === 'vac') {
+            const initialOff = practitioner.schedulePractitionerRequest.filter((res) => res.requestType.abbr === 'vac');
+            const saveVac = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
+            // this.mayDayOffLength = initialOff.length + savedOff.length;
+            if (!this.maxDayOffLength?.[practitioner.practitioner.id]) {
+                this.maxDayOffLength[practitioner.practitioner.id] = {};
+            }
+            this.maxDayOffLength[practitioner.practitioner.id].vacation =
+                initialOff.length + saveVac.length;
+            // cache initial value
+            const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
+            this.vacDayOff[practitioner.practitioner.id] = 15 - findVacation.vacation;
         }
     }
     // @ts-ignore
@@ -2069,18 +2130,25 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-    generateDayOff(startDate, endDate, dayOffAlreadySpent, availableDayOff) {
-        const result = [...dayOffAlreadySpent];
-        let currentDate = new Date(startDate);
-        while (availableDayOff > 0 && currentDate <= endDate) {
-            const dateString = this.formatDate(currentDate);
-            if (!result.includes(dateString) && currentDate.getMonth() === startDate.getMonth()) {
-                result.push(dateString);
-                availableDayOff--;
+    generateDayOff(startDate, endDate, dayOffExist, dayOff) {
+        const existingDaysOff = new Set(dayOffExist);
+        const availableDays = [...dayOffExist];
+        while (dayOff > availableDays.length) {
+            for (let currentDate = new Date(startDate.getTime()); currentDate <= endDate && dayOff > availableDays.length; currentDate.setDate(currentDate.getDate() + 1)) {
+                const dateString = currentDate.getFullYear().toString().padStart(4, '0') +
+                    '-' +
+                    (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+                    '-' +
+                    currentDate.getDate().toString().padStart(2, '0');
+                if (!existingDaysOff.has(dateString) &&
+                    currentDate >= startDate &&
+                    currentDate <= endDate) {
+                    availableDays.push(dateString);
+                    existingDaysOff.add(dateString);
+                }
             }
-            currentDate.setDate(currentDate.getDate() + 1);
         }
-        return result;
+        return availableDays;
     }
     getHolidayObject(inputArray) {
         const outputObject = {};
