@@ -2221,13 +2221,16 @@ export class ShiftSchedule extends LitElement {
               'display',
               this.requestSelected?.abbr,
               practitioner,
-              dateString,indexUser
+              dateString,
+              indexUser
             )}
           </c-box>
         `;
 
       case 'woff':
-        return html` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString,indexUser)} `;
+        return html`
+          ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+        `;
 
       default:
         return undefined;
@@ -2709,7 +2712,7 @@ export class ShiftSchedule extends LitElement {
         slot="host"
         @click="${state === 'select'
           ? () => {
-              if (this.requestSelected?.abbr === 'woff' && typeof indexUser === "number") {
+              if (this.requestSelected?.abbr === 'woff' && typeof indexUser === 'number') {
                 this.userSelectedIndex = indexUser;
               }
               this.selectDateRequest(date, type, practitioner, dateString);
@@ -2976,6 +2979,7 @@ export class ShiftSchedule extends LitElement {
         litVirtualizer.addEventListener('scroll', (e) => {
           this.currentScrollX = litVirtualizer.scrollLeft;
           tableHeaderWrapper.scrollLeft = this.currentScrollX;
+          this.closePopover();
         });
       }
 

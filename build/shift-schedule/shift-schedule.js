@@ -1607,7 +1607,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           </c-box>
         `;
             case 'woff':
-                return html ` ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)} `;
+                return html `
+          ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+        `;
             default:
                 return undefined;
         }
@@ -1913,7 +1915,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         slot="host"
         @click="${state === 'select'
             ? () => {
-                if (this.requestSelected?.abbr === 'woff' && typeof indexUser === "number") {
+                if (this.requestSelected?.abbr === 'woff' && typeof indexUser === 'number') {
                     this.userSelectedIndex = indexUser;
                 }
                 this.selectDateRequest(date, type, practitioner, dateString);
@@ -2095,6 +2097,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 litVirtualizer.addEventListener('scroll', (e) => {
                     this.currentScrollX = litVirtualizer.scrollLeft;
                     tableHeaderWrapper.scrollLeft = this.currentScrollX;
+                    this.closePopover();
                 });
             }
             if (!this.monthTitleNav) {
