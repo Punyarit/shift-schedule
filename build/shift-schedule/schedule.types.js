@@ -28,7 +28,7 @@ export const requestTypeStyles = {
 export const dayPortValue = {
     a: {
         src: 'sunset-u',
-        text: 'กลางวัน',
+        text: 'บ่าย',
         bgColor: 'warning-100',
         mediumColor: 'warning-200',
         iconColor: 'color-12-500',
@@ -38,7 +38,7 @@ export const dayPortValue = {
     },
     n: {
         src: 'moon-u',
-        text: 'เย็น',
+        text: 'ดึก',
         bgColor: 'color-7-100',
         mediumColor: 'primary-200',
         iconColor: 'color-7-500',
