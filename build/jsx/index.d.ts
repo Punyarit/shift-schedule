@@ -9,6 +9,7 @@ export declare const CxShiftSchedule: import("@lit-labs/react").ReactWebComponen
     onSaveVac: string;
     onSaveWoff: string;
     onRemoveRequest: string;
+    onRemoveAction: string;
     onSelectRequest: string;
     onRemoveOrigin: string;
     onFocusRequest: string;

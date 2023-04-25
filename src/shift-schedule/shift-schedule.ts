@@ -296,6 +296,8 @@ export class ShiftSchedule extends LitElement {
   private setRemoveMode() {
     this.requestSelected = undefined;
     this.isRemoveMode = true;
+
+    this.dispatchEvent(new CustomEvent('remove-action'));
   }
 
   private holidayWithKeyMap: {
@@ -467,7 +469,15 @@ export class ShiftSchedule extends LitElement {
                 </c-box>
 
                 <c-box flex id="week-month-title">
-                  <c-box absolute top-73 left="274" h-26 pt-4 flex items-center col-gap-6>
+                  <c-box
+                    absolute
+                    style="${this.mode === 'edit' ? 'top:73px' : ''}"
+                    left="274"
+                    h-26
+                    pt-4
+                    flex
+                    items-center
+                    col-gap-6>
                     ${this.isOneMonth
                       ? undefined
                       : html` <c-box
@@ -1589,6 +1599,9 @@ export class ShiftSchedule extends LitElement {
   }
 
   saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity) {
+    const disabledDates = this.disableDates
+      ? this.disableDates?.flatMap((res) => res.date)
+      : undefined;
     // prepare dayOff
     if (e.detail.endDate && this.requestSelected?.abbr === 'off') {
       const initialDayOFfExist =
@@ -1605,15 +1618,18 @@ export class ShiftSchedule extends LitElement {
       const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
 
       if (dayBetweenStartEnd > dayOff) {
-        const uniqueDayOffExist = [
+        let uniqueDayOffExist = [
           ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
         ] as string[];
-        const generateDayOffValue = this.generateDayOff(
+
+        let generateDayOffValue = this.generateDayOff(
           e.detail.startDate!,
           e.detail.endDate,
           uniqueDayOffExist,
-          dayOff
+          dayOff,
+          disabledDates
         );
+
         e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
       }
     }
@@ -1641,11 +1657,12 @@ export class ShiftSchedule extends LitElement {
         const uniqueDayOffExist = [
           ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
         ] as string[];
-        const generateDayOffValue = this.generateDayOff(
+        let generateDayOffValue = this.generateDayOff(
           e.detail.startDate!,
           e.detail.endDate,
           uniqueDayOffExist,
-          dayOff
+          dayOff,
+          disabledDates
         );
 
         e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
@@ -3105,8 +3122,15 @@ export class ShiftSchedule extends LitElement {
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
-  generateDayOff(startDate: Date, endDate: Date, dayOffExist: string[], dayOff: number): string[] {
+  generateDayOff(
+    startDate: Date,
+    endDate: Date,
+    dayOffExist: string[],
+    dayOff: number,
+    disabledDate?: string[]
+  ): string[] {
     const existingDaysOff: Set<string> = new Set(dayOffExist);
+    const disabledDays: Set<string> = new Set(disabledDate);
     const availableDays: string[] = [...dayOffExist];
 
     while (dayOff > availableDays.length) {
@@ -3124,6 +3148,7 @@ export class ShiftSchedule extends LitElement {
 
         if (
           !existingDaysOff.has(dateString) &&
+          !disabledDays.has(dateString) &&
           currentDate >= startDate &&
           currentDate <= endDate
         ) {
