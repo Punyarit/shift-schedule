@@ -13,6 +13,7 @@ import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
 import { CBoxUiAttribute } from '@cortex-ui/core/cx/components/c-box/types/attribute-changed.types';
+import { debounce } from '@cortex-ui/core/cx/helpers/debounceTimer';
 import {
   ArrangedRequest,
   DateBetweenData,
@@ -189,7 +190,6 @@ export class ShiftSchedule extends LitElement {
 
   private removeRequestSelected?: RequestType;
 
-  private currentMonthTitleIndex = 0;
 
   public tableWrapperRef = createRef<HTMLDivElement>();
   public dividerRef = createRef<HTMLDivElement>();
@@ -292,8 +292,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -417,7 +417,7 @@ export class ShiftSchedule extends LitElement {
           border: 2px solid var(--gray-400) !important;
         }
       </style>
-      <c-box style="height:${this.maxHeight || '100%'}" relative overflow-hidden>
+      <c-box style="height:${this.maxHeight || '100%'}" relative>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
@@ -1367,25 +1367,28 @@ export class ShiftSchedule extends LitElement {
   goToMonth(type: 'next' | 'previous') {
     const litVirtualizer = this.querySelector('.lit-virtualizer');
     if (litVirtualizer) {
-      this.currentMonthTitleIndex =
-        this.currentMonthTitleIndex === this.monthTitleNav!.length - 1
-          ? type === 'next'
-            ? this.currentMonthTitleIndex
-            : this.currentMonthTitleIndex - 1
-          : this.currentMonthTitleIndex +
-            (type === 'next' ? 1 : this.currentMonthTitleIndex > 0 ? -1 : 0);
+      const currentMonth = this.scrollValueFirstDateMonth?.find(
+        (res) => res.date === this.currentMonthTitleDisplay
+      );
 
-      const nextElement = this.monthTitleNav![this.currentMonthTitleIndex];
+      let targetMonth:
+        | {
+            date: string;
+            scrollValue: number;
+            index: number;
+          }
+        | undefined;
+      const currentIndex = currentMonth?.index;
+      targetMonth = this.scrollValueFirstDateMonth?.[currentIndex! + (type === 'next' ? 1 : -1)];
 
-      if (this.monthTitleNav![this.currentMonthTitleIndex]) {
+      if(targetMonth) {
         litVirtualizer.scrollTo({
           top: 0,
-          left: nextElement.offsetLeft - this.monthTitleNav![0].offsetLeft,
+          left: targetMonth!.scrollValue - 319,
           behavior: 'smooth',
         });
-        this.currentMonthTitleDisplay =
-          this.monthTitleNav![this.currentMonthTitleIndex].dataset.firstDate;
       }
+     
     }
   }
 
@@ -3013,6 +3016,12 @@ export class ShiftSchedule extends LitElement {
   @state()
   private shouldAllowedWeekOffSelect?: boolean;
 
+  private scrollValueFirstDateMonth?: {
+    date: string;
+    scrollValue: number;
+    index: number;
+  }[];
+
   updated(changedProp: Map<string, unknown>) {
     if (this.requestSelected?.abbr === 'woff') {
       const tableWrapper = this.querySelector('.lit-virtualizer');
@@ -3081,14 +3090,53 @@ export class ShiftSchedule extends LitElement {
       const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
       const litVirtualizer = this.querySelector('.lit-virtualizer');
 
+      const firstDateOfMonths = this.querySelectorAll('.first-date-of-month');
+      const firstDateOfMonthsArray = Array.from(firstDateOfMonths);
+
+      if (!this.scrollValueFirstDateMonth) {
+        debounce(() => {
+          this.scrollValueFirstDateMonth = structuredClone(
+            firstDateOfMonthsArray.map((ele, index) => {
+              return {
+                scrollValue: Math.floor(ele.getBoundingClientRect().left),
+                date: ele.getAttribute('data-first-date'),
+                index,
+              };
+            })
+          );
+        }, 250);
+      }
       if (tableHeaderWrapper && litVirtualizer) {
         tableHeaderWrapper.addEventListener('scroll', (e) => {
-          tableHeaderWrapper.scrollLeft = this.currentScrollX;
+          if (this.scrollValueFirstDateMonth) {
+            tableHeaderWrapper.scrollLeft = this.currentScrollX;
+          }
         });
         litVirtualizer.addEventListener('scroll', (e) => {
-          this.currentScrollX = litVirtualizer.scrollLeft;
-          tableHeaderWrapper.scrollLeft = this.currentScrollX;
-          this.closePopover();
+          if (this.scrollValueFirstDateMonth) {
+            const target = e.target as HTMLElement;
+            const scrollValue = target.scrollLeft + 320;
+            let value = {} as {
+              date: string;
+              scrollValue: number;
+              index: number;
+            };
+            for (let index = 0; index <= this.scrollValueFirstDateMonth.length; index++) {
+              const current = this.scrollValueFirstDateMonth[index];
+              const next = this.scrollValueFirstDateMonth[index + 1];
+              if (scrollValue >= current?.scrollValue && scrollValue <= next?.scrollValue) {
+                value = current;
+              } else if (!next && !Object.keys(value).length) {
+                value = this.scrollValueFirstDateMonth[this.scrollValueFirstDateMonth.length - 1];
+              }
+            }
+
+            this.currentMonthTitleDisplay = value.date;
+
+            this.currentScrollX = litVirtualizer.scrollLeft;
+            tableHeaderWrapper.scrollLeft = this.currentScrollX;
+            this.closePopover();
+          }
         });
       }
 

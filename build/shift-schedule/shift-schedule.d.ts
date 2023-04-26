@@ -75,7 +75,6 @@ export declare class ShiftSchedule extends LitElement {
     maxHeight?: string;
     datepickerData?: CXDatePicker.SelectDate.Range['detail'];
     private removeRequestSelected?;
-    private currentMonthTitleIndex;
     tableWrapperRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     dividerRef: import("lit-html/directives/ref").Ref<HTMLDivElement>;
     remarkRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
@@ -202,6 +201,7 @@ export declare class ShiftSchedule extends LitElement {
     private moveUserToFirstArray;
     isOneMonth?: boolean;
     private shouldAllowedWeekOffSelect?;
+    private scrollValueFirstDateMonth?;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;
     private maxDayOffLength;
