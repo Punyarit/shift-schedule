@@ -26,11 +26,11 @@ let MyElement = class MyElement extends LitElement {
         }
       </style>
       <c-box
-        shadow-hover="shadow-3"
         class="wrapper"
         tabindex="0"
         tx="16 regular ${isSelected ? 'white' : this.accentColor}"
         ui="${this.btnWrapper(isSelected ? this.accentColor : this.iconBgColor)}"
+        ui-hover="hov: bg-${isSelected ? this.accentColor : this.iconBgColor}"
         transition="all 0.2s ease"
         bg="${isSelected ? this.accentColor : 'white'}">
         <c-box
