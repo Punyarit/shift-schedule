@@ -190,7 +190,6 @@ export class ShiftSchedule extends LitElement {
 
   private removeRequestSelected?: RequestType;
 
-
   public tableWrapperRef = createRef<HTMLDivElement>();
   public dividerRef = createRef<HTMLDivElement>();
   public remarkRef = createRef<HTMLInputElement>();
@@ -481,37 +480,51 @@ export class ShiftSchedule extends LitElement {
                     flex
                     items-center
                     col-gap-6>
-                    ${this.isOneMonth
-                      ? undefined
-                      : html` <c-box
-                          ui="_: w-24 h-24 round-full flex-center"
-                          ui-active="_1: bg-primary-100"
-                          icon-suffix="8 angle-left-u gray-600"
-                          transition-200
-                          cursor-pointer
-                          @click="${() => this.goToMonth('previous')}"></c-box>`}
-
                     <c-box
-                      w-90
-                      flex
-                      style="${this.isOneMonth ? '' : 'justify-content: center'}"
-                      tx-12
-                      tx-gray-600>
+                      @mousemove=${(e: MouseEvent) => {
+                        const monthVal = this.scrollValueFirstDateMonth?.find(
+                          (res) => res.date === this.currentMonthTitleDisplay
+                        );
+                        if (typeof monthVal === "undefined" || monthVal?.index === 0) {
+                          (e.target as HTMLElement).style.cursor = 'not-allowed';
+                        }else {
+                          (e.target as HTMLElement).style.cursor = 'pointer';
+
+                        }
+                      }}
+                      ui="_: w-24 h-24 round-full flex-center"
+                      ui-active="_1: bg-primary-100"
+                      icon-suffix="8 angle-left-u gray-600"
+                      transition-200
+                      cursor-pointer
+                      @click="${() => this.goToMonth('previous')}"></c-box>
+
+                    <c-box w-90 flex justify-center tx-12 tx-gray-600>
                       ${this.dateFormat(this.currentMonthTitleDisplay, {
                         month: 'long',
                         year: 'numeric',
                       })}
                     </c-box>
 
-                    ${this.isOneMonth
-                      ? undefined
-                      : html`<c-box
-                          ui="_: w-24 h-24 round-full flex-center"
-                          ui-active="_1: bg-primary-100"
-                          transition-200
-                          icon-suffix="8 angle-right-u gray-600"
-                          cursor-pointer
-                          @click="${() => this.goToMonth('next')}"></c-box>`}
+                    <c-box
+                      ui="_: w-24 h-24 round-full flex-center"
+                      ui-active="_1: bg-primary-100"
+                      transition-200
+                      icon-suffix="8 angle-right-u gray-600"
+                      cursor-pointer
+                      @mousemove=${(e: MouseEvent) => {
+                        const monthVal = this.scrollValueFirstDateMonth?.find(
+                          (res) => res.date === this.currentMonthTitleDisplay
+                        );
+
+                        if (typeof monthVal === "undefined" || monthVal?.index === this.scrollValueFirstDateMonth!.length - 1) {
+                          (e.target as HTMLElement).style.cursor = 'not-allowed';
+                        }else {
+                          (e.target as HTMLElement).style.cursor = 'pointer';
+
+                        }
+                      }}
+                      @click="${() => this.goToMonth('next')}"></c-box>
                   </c-box>
                   ${this.dateBetween?.map((dateBet) => {
                     return html`
@@ -1381,14 +1394,13 @@ export class ShiftSchedule extends LitElement {
       const currentIndex = currentMonth?.index;
       targetMonth = this.scrollValueFirstDateMonth?.[currentIndex! + (type === 'next' ? 1 : -1)];
 
-      if(targetMonth) {
+      if (targetMonth) {
         litVirtualizer.scrollTo({
           top: 0,
           left: targetMonth!.scrollValue - 319,
           behavior: 'smooth',
         });
       }
-     
     }
   }
 
@@ -3011,9 +3023,6 @@ export class ShiftSchedule extends LitElement {
   }
 
   @state()
-  isOneMonth?: boolean;
-
-  @state()
   private shouldAllowedWeekOffSelect?: boolean;
 
   private scrollValueFirstDateMonth?: {
@@ -3028,12 +3037,6 @@ export class ShiftSchedule extends LitElement {
       const targetElement = tableWrapper?.children[this.userHoverIndex];
       const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
       this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
-    }
-    if (typeof this.isOneMonth === 'undefined' && this.scheduleData) {
-      const start = new Date(this.scheduleData.startDate);
-      const end = new Date(this.scheduleData.endDate);
-      this.isOneMonth =
-        start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
     }
     // remove borderRight last element
     const weekMonthTitle = this.querySelector('#week-month-title');

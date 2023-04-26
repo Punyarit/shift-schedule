@@ -199,7 +199,6 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     private moveUserToFirstArray;
-    isOneMonth?: boolean;
     private shouldAllowedWeekOffSelect?;
     private scrollValueFirstDateMonth?;
     updated(changedProp: Map<string, unknown>): void;
