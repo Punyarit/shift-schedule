@@ -135,6 +135,7 @@ export declare class ShiftSchedule extends LitElement {
     goToMonth(type: 'next' | 'previous'): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
+    private generateDayOffValue?;
     saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity): void;
     removeInitialSameData(practitionerId: string, dateString?: string): void;
     deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
@@ -151,6 +152,16 @@ export declare class ShiftSchedule extends LitElement {
         event?: PointerEvent;
     }): TemplateResult<1> | undefined;
     saveShiftPlanDatePicker: (practitioner: SchedulePractitionerEntity, dateString: string, ceillId: string, remark: string, type: RequestType['abbr']) => void;
+    filterDateDataDisabled(dateData: {
+        [key: string]: any;
+    }, disabledDate: string[]): {
+        [key: string]: any;
+    };
+    filterDateDataUse(dateData: {
+        [key: string]: any;
+    }, usedDate: string[]): {
+        [key: string]: any;
+    };
     renderDatepickerBox(data: {
         title: string;
         practitioner: SchedulePractitionerEntity;

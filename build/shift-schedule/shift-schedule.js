@@ -122,6 +122,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         },
                         practitioner,
                     };
+                    if (this.generateDayOffValue) {
+                        const filteredDateOff = this.filterDateDataUse(this.shiftOffRequestSaved[practitioner.id].request, this.generateDayOffValue);
+                        this.shiftOffRequestSaved[practitioner.id].request = filteredDateOff;
+                    }
+                    else if (this.disableDates) {
+                        const disabledDates = this.disableDates?.flatMap((res) => res.date);
+                        const filteredDateOff = this.filterDateDataDisabled(this.shiftOffRequestSaved[practitioner.id].request, disabledDates);
+                        this.shiftOffRequestSaved[practitioner.id].request = filteredDateOff;
+                    }
                     this.dispatchEvent(new CustomEvent('save-off', {
                         detail: this.shiftOffRequestSaved,
                     }));
@@ -147,6 +156,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         },
                         practitioner,
                     };
+                    if (this.generateDayOffValue) {
+                        const filteredDateVac = this.filterDateDataUse(this.shiftVacRequestSaved[practitioner.id].request, this.generateDayOffValue);
+                        this.shiftVacRequestSaved[practitioner.id].request = filteredDateVac;
+                    }
+                    else if (this.disableDates) {
+                        const disabledDates = this.disableDates?.flatMap((res) => res.date);
+                        const filteredDateOff = this.filterDateDataDisabled(this.shiftVacRequestSaved[practitioner.id].request, disabledDates);
+                        this.shiftVacRequestSaved[practitioner.id].request = filteredDateOff;
+                    }
                     this.dispatchEvent(new CustomEvent('save-vac', {
                         detail: this.shiftVacRequestSaved,
                     }));
@@ -1308,8 +1326,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 let uniqueDayOffExist = [
                     ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
                 ];
-                let generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
-                e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
+                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
+                e.detail.endDate = new Date(this.generateDayOffValue[this.generateDayOffValue.length - 1]);
             }
         }
         // prepare vacation off
@@ -1325,8 +1343,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 const uniqueDayOffExist = [
                     ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
                 ];
-                let generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
-                e.detail.endDate = new Date(generateDayOffValue[generateDayOffValue.length - 1]);
+                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
+                e.detail.endDate = new Date(this.generateDayOffValue[this.generateDayOffValue.length - 1]);
             }
         }
         this.datepickerData = e.detail;
@@ -1431,6 +1449,24 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     request: data.request,
                 });
         }
+    }
+    filterDateDataDisabled(dateData, disabledDate) {
+        const filteredData = {};
+        for (const date in dateData) {
+            if (!disabledDate.includes(date)) {
+                filteredData[date] = dateData[date];
+            }
+        }
+        return filteredData;
+    }
+    filterDateDataUse(dateData, usedDate) {
+        const filteredData = {};
+        usedDate?.forEach((date) => {
+            if (dateData?.hasOwnProperty(date)) {
+                filteredData[date] = dateData[date];
+            }
+        });
+        return filteredData;
     }
     renderDatepickerBox(data) {
         const title = {
