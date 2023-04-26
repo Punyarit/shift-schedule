@@ -52,6 +52,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.holidays = [];
         this.errorDayRequest = [];
         this.srState = [];
+        this.maxWeekOFf = 24;
         this.shiftSrRequestCache = {};
         this.shiftSrShipCache = {};
         this.shiftDatepickerCache = {};
@@ -299,8 +300,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         this.requestSelected = undefined;
@@ -707,10 +708,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             this.viewerRole === 'manager'
                             ? '1'
                             : '0.6'}; max-width:88px; word-break:break-all;
-                                          ${(this.requestSelected?.abbr === 'off' &&
-                            (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                                this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                                    practitioner?.practitioner?.leave?.dayOff)) ||
+                                          ${(this.requestSelected?.abbr === 'woff' &&
+                            this.shouldAllowedWeekOffSelect) ||
+                            (this.requestSelected?.abbr === 'off' &&
+                                (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                                        practitioner?.practitioner?.leave?.dayOff)) ||
                             (this.requestSelected?.abbr === 'vac' &&
                                 (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
@@ -1613,14 +1616,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         indexUser,
                     }, this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e }), this.renderEmptyBox(date, 'select', this.requestSelected?.abbr, practitioner, dateString, indexUser));
                 }}">
-            <!-- ${this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation}
-              ${this.vacDayOff?.[practitioner.practitioner.id]} -->
             ${this.renderEmptyBox(date, 'display', this.requestSelected?.abbr, practitioner, dateString, indexUser)}
           </c-box>
         `;
             case 'woff':
                 return html `
-          ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+          <c-box
+            w-full
+            h-full
+            style="${this.shouldAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
+            ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+          </c-box>
         `;
             default:
                 return undefined;
@@ -2053,6 +2059,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return true;
     }
     updated(changedProp) {
+        if (this.requestSelected?.abbr === 'woff') {
+            const tableWrapper = this.querySelector('.lit-virtualizer');
+            const targetElement = tableWrapper?.children[this.userHoverIndex];
+            const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
+            this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
+        }
         if (typeof this.isOneMonth === 'undefined' && this.scheduleData) {
             const start = new Date(this.scheduleData.startDate);
             const end = new Date(this.scheduleData.endDate);
@@ -2137,6 +2149,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 initialOff.length + savedOff.length;
         }
         this.setVacDayOff(practitioner);
+        super.update(changedProp);
     }
     setVacDayOff(practitioner) {
         if (practitioner && this.requestSelected?.abbr === 'vac') {
@@ -2151,6 +2164,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             // cache initial value
             const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
             this.vacDayOff[practitioner.practitioner.id] = 15 - findVacation.vacation;
+            this.requestUpdate();
         }
     }
     // @ts-ignore
@@ -2341,6 +2355,10 @@ __decorate([
     __metadata("design:type", Object)
 ], ShiftSchedule.prototype, "srState", void 0);
 __decorate([
+    property(),
+    __metadata("design:type", Number)
+], ShiftSchedule.prototype, "maxWeekOFf", void 0);
+__decorate([
     state(),
     __metadata("design:type", Number)
 ], ShiftSchedule.prototype, "maxHeightOfUserTable", void 0);
@@ -2392,6 +2410,10 @@ __decorate([
     state(),
     __metadata("design:type", Boolean)
 ], ShiftSchedule.prototype, "isOneMonth", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Boolean)
+], ShiftSchedule.prototype, "shouldAllowedWeekOffSelect", void 0);
 ShiftSchedule = __decorate([
     customElement('cx-shift-schedule')
 ], ShiftSchedule);

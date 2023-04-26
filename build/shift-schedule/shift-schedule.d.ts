@@ -43,6 +43,7 @@ export declare class ShiftSchedule extends LitElement {
     requestSelected?: RequestType;
     selectedDate?: Date;
     srState: never[];
+    maxWeekOFf: number;
     maxHeightOfUserTable?: number;
     private shiftSrRequestCache;
     private shiftSrShipCache;
@@ -189,6 +190,7 @@ export declare class ShiftSchedule extends LitElement {
     private setTableEgdeLine;
     private moveUserToFirstArray;
     isOneMonth?: boolean;
+    private shouldAllowedWeekOffSelect?;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;
     private maxDayOffLength;

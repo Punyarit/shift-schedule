@@ -111,6 +111,9 @@ export class ShiftSchedule extends LitElement {
   @state()
   srState = [];
 
+  @property()
+  maxWeekOFf: number = 24;
+
   @state()
   maxHeightOfUserTable?: number;
 
@@ -289,8 +292,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -754,7 +757,9 @@ export class ShiftSchedule extends LitElement {
                                         this.viewerRole === 'manager'
                                           ? '1'
                                           : '0.6'}; max-width:88px; word-break:break-all;
-                                          ${(this.requestSelected?.abbr === 'off' &&
+                                          ${(this.requestSelected?.abbr === 'woff' &&
+                                          this.shouldAllowedWeekOffSelect) ||
+                                        (this.requestSelected?.abbr === 'off' &&
                                           (practitioner?.practitioner?.leave?.dayOff === 0 ||
                                             this.maxDayOffLength?.[
                                               (practitioner.practitioner as any).id
@@ -2231,8 +2236,6 @@ export class ShiftSchedule extends LitElement {
                 )
               );
             }}">
-            <!-- ${this.maxDayOffLength?.[(practitioner.practitioner as any).id]?.vacation}
-              ${this.vacDayOff?.[(practitioner.practitioner as any).id]} -->
             ${this.renderEmptyBox(
               date,
               'display',
@@ -2246,7 +2249,12 @@ export class ShiftSchedule extends LitElement {
 
       case 'woff':
         return html`
-          ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+          <c-box
+            w-full
+            h-full
+            style="${this.shouldAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
+            ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
+          </c-box>
         `;
 
       default:
@@ -2927,7 +2935,16 @@ export class ShiftSchedule extends LitElement {
   @state()
   isOneMonth?: boolean;
 
+  @state()
+  private shouldAllowedWeekOffSelect?: boolean;
+
   updated(changedProp: Map<string, unknown>) {
+    if (this.requestSelected?.abbr === 'woff') {
+      const tableWrapper = this.querySelector('.lit-virtualizer');
+      const targetElement = tableWrapper?.children[this.userHoverIndex];
+      const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
+      this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
+    }
     if (typeof this.isOneMonth === 'undefined' && this.scheduleData) {
       const start = new Date(this.scheduleData.startDate);
       const end = new Date(this.scheduleData.endDate);
@@ -3030,6 +3047,8 @@ export class ShiftSchedule extends LitElement {
         initialOff.length + savedOff.length;
     }
     this.setVacDayOff(practitioner as SchedulePractitionerEntity);
+
+    super.update(changedProp)
   }
 
   private setVacDayOff(practitioner: SchedulePractitionerEntity) {
@@ -3051,10 +3070,12 @@ export class ShiftSchedule extends LitElement {
         (res) => res!.year === new Date(this.currentTime).getFullYear()
       );
       this.vacDayOff[(practitioner.practitioner as Practitioner).id] = 15 - findVacation!.vacation;
+      this.requestUpdate()
     }
   }
 
   private maxDayOffLength: Record<string, Record<'dayOff' | 'vacation', number>> = {};
+
   private vacDayOff: { [practitionerId: string]: number } = {};
 
   private currentScrollX = 0;
