@@ -261,7 +261,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           @click="${() => this.selectRequest(type)}"
           .currentType="${this.requestSelected}"
           .requestType="${type}"
-          text="${type.name}"
+          text="${type.abbr === 'sem' ? 'อบรม, สัมนา, ไปราชการ' : type.name}"
           icon="${iconSrc}"
           iconBgColor="${iconBgColor}"
           accentColor="${accentColor}"></request-button>`;
@@ -319,8 +319,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         this.requestSelected = undefined;
@@ -330,6 +330,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     render() {
         return html `
       <style>
+        .remove-btn:hover {
+          background-color: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
+        }
+
         .shake-efx-popover {
           animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
           transform: translate3d(0, 0, 0);
@@ -463,7 +467,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 <c-box inline h-40 w-1 bg-gray-400></c-box>
                 <c-box
                   @click="${this.setRemoveMode}"
-                  shadow-hover="shadow-3"
                   inline-flex
                   items-center
                   col-gap-8
@@ -472,6 +475,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   cursor-pointer
+                  class="remove-btn"
                   style="border-color: var(--neutral-200)"
                   ui-active="${this.isRemoveMode
                 ? 'bg: bg-' + 'neutral-500' + '!'
@@ -490,6 +494,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   <c-box
                     transition="all 0.2s ease"
                     ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-gray-800'}"
+                    ,
                     >ลบ</c-box
                   >
                 </c-box>
@@ -779,7 +784,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                         <!-- if have request date then render request -->
 
                                         <!-- when saving -->
-                                        ${disableDate && !semSaved && this.requestSelected?.abbr !== "sem"
+                                        ${disableDate &&
+                            !semSaved &&
+                            this.requestSelected?.abbr !== 'sem'
                             ? html ` <div class="diagonal-pattern"></div> `
                             : srSaved && srSaved?.request?.[dateString]
                                 ? this.renderSrShiftSaved(srSaved, dateString, practitioner, indexUser)
@@ -1626,7 +1633,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 arrowpoint: true,
                 focusout: 'none',
                 mouseleave: 'none',
-                transform: "center",
+                transform: 'center',
             }}">
           ${popoverHost} ${popoverContent}
         </cx-popover>
@@ -1920,7 +1927,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             : html `
           <c-box slot="popover" popover-check>
             <c-box content flex flex-col items-center row-gap-12>
-            <c-box> ไม่มีเวรให้เลือก </c-box>
+              <c-box> ไม่มีเวรให้เลือก </c-box>
 
               <cx-button
                 .var="${{ width: 'size-0' }}"
