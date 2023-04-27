@@ -226,6 +226,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 this.tableWrapperRef.value?.removeAttribute('ui');
             }
         };
+        this.shouldScrollErrorTarget = false;
         this.maxDayOffLength = {};
         this.vacDayOff = {};
         this.currentScrollX = 0;
@@ -321,6 +322,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     render() {
         return html `
       <style>
+        .error-day-request {
+          border: 2px solid #f3655c !important;
+        }
         .remove-btn:hover {
           background-color: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
         }
@@ -648,6 +652,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             return html `
                         <c-box
                           flex
+                          style="width: fit-content;"
                           ui="targetUser: ${targetUser ? 'order-first' : ''}"
                           @click="${() => {
                 if (this.mode === 'view') {
@@ -743,15 +748,14 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                             : null}"
                                       ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                      class="${(this.viewerRole === 'staff' && indexUser === 0) ||
+                                      class="${isErrorDayRequest ? 'error-day-request' : ''} ${(this
+                            .viewerRole === 'staff' &&
+                            indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
                                 indexUser === this.userSelectedIndex &&
                                 this.requestSelected)
                             ? 'focus-divider'
-                            : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}"
-                                      style="${isErrorDayRequest
-                            ? 'border: 2px solid #F3655C'
-                            : ''}">
+                            : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
                                       <c-box
                                         w-full
                                         h-full
@@ -1475,6 +1479,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     type: data.type,
                     indexUser: data.indexUser,
                     request: data.request,
+                    event: data.event,
                 });
         }
     }
@@ -1497,6 +1502,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return filteredData;
     }
     renderDatepickerBox(data) {
+        const inputTarget = data.event?.target;
+        const inputExistValue = inputTarget.textContent?.trim();
+        const shouldInitValue = inputTarget.getAttribute('shift-type') === `${this.requestSelected?.abbr}-saved`;
         const title = {
             sem: 'ขออบรม, สัมนา, ไปราชการ',
             off: 'ขอลาหยุด',
@@ -1570,6 +1578,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 input.value = input.value.slice(0, 10);
             }
         }}"
+              value="${shouldInitValue ? inputExistValue : ''}"
               ${ref(this.remarkRef)}
               type="text"
               style="border:none;outline:none;width:200px"
@@ -1706,10 +1715,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     // FIXME: any type w8 for api data
     renderShipSrRequest(shifts, dayPart, dateString, practitioner, initialSr) {
-        console.log('shift-schedule.js |dayPart| = ', dayPart);
-        console.log('shift-schedule.js |dateString| = ', dateString);
-        console.log('shift-schedule.js |practitioner| = ', practitioner);
-        console.log('shift-schedule.js |shifts| = ', shifts);
         const shouldRender = shifts.flatMap((res) => res.scheduleStaffings?.filter((res) => res.planDate === dateString &&
             res.practitionerLevel.id === practitioner.practitioner.practitionerLevel.id &&
             res.practitionerLevel.practitionerRole.id ===
@@ -2170,8 +2175,24 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return true;
     }
     updated(changedProp) {
+        const tableWrapper = this.querySelector('.lit-virtualizer');
+        const errorDayRequest = this.querySelector('.error-day-request');
+        if (changedProp.has('errorDayRequest')) {
+            this.shouldScrollErrorTarget = true;
+        }
+        if (errorDayRequest && this.shouldScrollErrorTarget) {
+            setTimeout(() => {
+                const errorRect = errorDayRequest?.getBoundingClientRect();
+                const scrollErrorValue = errorRect?.left;
+                tableWrapper?.scrollTo({
+                    top: 0,
+                    left: Math.floor(scrollErrorValue - 320),
+                    behavior: 'smooth',
+                });
+            }, 750);
+            this.shouldScrollErrorTarget = false;
+        }
         if (this.requestSelected?.abbr === 'woff') {
-            const tableWrapper = this.querySelector('.lit-virtualizer');
             const targetElement = tableWrapper?.children[this.userHoverIndex];
             const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
             this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
@@ -2219,7 +2240,11 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
             const litVirtualizer = this.querySelector('.lit-virtualizer');
             const firstDateOfMonths = this.querySelectorAll('.first-date-of-month');
+            const startDateOgMonth = this.querySelector('.start-date-of-month');
             const firstDateOfMonthsArray = Array.from(firstDateOfMonths);
+            if (startDateOgMonth) {
+                firstDateOfMonthsArray.unshift(startDateOgMonth);
+            }
             if (!this.scrollValueFirstDateMonth) {
                 debounce(() => {
                     this.scrollValueFirstDateMonth = structuredClone(firstDateOfMonthsArray.map((ele, index) => {
@@ -2260,13 +2285,13 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 });
             }
             if (!this.monthTitleNav) {
-                this.monthTitleNav = this.querySelectorAll('.first-date-of-month');
-                if (this.monthTitleNav.length) {
-                    this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+                this.monthTitleNav = this.querySelector('.start-date-of-month');
+                if (this.monthTitleNav) {
+                    this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
                 }
                 else {
-                    this.monthTitleNav = this.querySelectorAll('.start-date-of-month');
-                    this.currentMonthTitleDisplay = this.monthTitleNav[0].dataset.firstDate;
+                    this.monthTitleNav = this.querySelector('.first-date-of-month');
+                    this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
                 }
             }
         }

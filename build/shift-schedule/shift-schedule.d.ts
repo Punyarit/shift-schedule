@@ -170,6 +170,7 @@ export declare class ShiftSchedule extends LitElement {
         type: RequestType['abbr'];
         indexUser: number;
         request?: SrShiftPlan;
+        event?: PointerEvent;
     }): TemplateResult<1>;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
@@ -200,6 +201,7 @@ export declare class ShiftSchedule extends LitElement {
     private moveUserToFirstArray;
     private shouldAllowedWeekOffSelect?;
     private scrollValueFirstDateMonth?;
+    shouldScrollErrorTarget: boolean;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;
     private maxDayOffLength;

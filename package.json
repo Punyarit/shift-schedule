@@ -1,6 +1,6 @@
 {
   "name": "@cortex-factory/shift-schedule",
-  "version": "0.0.123",
+  "version": "0.0.127",
   "main": "index.js",
   "scripts": {
     "build": "tsc"
