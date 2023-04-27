@@ -83,7 +83,6 @@ export declare class ShiftSchedule extends LitElement {
     dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
     renderRequestButton(): TemplateResult<1>;
     selectRequest(type: RequestType): void;
-    private calcHeightOfUserTable;
     private disableDateArranged;
     connectedCallback(): Promise<void>;
     private setRemoveMode;

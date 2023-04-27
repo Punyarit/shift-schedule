@@ -244,17 +244,6 @@ export class ShiftSchedule extends LitElement {
     );
   }
 
-  private calcHeightOfUserTable() {
-    const theme = document.body.querySelector('cx-theme');
-    const userTable = this.querySelector('#week-month-user');
-
-    setTimeout(() => {
-      const heightOfTheme = theme?.getBoundingClientRect();
-      const userTableTop = userTable?.getBoundingClientRect();
-      this.maxHeightOfUserTable = Math.floor(heightOfTheme?.height! - userTableTop?.top!);
-    }, 250);
-  }
-
   private disableDateArranged = {} as {
     [date: string]: DisabledDate;
   };
@@ -448,7 +437,7 @@ export class ShiftSchedule extends LitElement {
           border: 2px solid var(--gray-400) !important;
         }
       </style>
-      <c-box style="height:${this.maxHeight || '100%'}" relative>
+      <c-box relative overflow-hidden>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
@@ -651,7 +640,7 @@ export class ShiftSchedule extends LitElement {
                 inline-flex
                 flex-col
                 id="week-month-user"
-                style="height:${this.maxHeightOfUserTable!}px; width:var(--table-width)">
+                style="height:${this.maxHeight}; width:var(--table-width)">
                 <div class="lit-virtualizer">
                   ${(this.scheduleData as SchedulingData)?.schedulePractitioner?.map(
                     (practitioner, indexUser) => {
@@ -827,9 +816,7 @@ export class ShiftSchedule extends LitElement {
                                         <!-- if have request date then render request -->
 
                                         <!-- when saving -->
-                                        ${disableDate &&
-                                        !semSaved &&
-                                        this.requestSelected?.abbr !== 'sem'
+                                        ${disableDate && !semSaved
                                           ? html` <div class="diagonal-pattern"></div> `
                                           : srSaved && srSaved?.request?.[dateString]
                                           ? this.renderSrShiftSaved(
@@ -3138,7 +3125,6 @@ export class ShiftSchedule extends LitElement {
       lastTableIndexUser.style.borderRight = 'var(--size-1) solid var(--primary-100)';
     });
 
-    this.calcHeightOfUserTable();
     // sr
     const shiftPlandatepicker = this.querySelectorAll('.shift-plan-datepicker');
     const woffSaved = this.querySelectorAll('.woff-saved');
