@@ -310,8 +310,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         this.requestSelected = undefined;
