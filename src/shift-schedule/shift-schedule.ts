@@ -281,8 +281,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -2403,6 +2403,19 @@ export class ShiftSchedule extends LitElement {
       )
     );
 
+    const filteredShift = shifts.flatMap((res) => {
+      return {
+        ...res,
+        scheduleStaffings: res.scheduleStaffings?.filter(
+          (res) =>
+            res.planDate === dateString.trim() &&
+            res.practitionerLevel.id === practitioner.practitioner.practitionerLevel.id &&
+            res.practitionerLevel.practitionerRole.id ===
+              practitioner.practitioner.practitionerRole.id
+        ),
+      };
+    });
+
     return shouldRender.length
       ? html` <c-box flex col-gap-24>
           <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
@@ -2420,61 +2433,63 @@ export class ShiftSchedule extends LitElement {
           </c-box>
           <c-box w-full>
             <c-box flex col-gap-6 justify-between>
-              ${shifts?.map((requestPlan) => {
+              ${filteredShift?.map((requestPlan) => {
                 const [dayPart, plan] = requestPlan.shiftName.split('');
                 const hasInitialSr = initialSr?.[+plan];
 
                 const bgColor = dayPortValue[dayPart as DayPart].bgColor;
                 const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
 
-                return html` <c-box flex items-center flex-col>
-                  <c-box
-                    @click="${(e: PointerEvent) => {
-                      this.addSrShiftRequest(requestPlan, dateString);
+                return requestPlan?.scheduleStaffings?.length
+                  ? html` <c-box flex items-center flex-col>
+                      <c-box
+                        @click="${(e: PointerEvent) => {
+                          this.addSrShiftRequest(requestPlan, dateString);
 
-                      const target = e.target as CBoxUiAttribute;
-                      target.uiToggled = !target.uiToggled;
+                          const target = e.target as CBoxUiAttribute;
+                          target.uiToggled = !target.uiToggled;
 
-                      const bgAttr = hasInitialSr
-                        ? target.uiToggled
-                          ? `${'primary-25'}!`
-                          : `${bgColor}!`
-                        : target.uiToggled
-                        ? `${bgColor}!`
-                        : `${'primary-25'}!`;
+                          const bgAttr = hasInitialSr
+                            ? target.uiToggled
+                              ? `${'primary-25'}!`
+                              : `${bgColor}!`
+                            : target.uiToggled
+                            ? `${bgColor}!`
+                            : `${'primary-25'}!`;
 
-                      const colorAttr = hasInitialSr
-                        ? target.uiToggled
-                          ? `gray-500`
-                          : `color-4-700`
-                        : target.uiToggled
-                        ? `color-4-700`
-                        : `gray-500`;
+                          const colorAttr = hasInitialSr
+                            ? target.uiToggled
+                              ? `gray-500`
+                              : `color-4-700`
+                            : target.uiToggled
+                            ? `color-4-700`
+                            : `gray-500`;
 
-                      target.setAttribute('bg', bgAttr);
-                      target.style.color = `var(--${colorAttr})`;
-                    }}"
-                    shadow-hover="shadow-3"
-                    ui-active="_1:bg-${mediumColor}!"
-                    transition="all 0.2s ease"
-                    w-80
-                    h-30
-                    bg="${hasInitialSr ? bgColor : 'primary-25'}"
-                    round-8
-                    flex
-                    justify-center
-                    items-center
-                    cursor-pointer
-                    tx-14
-                    bold
-                    style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
-                    >${plan}</c-box
-                  >
-                  <c-box tx-12
-                    >${requestPlan.startTime.slice(0, -3)} -
-                    ${requestPlan.endTime.slice(0, -3)}</c-box
-                  >
-                </c-box>`;
+                          target.setAttribute('bg', bgAttr);
+                          target.style.color = `var(--${colorAttr})`;
+                        }}"
+                        shadow-hover="shadow-3"
+                        ui-active="_1:bg-${mediumColor}!"
+                        transition="all 0.2s ease"
+                        w-80
+                        h-30
+                        bg="${hasInitialSr ? bgColor : 'primary-25'}"
+                        round-8
+                        flex
+                        justify-center
+                        items-center
+                        cursor-pointer
+                        tx-14
+                        bold
+                        style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
+                        >${plan}</c-box
+                      >
+                      <c-box tx-12
+                        >${requestPlan.startTime.slice(0, -3)} -
+                        ${requestPlan.endTime.slice(0, -3)}</c-box
+                      >
+                    </c-box>`
+                  : undefined;
               })}
             </c-box>
           </c-box>
