@@ -218,6 +218,7 @@ export declare class ShiftSchedule extends LitElement {
     reduceDate: (date: Date, n: number) => Date;
     daysBetween: (startDate: Date, endDate: Date) => number;
     createRenderRoot(): this;
+    disconnectedCallback(): void;
 }
 declare global {
     namespace CXShiftSchedule {

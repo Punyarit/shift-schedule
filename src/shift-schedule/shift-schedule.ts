@@ -43,6 +43,7 @@ import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-c
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import '@lit-labs/virtualizer';
+import { CXModal } from '../jsx';
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -281,8 +282,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -436,7 +437,7 @@ export class ShiftSchedule extends LitElement {
         }
 
         c-box[input-box].remark-input {
-          width: var(--size-284) !important;
+          width: 284px !important;
           border: 2px solid var(--gray-400) !important;
         }
       </style>
@@ -734,7 +735,7 @@ export class ShiftSchedule extends LitElement {
                             <c-box>
                               <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
                               <c-box tx-12
-                                >${practitionerRole.name}, ${practitionerLevel.name}</c-box
+                                >${practitionerRole.abbr}, ${practitionerLevel.name}</c-box
                               >
                             </c-box>
                           </c-box>
@@ -819,7 +820,7 @@ export class ShiftSchedule extends LitElement {
                                         <!-- if have request date then render request -->
 
                                         <!-- when saving -->
-                                        ${disableDate && !semSaved
+                                        ${disableDate
                                           ? html` <div class="diagonal-pattern"></div> `
                                           : srSaved && srSaved?.request?.[dateString]
                                           ? this.renderSrShiftSaved(
@@ -1419,11 +1420,11 @@ export class ShiftSchedule extends LitElement {
         | undefined;
       const currentIndex = currentMonth?.index;
       targetMonth = this.scrollValueFirstDateMonth?.[currentIndex! + (type === 'next' ? 1 : -1)];
-
+      const left = litVirtualizer.getBoundingClientRect().left;
       if (targetMonth) {
         litVirtualizer.scrollTo({
           top: 0,
-          left: targetMonth!.scrollValue - 319,
+          left: targetMonth!.scrollValue - (left + 260 - 1),
           behavior: 'smooth',
         });
       }
@@ -2887,6 +2888,12 @@ export class ShiftSchedule extends LitElement {
     this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
 
     this.dispatchEvent(
+      new CustomEvent('focus-request', {
+        detail: { practitioner: practitioner },
+      })
+    );
+
+    this.dispatchEvent(
       new CustomEvent('save-woff', {
         detail: this.shiftWoffRequestSaved,
       })
@@ -3136,12 +3143,13 @@ export class ShiftSchedule extends LitElement {
       this.shouldScrollErrorTarget = true;
     }
     if (errorDayRequest && this.shouldScrollErrorTarget) {
+      const left = tableWrapper?.getBoundingClientRect().left;
       setTimeout(() => {
         const errorRect = errorDayRequest?.getBoundingClientRect();
         const scrollErrorValue = errorRect?.left;
         tableWrapper?.scrollTo({
           top: 0,
-          left: Math.floor(scrollErrorValue! - 320),
+          left: Math.floor(scrollErrorValue! - (left! + 260)),
           behavior: 'smooth',
         });
       }, 750);
@@ -3238,7 +3246,8 @@ export class ShiftSchedule extends LitElement {
         litVirtualizer.addEventListener('scroll', (e) => {
           if (this.scrollValueFirstDateMonth) {
             const target = e.target as HTMLElement;
-            const scrollValue = target.scrollLeft + 320;
+            const left = target.getBoundingClientRect().left + 260;
+            const scrollValue = target.scrollLeft + left;
             let value = {} as {
               date: string;
               scrollValue: number;
@@ -3490,6 +3499,11 @@ export class ShiftSchedule extends LitElement {
 
   createRenderRoot() {
     return this;
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    ModalCaller.popover().clear();
   }
 }
 declare global {
