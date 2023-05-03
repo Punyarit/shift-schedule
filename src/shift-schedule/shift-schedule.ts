@@ -734,8 +734,9 @@ export class ShiftSchedule extends LitElement {
 
                             <c-box>
                               <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                              <c-box tx-12
-                                >${practitionerRole.abbr}, ${practitionerLevel.name}</c-box
+                              <c-box tx-12>
+                                <span style="text-transform: uppercase"> ${practitionerRole.abbr} </span>,
+                                ${practitionerLevel.name}</c-box
                               >
                             </c-box>
                           </c-box>
