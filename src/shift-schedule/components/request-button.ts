@@ -7,7 +7,7 @@ export class MyElement extends LitElement {
   private btnWrapper = (color: string) =>
     `btnWrapper: cursor-pointer flex items-center col-gap-8 round-24 border-2 border-${color} border-solid pr-24`;
 
-  private btnContent = 'btnContent: round-full flex items-center justify-center';
+  private btnContent = 'btnContent: flex items-center justify-center round-full';
 
   @property({ type: String })
   text!: string;
@@ -41,32 +41,32 @@ export class MyElement extends LitElement {
 
   render() {
     const isSelected = this.requestType.abbr === this.currentType?.abbr;
+    const hov = `hov: bg-${isSelected ? this.accentColor : this.iconBgColor}!`;
     return html`
-      <style>
-        c-box[icon-prefix]::before {
-          transition: 0.2s ease;
-        }
-      </style>
-      <c-box
+      <c-div
         class="wrapper"
         tabindex="0"
-        tx="16 regular ${isSelected ? 'white' : this.accentColor}"
-        ui="${this.btnWrapper(isSelected ? this.accentColor : this.iconBgColor)}"
-        ui-hover="hov: bg-${isSelected ? this.accentColor : this.iconBgColor}"
-        transition="all 0.2s ease"
-        bg="${isSelected ? this.accentColor : 'white'}">
-        <c-box
+        .$class="${this.btnWrapper(isSelected ? this.accentColor : this.iconBgColor)}"
+        .$class-hover="${hov}"
+        style="font-size: 16px; color: var(--${isSelected
+          ? 'white'
+          : this.accentColor}); transition: all 0.2s ease; background: var(--${isSelected
+          ? this.accentColor
+          : 'white'})">
+        <c-div
           id="icon-head"
-          ui="${this.btnContent}"
-          min-w="${this.width}"
-          min-h="${this.height}"
-          bg="${isSelected ? this.accentColor : this.iconBgColor}">
-          <c-box icon-prefix="24 ${this.icon} ${isSelected ? 'white' : this.accentColor}"></c-box>
-        </c-box>
-        <c-box whitespace-pre tx="16 regular ${isSelected ? 'white' : 'gray-800'}"
-          >${this.text}</c-box
+          .$class="${this.btnContent}"
+          .min-w="${this.width}"
+          .min-h="${this.height}"
+          style="background: var(--${isSelected ? this.accentColor : this.iconBgColor})">
+          <c-div .$icon="${this.icon}: tx-24 tx-${isSelected ? 'white' : this.accentColor}"></c-div>
+        </c-div>
+        <c-div
+          whitespace-pre
+          style="font-size: 16px; color: var(--${isSelected ? 'white' : 'gray-800'})"
+          >${this.text}</c-div
         >
-      </c-box>
+      </c-div>
     `;
   }
 

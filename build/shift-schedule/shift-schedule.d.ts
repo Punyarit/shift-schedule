@@ -1,5 +1,5 @@
 import { LitElement, PropertyValueMap, TemplateResult } from 'lit';
-import '@cortex-ui/core/cx/c-box';
+import '@cortex-ui/core/cx/div';
 import '@cortex-ui/core/cx/modal';
 import '@cortex-ui/core/cx/theme';
 import '@cortex-ui/core/cx/icon';
