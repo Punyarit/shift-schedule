@@ -115,7 +115,7 @@ export class ShiftSchedule extends LitElement {
   srState = [];
 
   @property()
-  maxWeekOFf: number = 24;
+  maxWeekOFf: number = 3;
 
   @state()
   maxHeightOfUserTable?: number;
@@ -234,6 +234,11 @@ export class ShiftSchedule extends LitElement {
   }
 
   selectRequest(type: RequestType) {
+    if (this.currentPopoverRef) {
+      this.shakePopover();
+      return;
+    }
+
     this.isRemoveMode = false;
     this.requestSelected = type;
     this.dispatchEvent(
@@ -287,6 +292,10 @@ export class ShiftSchedule extends LitElement {
   }
 
   private setRemoveMode() {
+    if (this.currentPopoverRef) {
+      this.shakePopover();
+      return;
+    }
     this.requestSelected = undefined;
     this.isRemoveMode = true;
 
@@ -304,6 +313,12 @@ export class ShiftSchedule extends LitElement {
   dividerTop = 0;
 
   private monthTitleNav?: HTMLElement | null;
+
+  @state()
+  shouldArrowLeftDisable?: boolean;
+
+  @state()
+  shouldArrowRightDisable?: boolean;
 
   @state()
   currentMonthTitleDisplay?: string;
@@ -358,11 +373,26 @@ export class ShiftSchedule extends LitElement {
           overflow: auto;
         }
 
+        /*  */
         .lit-virtualizer::-webkit-scrollbar {
-          width: 0px;
-          height: 0px;
-          background: transparent;
+          width: 6px;
         }
+
+        /* Track */
+        .lit-virtualizer::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        /* Handle */
+        .lit-virtualizer::-webkit-scrollbar-thumb {
+          background: #a1a1a1;
+        }
+
+        /* Handle on hover */
+        .lit-virtualizer::-webkit-scrollbar-thumb:hover {
+          background: #696969;
+        }
+        /*  */
 
         :host {
           --cbox-divider-width: 100%;
@@ -437,15 +467,26 @@ export class ShiftSchedule extends LitElement {
         }
 
         c-box[input-box].remark-input {
-          width: 284px !important;
+          width: 312px !important;
           border: 2px solid var(--gray-400) !important;
+        }
+
+        .buttonGroupUI {
+          display: flex;
+          align-items: center;
+          column-gap: 24px;
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+        .remove-btn-active:active {
+          background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
         }
       </style>
       <c-box relative overflow-hidden>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
-            ? html` <c-box ui="${this.buttonGroupUI}">
+            ? html` <c-box class="buttonGroupUI">
                 <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
                 ${this.renderRequestButton()}
                 <c-box inline h-40 w-1 bg-gray-400></c-box>
@@ -459,15 +500,12 @@ export class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   cursor-pointer
-                  class="remove-btn"
+                  class="remove-btn remove-btn-active"
                   style="border-color: var(--neutral-200)"
-                  ui-active="${this.isRemoveMode
-                    ? 'bg: bg-' + 'neutral-500' + '!'
-                    : 'bg: bg-' + 'neutral-200' + '!'}"
                   bg="${this.isRemoveMode ? 'neutral-500' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="20 close-circle-line ${this.isRemoveMode
+                    icon-prefix="16 delete-tag-custom ${this.isRemoveMode
                       ? 'white!'
                       : 'neutral-500'}"
                     w-44
@@ -477,6 +515,7 @@ export class ShiftSchedule extends LitElement {
                   </c-box>
                   <c-box
                     transition="all 0.2s ease"
+                    style="color:${this.isRemoveMode ? 'white!' : 'neutral-500'}"
                     ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-gray-800'}"
                     ,
                     >ลบ</c-box
@@ -507,22 +546,18 @@ export class ShiftSchedule extends LitElement {
                     items-center
                     col-gap-6>
                     <c-box
-                      @mousemove=${(e: MouseEvent) => {
-                        const monthVal = this.scrollValueFirstDateMonth?.find(
-                          (res) => res.date === this.currentMonthTitleDisplay
-                        );
-                        if (typeof monthVal === 'undefined' || monthVal?.index === 0) {
-                          (e.target as HTMLElement).style.cursor = 'not-allowed';
-                        } else {
-                          (e.target as HTMLElement).style.cursor = 'pointer';
-                        }
-                      }}
                       ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
-                      icon-suffix="8 angle-left-u gray-600"
+                      ui-active="_1: ${this.shouldArrowLeftDisable ? 'bg-white' : 'bg-primary-100'}"
+                      icon-suffix="8 angle-left-u ${this.shouldArrowLeftDisable
+                        ? 'gray-400'
+                        : 'gray-600'}"
                       transition-200
                       cursor-pointer
-                      @click="${() => this.goToMonth('previous')}"></c-box>
+                      style="${this.shouldArrowLeftDisable
+                        ? 'cursor: not-allowed'
+                        : 'cursor: pointer'}"
+                      @click="${() =>
+                        this.shouldArrowLeftDisable ? null : this.goToMonth('previous')}"></c-box>
 
                     <c-box w-90 flex justify-center tx-12 tx-gray-600>
                       ${this.dateFormat(this.currentMonthTitleDisplay, {
@@ -533,25 +568,19 @@ export class ShiftSchedule extends LitElement {
 
                     <c-box
                       ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
+                      ui-active="_1: ${this.shouldArrowRightDisable
+                        ? 'bg-white'
+                        : 'bg-primary-100'}"
                       transition-200
-                      icon-suffix="8 angle-right-u gray-600"
+                      icon-suffix="8 angle-right-u ${this.shouldArrowRightDisable
+                        ? 'gray-400'
+                        : 'gray-600'}"
                       cursor-pointer
-                      @mousemove=${(e: MouseEvent) => {
-                        const monthVal = this.scrollValueFirstDateMonth?.find(
-                          (res) => res.date === this.currentMonthTitleDisplay
-                        );
-
-                        if (
-                          typeof monthVal === 'undefined' ||
-                          monthVal?.index === this.scrollValueFirstDateMonth!.length - 1
-                        ) {
-                          (e.target as HTMLElement).style.cursor = 'not-allowed';
-                        } else {
-                          (e.target as HTMLElement).style.cursor = 'pointer';
-                        }
-                      }}
-                      @click="${() => this.goToMonth('next')}"></c-box>
+                      style="${this.shouldArrowRightDisable
+                        ? 'cursor: not-allowed'
+                        : 'cursor: pointer'}"
+                      @click="${() =>
+                        this.shouldArrowRightDisable ? null : this.goToMonth('next')}"></c-box>
                   </c-box>
                   ${this.dateBetween?.map((dateBet) => {
                     return html`
@@ -566,7 +595,7 @@ export class ShiftSchedule extends LitElement {
                         </c-box>
 
                         <c-box ui=${this.weekDayWRapperUI}>
-                          ${dateBet.dateBetween.map((weekday) => {
+                          ${dateBet.dateBetween.map((weekday, weekIndex) => {
                             return html`
                               <c-box flex flex-col>
                                 <c-box
@@ -604,7 +633,7 @@ export class ShiftSchedule extends LitElement {
                                       data-first-date="${localISOTime}"
                                       class="${date.getDate() === 1
                                         ? 'first-date-of-month'
-                                        : dateIndex === 0
+                                        : this.dateBetween?.[0].dateBetween[0][0].getDate() !== 1
                                         ? 'start-date-of-month'
                                         : ''}"
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
@@ -735,8 +764,9 @@ export class ShiftSchedule extends LitElement {
                             <c-box>
                               <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
                               <c-box tx-12>
-                                <span style="text-transform: uppercase"> ${practitionerRole.abbr} </span>,
-                                ${practitionerLevel.name}</c-box
+                                <span style="text-transform: uppercase">
+                                  ${practitionerRole.abbr} </span
+                                >, ${practitionerLevel.name}</c-box
                               >
                             </c-box>
                           </c-box>
@@ -799,7 +829,7 @@ export class ShiftSchedule extends LitElement {
                                           ? '1'
                                           : '0.6'}; max-width:88px; word-break:break-all;
                                           ${(this.requestSelected?.abbr === 'woff' &&
-                                          this.shouldAllowedWeekOffSelect) ||
+                                          this.shouldNotAllowedWeekOffSelect) ||
                                         (this.requestSelected?.abbr === 'off' &&
                                           (practitioner?.practitioner?.leave?.dayOff === 0 ||
                                             this.maxDayOffLength?.[
@@ -1046,8 +1076,20 @@ export class ShiftSchedule extends LitElement {
     date?: Date,
     indexUser?: number
   ): TemplateResult {
+    console.log(practitioner, 'practitioner');
     return html`<c-box h-full w-full p-4 border-box slot="host">
       <c-box
+        style="${(this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
+        (this.requestSelected?.abbr === 'off' &&
+          (practitioner?.practitioner?.leave?.dayOff === 0 ||
+            this.maxDayOffLength?.[(practitioner?.practitioner as any).id]?.dayOff >=
+              practitioner?.practitioner?.leave?.dayOff!)) ||
+        (this.requestSelected?.abbr === 'vac' &&
+          (this.vacDayOff?.[(practitioner?.practitioner as any).id] === 0 ||
+            this.maxDayOffLength?.[(practitioner?.practitioner as any).id]?.vacation >=
+              this.vacDayOff?.[(practitioner?.practitioner as any).id]))
+          ? 'pointer-events: none'
+          : ''}"
         class="woff-saved ${this.requestSelected?.abbr !== 'woff' || this.isRemoveMode
           ? 'hover-request'
           : ''}"
@@ -1080,13 +1122,23 @@ export class ShiftSchedule extends LitElement {
     practitioner: SchedulePractitionerEntity,
     planEntries: [string, Record<number, ScheduleShiftsEntity>][]
   ) {
+    const checkMaxLength =
+      (this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
+      (this.requestSelected?.abbr === 'off' &&
+        (practitioner?.practitioner?.leave?.dayOff === 0 ||
+          this.maxDayOffLength?.[(practitioner.practitioner as any).id]?.dayOff >=
+            practitioner?.practitioner?.leave?.dayOff)) ||
+      (this.requestSelected?.abbr === 'vac' &&
+        (this.vacDayOff?.[(practitioner.practitioner as any).id] === 0 ||
+          this.maxDayOffLength?.[(practitioner.practitioner as any).id]?.vacation >=
+            this.vacDayOff?.[(practitioner.practitioner as any).id]));
     return html` <c-box
       @click="${() => this.removeSrPlan(dateString, practitioner)}"
       w-full
       h-full
+      style="${checkMaxLength ? 'pointer-events:none' : this.isRemoveMode ? 'cursor:pointer' : ''}"
       shift-type="sr-saved"
-      slot="host"
-      cursor="${this.requestSelected || this.isRemoveMode ? 'pointer' : 'default'}">
+      slot="host">
       ${planEntries
         ?.sort((a, b) => {
           const indexMap = { m: 0, a: 1, n: 2 };
@@ -1296,11 +1348,13 @@ export class ShiftSchedule extends LitElement {
     indexUser: number
   ) {
     const cellId = `sem-saved-shift-cell-${indexUser}`;
-
+    const checkWeekOffDisabled =
+      this.shouldNotAllowedWeekOffSelect && this.requestSelected?.abbr === 'woff';
     return html`<c-box p-4 border-box h-full w-full slot="host" shift-type="${type}-saved">
       <c-box
         id="${cellId}-${data.dateString}"
-        style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
+        style="pointer-events:${checkWeekOffDisabled ||
+        (this.requestSelected?.abbr === 'off' &&
           (practitioner?.practitioner?.leave?.dayOff === 0 ||
             this.maxDayOffLength?.[(practitioner.practitioner as any).id]?.dayOff >=
               practitioner?.practitioner?.leave?.dayOff)) ||
@@ -1309,7 +1363,7 @@ export class ShiftSchedule extends LitElement {
             this.maxDayOffLength?.[(practitioner.practitioner as any).id]?.vacation >=
               this.vacDayOff?.[(practitioner.practitioner as any).id]))
           ? 'none'
-          : '   '}"
+          : ''}"
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
           ? 'hover-request'
           : ''}"
@@ -1406,6 +1460,8 @@ export class ShiftSchedule extends LitElement {
   }
 
   goToMonth(type: 'next' | 'previous') {
+    // if (this.shouldArrowLeftDisable === true && type === 'next') return;
+    // if (this.shouldArrowRightDisable === true && type === 'previous') return;
     const litVirtualizer = this.querySelector('.lit-virtualizer');
     if (litVirtualizer) {
       const currentMonth = this.scrollValueFirstDateMonth?.find(
@@ -1421,11 +1477,21 @@ export class ShiftSchedule extends LitElement {
         | undefined;
       const currentIndex = currentMonth?.index;
       targetMonth = this.scrollValueFirstDateMonth?.[currentIndex! + (type === 'next' ? 1 : -1)];
+
       const left = litVirtualizer.getBoundingClientRect().left;
-      if (targetMonth) {
+      const scrollValue = targetMonth!.scrollValue - (left + 260);
+      if (targetMonth && Math.floor(scrollValue) <= 0) {
+        targetMonth = this.scrollValueFirstDateMonth?.[currentIndex! + (type === 'next' ? 2 : -1)];
+        const scrollValue = targetMonth!.scrollValue - (left + 260);
         litVirtualizer.scrollTo({
-          top: 0,
-          left: targetMonth!.scrollValue - (left + 260 - 1),
+          top: litVirtualizer.scrollTop,
+          left: scrollValue + 1,
+          behavior: 'smooth',
+        });
+      } else if (targetMonth) {
+        litVirtualizer.scrollTo({
+          top: litVirtualizer.scrollTop,
+          left: scrollValue + 1,
           behavior: 'smooth',
         });
       }
@@ -2202,6 +2268,14 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
+  shakePopover() {
+    const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
+    popoverCheck?.classList.add('shake-efx-popover');
+    setTimeout(() => {
+      popoverCheck?.classList.remove('shake-efx-popover');
+    }, 600);
+  }
+
   appendPopover(
     type: RequestType['abbr'],
     cellId: string,
@@ -2215,16 +2289,10 @@ export class ShiftSchedule extends LitElement {
     popoverHost: TemplateResult
   ) {
     if (this.isRemoveMode) return;
-
     if (this.currentPopoverRef) {
-      const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
-      popoverCheck?.classList.add('shake-efx-popover');
-      setTimeout(() => {
-        popoverCheck?.classList.remove('shake-efx-popover');
-      }, 600);
+      this.shakePopover();
       return;
     }
-
     if (
       (this.requestSelected?.abbr === 'off' &&
         (data.practitioner.practitioner.leave.dayOff === 0 ||
@@ -2387,7 +2455,7 @@ export class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            style="${this.shouldAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
+            style="${this.shouldNotAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
             ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
           </c-box>
         `;
@@ -2862,6 +2930,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string) {
+    if (this.shouldNotAllowedWeekOffSelect === true) return;
     if (!this.shiftWoffRequestSaved?.[practitioner.id]) {
       this.shiftWoffRequestSaved![practitioner.id] = {} as {
         practitioner: SchedulePractitionerEntity;
@@ -3114,9 +3183,9 @@ export class ShiftSchedule extends LitElement {
   };
 
   private moveUserToFirstArray() {
-    const index = this.scheduleData?.schedulePractitioner?.findIndex(
-      (obj) => obj.practitionerId === this.practitionerId
-    );
+    const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => {
+      return obj.practitionerId === this.practitionerId;
+    });
 
     if (index !== -1) {
       const item = this.scheduleData?.schedulePractitioner?.splice(index!, 1)[0];
@@ -3127,7 +3196,7 @@ export class ShiftSchedule extends LitElement {
   }
 
   @state()
-  private shouldAllowedWeekOffSelect?: boolean;
+  private shouldNotAllowedWeekOffSelect?: boolean;
 
   private scrollValueFirstDateMonth?: {
     date: string;
@@ -3135,7 +3204,15 @@ export class ShiftSchedule extends LitElement {
     index: number;
   }[];
 
+  isSameMonth(date1: string, date2: string): boolean {
+    return (
+      new Date(date1).getMonth() === new Date(date2).getMonth() &&
+      new Date(date1).getFullYear() === new Date(date2).getFullYear()
+    );
+  }
+
   shouldScrollErrorTarget = false;
+  initialScroll = false;
   updated(changedProp: Map<string, unknown>) {
     const tableWrapper = this.querySelector('.lit-virtualizer');
     const errorDayRequest = this.querySelector('.error-day-request');
@@ -3160,7 +3237,7 @@ export class ShiftSchedule extends LitElement {
     if (this.requestSelected?.abbr === 'woff') {
       const targetElement = tableWrapper?.children[this.userHoverIndex];
       const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
-      this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
+      this.shouldNotAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
     }
     // remove borderRight last element
     const weekMonthTitle = this.querySelector('#week-month-title');
@@ -3228,17 +3305,20 @@ export class ShiftSchedule extends LitElement {
       if (!this.scrollValueFirstDateMonth) {
         debounce(() => {
           this.scrollValueFirstDateMonth = structuredClone(
-            firstDateOfMonthsArray.map((ele, index) => {
-              return {
-                scrollValue: Math.floor(ele.getBoundingClientRect().left),
-                date: ele.getAttribute('data-first-date'),
-                index,
-              };
-            })
+            firstDateOfMonthsArray
+              .map((ele, index) => {
+                return {
+                  scrollValue: Math.floor(ele.getBoundingClientRect().left),
+                  date: ele.getAttribute('data-first-date'),
+                };
+              })
+              ?.sort((a, b) => a.scrollValue - b.scrollValue)
+              .map((res, index) => ({ ...res, index }))
           );
         }, 250);
       }
-      if (tableHeaderWrapper && litVirtualizer) {
+      if (tableHeaderWrapper && litVirtualizer && this.initialScroll === false) {
+        this.initialScroll = true;
         tableHeaderWrapper.addEventListener('scroll', (e) => {
           if (this.scrollValueFirstDateMonth) {
             tableHeaderWrapper.scrollLeft = this.currentScrollX;
@@ -3263,9 +3343,21 @@ export class ShiftSchedule extends LitElement {
                 value = this.scrollValueFirstDateMonth[this.scrollValueFirstDateMonth.length - 1];
               }
             }
-
             this.currentMonthTitleDisplay = value.date;
+            if (this.scrollValueFirstDateMonth[0].date === this.currentMonthTitleDisplay) {
+              this.shouldArrowLeftDisable = true;
+            } else {
+              this.shouldArrowLeftDisable = false;
+            }
 
+            if (
+              this.scrollValueFirstDateMonth[this.scrollValueFirstDateMonth.length - 1].date ===
+              this.currentMonthTitleDisplay
+            ) {
+              this.shouldArrowRightDisable = true;
+            } else {
+              this.shouldArrowRightDisable = false;
+            }
             this.currentScrollX = litVirtualizer.scrollLeft;
             tableHeaderWrapper.scrollLeft = this.currentScrollX;
             this.closePopover();
@@ -3283,6 +3375,32 @@ export class ShiftSchedule extends LitElement {
           this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
         }
       }
+
+      setTimeout(() => {
+        // right
+        const monthValRight = this.scrollValueFirstDateMonth?.find(
+          (res) => res.date === this.currentMonthTitleDisplay
+        );
+
+        if (
+          typeof monthValRight === 'undefined' ||
+          monthValRight?.index === this.scrollValueFirstDateMonth!.length - 1
+        ) {
+          this.shouldArrowRightDisable = true;
+        } else {
+          this.shouldArrowRightDisable = false;
+        }
+
+        // left
+        const monthValLeft = this.scrollValueFirstDateMonth?.find(
+          (res) => res.date === this.currentMonthTitleDisplay
+        );
+        if (typeof monthValLeft === 'undefined' || monthValLeft?.index === 0) {
+          this.shouldArrowLeftDisable = true;
+        } else {
+          this.shouldArrowLeftDisable = false;
+        }
+      }, 250);
     }
 
     //

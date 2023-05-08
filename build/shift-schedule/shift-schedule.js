@@ -54,7 +54,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.holidays = [];
         this.errorDayRequest = [];
         this.srState = [];
-        this.maxWeekOFf = 24;
+        this.maxWeekOFf = 3;
         this.shiftSrRequestCache = {};
         this.shiftSrShipCache = {};
         this.shiftDatepickerCache = {};
@@ -227,6 +227,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
         };
         this.shouldScrollErrorTarget = false;
+        this.initialScroll = false;
         this.maxDayOffLength = {};
         this.vacDayOff = {};
         this.currentScrollX = 0;
@@ -270,6 +271,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     selectRequest(type) {
+        if (this.currentPopoverRef) {
+            this.shakePopover();
+            return;
+        }
         this.isRemoveMode = false;
         this.requestSelected = type;
         this.dispatchEvent(new CustomEvent('select-request', {
@@ -315,6 +320,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
+        if (this.currentPopoverRef) {
+            this.shakePopover();
+            return;
+        }
         this.requestSelected = undefined;
         this.isRemoveMode = true;
         this.dispatchEvent(new CustomEvent('remove-action'));
@@ -369,11 +378,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           overflow: auto;
         }
 
+        /*  */
         .lit-virtualizer::-webkit-scrollbar {
-          width: 0px;
-          height: 0px;
-          background: transparent;
+          width: 6px;
         }
+
+        /* Track */
+        .lit-virtualizer::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        /* Handle */
+        .lit-virtualizer::-webkit-scrollbar-thumb {
+          background: #a1a1a1;
+        }
+
+        /* Handle on hover */
+        .lit-virtualizer::-webkit-scrollbar-thumb:hover {
+          background: #696969;
+        }
+        /*  */
 
         :host {
           --cbox-divider-width: 100%;
@@ -448,15 +472,26 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
 
         c-box[input-box].remark-input {
-          width: 284px !important;
+          width: 312px !important;
           border: 2px solid var(--gray-400) !important;
+        }
+
+        .buttonGroupUI {
+          display: flex;
+          align-items: center;
+          column-gap: 24px;
+          padding-left: 24px;
+          padding-right: 24px;
+        }
+        .remove-btn-active:active {
+          background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
         }
       </style>
       <c-box relative overflow-hidden>
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
-            ? html ` <c-box ui="${this.buttonGroupUI}">
+            ? html ` <c-box class="buttonGroupUI">
                 <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
                 ${this.renderRequestButton()}
                 <c-box inline h-40 w-1 bg-gray-400></c-box>
@@ -470,15 +505,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   border-solid
                   border-1
                   cursor-pointer
-                  class="remove-btn"
+                  class="remove-btn remove-btn-active"
                   style="border-color: var(--neutral-200)"
-                  ui-active="${this.isRemoveMode
-                ? 'bg: bg-' + 'neutral-500' + '!'
-                : 'bg: bg-' + 'neutral-200' + '!'}"
                   bg="${this.isRemoveMode ? 'neutral-500' : 'white'}">
                   <c-box
                     flex-center
-                    icon-prefix="20 close-circle-line ${this.isRemoveMode
+                    icon-prefix="16 delete-tag-custom ${this.isRemoveMode
                 ? 'white!'
                 : 'neutral-500'}"
                     w-44
@@ -488,6 +520,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                   </c-box>
                   <c-box
                     transition="all 0.2s ease"
+                    style="color:${this.isRemoveMode ? 'white!' : 'neutral-500'}"
                     ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-gray-800'}"
                     ,
                     >ลบ</c-box
@@ -518,21 +551,17 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     items-center
                     col-gap-6>
                     <c-box
-                      @mousemove=${(e) => {
-            const monthVal = this.scrollValueFirstDateMonth?.find((res) => res.date === this.currentMonthTitleDisplay);
-            if (typeof monthVal === 'undefined' || monthVal?.index === 0) {
-                e.target.style.cursor = 'not-allowed';
-            }
-            else {
-                e.target.style.cursor = 'pointer';
-            }
-        }}
                       ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
-                      icon-suffix="8 angle-left-u gray-600"
+                      ui-active="_1: ${this.shouldArrowLeftDisable ? 'bg-white' : 'bg-primary-100'}"
+                      icon-suffix="8 angle-left-u ${this.shouldArrowLeftDisable
+            ? 'gray-400'
+            : 'gray-600'}"
                       transition-200
                       cursor-pointer
-                      @click="${() => this.goToMonth('previous')}"></c-box>
+                      style="${this.shouldArrowLeftDisable
+            ? 'cursor: not-allowed'
+            : 'cursor: pointer'}"
+                      @click="${() => this.shouldArrowLeftDisable ? null : this.goToMonth('previous')}"></c-box>
 
                     <c-box w-90 flex justify-center tx-12 tx-gray-600>
                       ${this.dateFormat(this.currentMonthTitleDisplay, {
@@ -543,21 +572,18 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 
                     <c-box
                       ui="_: w-24 h-24 round-full flex-center"
-                      ui-active="_1: bg-primary-100"
+                      ui-active="_1: ${this.shouldArrowRightDisable
+            ? 'bg-white'
+            : 'bg-primary-100'}"
                       transition-200
-                      icon-suffix="8 angle-right-u gray-600"
+                      icon-suffix="8 angle-right-u ${this.shouldArrowRightDisable
+            ? 'gray-400'
+            : 'gray-600'}"
                       cursor-pointer
-                      @mousemove=${(e) => {
-            const monthVal = this.scrollValueFirstDateMonth?.find((res) => res.date === this.currentMonthTitleDisplay);
-            if (typeof monthVal === 'undefined' ||
-                monthVal?.index === this.scrollValueFirstDateMonth.length - 1) {
-                e.target.style.cursor = 'not-allowed';
-            }
-            else {
-                e.target.style.cursor = 'pointer';
-            }
-        }}
-                      @click="${() => this.goToMonth('next')}"></c-box>
+                      style="${this.shouldArrowRightDisable
+            ? 'cursor: not-allowed'
+            : 'cursor: pointer'}"
+                      @click="${() => this.shouldArrowRightDisable ? null : this.goToMonth('next')}"></c-box>
                   </c-box>
                   ${this.dateBetween?.map((dateBet) => {
             return html `
@@ -572,7 +598,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         </c-box>
 
                         <c-box ui=${this.weekDayWRapperUI}>
-                          ${dateBet.dateBetween.map((weekday) => {
+                          ${dateBet.dateBetween.map((weekday, weekIndex) => {
                 return html `
                               <c-box flex flex-col>
                                 <c-box
@@ -603,7 +629,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                       data-first-date="${localISOTime}"
                                       class="${date.getDate() === 1
                         ? 'first-date-of-month'
-                        : dateIndex === 0
+                        : this.dateBetween?.[0].dateBetween[0][0].getDate() !== 1
                             ? 'start-date-of-month'
                             : ''}"
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
@@ -717,8 +743,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             <c-box>
                               <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
                               <c-box tx-12>
-                                <span style="text-transform: uppercase"> ${practitionerRole.abbr} </span>,
-                                ${practitionerLevel.name}</c-box
+                                <span style="text-transform: uppercase">
+                                  ${practitionerRole.abbr} </span
+                                >, ${practitionerLevel.name}</c-box
                               >
                             </c-box>
                           </c-box>
@@ -766,7 +793,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             ? '1'
                             : '0.6'}; max-width:88px; word-break:break-all;
                                           ${(this.requestSelected?.abbr === 'woff' &&
-                            this.shouldAllowedWeekOffSelect) ||
+                            this.shouldNotAllowedWeekOffSelect) ||
                             (this.requestSelected?.abbr === 'off' &&
                                 (practitioner?.practitioner?.leave?.dayOff === 0 ||
                                     this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
@@ -909,8 +936,20 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     renderWoffSavedHost(dateString, practitioner, data, type, date, indexUser) {
+        console.log(practitioner, 'practitioner');
         return html `<c-box h-full w-full p-4 border-box slot="host">
       <c-box
+        style="${(this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
+            (this.requestSelected?.abbr === 'off' &&
+                (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                    this.maxDayOffLength?.[(practitioner?.practitioner).id]?.dayOff >=
+                        practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'vac' &&
+                (this.vacDayOff?.[(practitioner?.practitioner).id] === 0 ||
+                    this.maxDayOffLength?.[(practitioner?.practitioner).id]?.vacation >=
+                        this.vacDayOff?.[(practitioner?.practitioner).id]))
+            ? 'pointer-events: none'
+            : ''}"
         class="woff-saved ${this.requestSelected?.abbr !== 'woff' || this.isRemoveMode
             ? 'hover-request'
             : ''}"
@@ -937,13 +976,22 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     renderSrSavedHost(dateString, practitioner, planEntries) {
+        const checkMaxLength = (this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
+            (this.requestSelected?.abbr === 'off' &&
+                (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                        practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'vac' &&
+                (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
+                    this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
+                        this.vacDayOff?.[practitioner.practitioner.id]));
         return html ` <c-box
       @click="${() => this.removeSrPlan(dateString, practitioner)}"
       w-full
       h-full
+      style="${checkMaxLength ? 'pointer-events:none' : this.isRemoveMode ? 'cursor:pointer' : ''}"
       shift-type="sr-saved"
-      slot="host"
-      cursor="${this.requestSelected || this.isRemoveMode ? 'pointer' : 'default'}">
+      slot="host">
       ${planEntries
             ?.sort((a, b) => {
             const indexMap = { m: 0, a: 1, n: 2 };
@@ -1091,19 +1139,21 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     renderShiftPlanSaved(data, type, practitioner, date, indexUser) {
         const cellId = `sem-saved-shift-cell-${indexUser}`;
+        const checkWeekOffDisabled = this.shouldNotAllowedWeekOffSelect && this.requestSelected?.abbr === 'woff';
         return html `<c-box p-4 border-box h-full w-full slot="host" shift-type="${type}-saved">
       <c-box
         id="${cellId}-${data.dateString}"
-        style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
-            (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                    practitioner?.practitioner?.leave?.dayOff)) ||
+        style="pointer-events:${checkWeekOffDisabled ||
+            (this.requestSelected?.abbr === 'off' &&
+                (practitioner?.practitioner?.leave?.dayOff === 0 ||
+                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
+                        practitioner?.practitioner?.leave?.dayOff)) ||
             (this.requestSelected?.abbr === 'vac' &&
                 (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
                         this.vacDayOff?.[practitioner.practitioner.id]))
             ? 'none'
-            : '   '}"
+            : ''}"
         class="shift-plan-datepicker ${this.requestSelected || this.isRemoveMode
             ? 'hover-request'
             : ''}"
@@ -1181,6 +1231,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     goToMonth(type) {
+        // if (this.shouldArrowLeftDisable === true && type === 'next') return;
+        // if (this.shouldArrowRightDisable === true && type === 'previous') return;
         const litVirtualizer = this.querySelector('.lit-virtualizer');
         if (litVirtualizer) {
             const currentMonth = this.scrollValueFirstDateMonth?.find((res) => res.date === this.currentMonthTitleDisplay);
@@ -1188,10 +1240,20 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const currentIndex = currentMonth?.index;
             targetMonth = this.scrollValueFirstDateMonth?.[currentIndex + (type === 'next' ? 1 : -1)];
             const left = litVirtualizer.getBoundingClientRect().left;
-            if (targetMonth) {
+            const scrollValue = targetMonth.scrollValue - (left + 260);
+            if (targetMonth && Math.floor(scrollValue) <= 0) {
+                targetMonth = this.scrollValueFirstDateMonth?.[currentIndex + (type === 'next' ? 2 : -1)];
+                const scrollValue = targetMonth.scrollValue - (left + 260);
                 litVirtualizer.scrollTo({
-                    top: 0,
-                    left: targetMonth.scrollValue - (left + 260 - 1),
+                    top: litVirtualizer.scrollTop,
+                    left: scrollValue + 1,
+                    behavior: 'smooth',
+                });
+            }
+            else if (targetMonth) {
+                litVirtualizer.scrollTo({
+                    top: litVirtualizer.scrollTop,
+                    left: scrollValue + 1,
                     behavior: 'smooth',
                 });
             }
@@ -1590,15 +1652,18 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     `;
     }
+    shakePopover() {
+        const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
+        popoverCheck?.classList.add('shake-efx-popover');
+        setTimeout(() => {
+            popoverCheck?.classList.remove('shake-efx-popover');
+        }, 600);
+    }
     appendPopover(type, cellId, data, popoverContent, popoverHost) {
         if (this.isRemoveMode)
             return;
         if (this.currentPopoverRef) {
-            const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
-            popoverCheck?.classList.add('shake-efx-popover');
-            setTimeout(() => {
-                popoverCheck?.classList.remove('shake-efx-popover');
-            }, 600);
+            this.shakePopover();
             return;
         }
         if ((this.requestSelected?.abbr === 'off' &&
@@ -1707,7 +1772,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            style="${this.shouldAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
+            style="${this.shouldNotAllowedWeekOffSelect ? 'pointer-events: none' : ''}">
             ${this.renderEmptyBox(date, 'select', 'woff', practitioner, dateString, indexUser)}
           </c-box>
         `;
@@ -2016,6 +2081,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     saveWoffRequest(date, practitioner, dateString) {
+        if (this.shouldNotAllowedWeekOffSelect === true)
+            return;
         if (!this.shiftWoffRequestSaved?.[practitioner.id]) {
             this.shiftWoffRequestSaved[practitioner.id] = {};
             this.shiftWoffRequestSaved[practitioner.id].request = {};
@@ -2172,12 +2239,18 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return `${year}-${month}-${day}`;
     }
     moveUserToFirstArray() {
-        const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => obj.practitionerId === this.practitionerId);
+        const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => {
+            return obj.practitionerId === this.practitionerId;
+        });
         if (index !== -1) {
             const item = this.scheduleData?.schedulePractitioner?.splice(index, 1)[0];
             this.scheduleData?.schedulePractitioner?.unshift(item);
         }
         return true;
+    }
+    isSameMonth(date1, date2) {
+        return (new Date(date1).getMonth() === new Date(date2).getMonth() &&
+            new Date(date1).getFullYear() === new Date(date2).getFullYear());
     }
     updated(changedProp) {
         const tableWrapper = this.querySelector('.lit-virtualizer');
@@ -2201,7 +2274,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         if (this.requestSelected?.abbr === 'woff') {
             const targetElement = tableWrapper?.children[this.userHoverIndex];
             const allShipTypes = targetElement?.querySelectorAll('c-box[shift-type="woff-saved"]');
-            this.shouldAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
+            this.shouldNotAllowedWeekOffSelect = allShipTypes?.length === this.maxWeekOFf;
         }
         // remove borderRight last element
         const weekMonthTitle = this.querySelector('#week-month-title');
@@ -2253,16 +2326,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             }
             if (!this.scrollValueFirstDateMonth) {
                 debounce(() => {
-                    this.scrollValueFirstDateMonth = structuredClone(firstDateOfMonthsArray.map((ele, index) => {
+                    this.scrollValueFirstDateMonth = structuredClone(firstDateOfMonthsArray
+                        .map((ele, index) => {
                         return {
                             scrollValue: Math.floor(ele.getBoundingClientRect().left),
                             date: ele.getAttribute('data-first-date'),
-                            index,
                         };
-                    }));
+                    })
+                        ?.sort((a, b) => a.scrollValue - b.scrollValue)
+                        .map((res, index) => ({ ...res, index })));
                 }, 250);
             }
-            if (tableHeaderWrapper && litVirtualizer) {
+            if (tableHeaderWrapper && litVirtualizer && this.initialScroll === false) {
+                this.initialScroll = true;
                 tableHeaderWrapper.addEventListener('scroll', (e) => {
                     if (this.scrollValueFirstDateMonth) {
                         tableHeaderWrapper.scrollLeft = this.currentScrollX;
@@ -2285,6 +2361,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             }
                         }
                         this.currentMonthTitleDisplay = value.date;
+                        if (this.scrollValueFirstDateMonth[0].date === this.currentMonthTitleDisplay) {
+                            this.shouldArrowLeftDisable = true;
+                        }
+                        else {
+                            this.shouldArrowLeftDisable = false;
+                        }
+                        if (this.scrollValueFirstDateMonth[this.scrollValueFirstDateMonth.length - 1].date ===
+                            this.currentMonthTitleDisplay) {
+                            this.shouldArrowRightDisable = true;
+                        }
+                        else {
+                            this.shouldArrowRightDisable = false;
+                        }
                         this.currentScrollX = litVirtualizer.scrollLeft;
                         tableHeaderWrapper.scrollLeft = this.currentScrollX;
                         this.closePopover();
@@ -2301,6 +2390,25 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
                 }
             }
+            setTimeout(() => {
+                // right
+                const monthValRight = this.scrollValueFirstDateMonth?.find((res) => res.date === this.currentMonthTitleDisplay);
+                if (typeof monthValRight === 'undefined' ||
+                    monthValRight?.index === this.scrollValueFirstDateMonth.length - 1) {
+                    this.shouldArrowRightDisable = true;
+                }
+                else {
+                    this.shouldArrowRightDisable = false;
+                }
+                // left
+                const monthValLeft = this.scrollValueFirstDateMonth?.find((res) => res.date === this.currentMonthTitleDisplay);
+                if (typeof monthValLeft === 'undefined' || monthValLeft?.index === 0) {
+                    this.shouldArrowLeftDisable = true;
+                }
+                else {
+                    this.shouldArrowLeftDisable = false;
+                }
+            }, 250);
         }
         //
         const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
@@ -2575,12 +2683,20 @@ __decorate([
 ], ShiftSchedule.prototype, "dividerTop", void 0);
 __decorate([
     state(),
+    __metadata("design:type", Boolean)
+], ShiftSchedule.prototype, "shouldArrowLeftDisable", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Boolean)
+], ShiftSchedule.prototype, "shouldArrowRightDisable", void 0);
+__decorate([
+    state(),
     __metadata("design:type", String)
 ], ShiftSchedule.prototype, "currentMonthTitleDisplay", void 0);
 __decorate([
     state(),
     __metadata("design:type", Boolean)
-], ShiftSchedule.prototype, "shouldAllowedWeekOffSelect", void 0);
+], ShiftSchedule.prototype, "shouldNotAllowedWeekOffSelect", void 0);
 ShiftSchedule = __decorate([
     customElement('cx-shift-schedule')
 ], ShiftSchedule);

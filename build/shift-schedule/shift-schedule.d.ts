@@ -90,6 +90,8 @@ export declare class ShiftSchedule extends LitElement {
     isRemoveMode: boolean;
     dividerTop: number;
     private monthTitleNav?;
+    shouldArrowLeftDisable?: boolean;
+    shouldArrowRightDisable?: boolean;
     currentMonthTitleDisplay?: string;
     render(): TemplateResult<1>;
     managerHoverUser(indexUser: number, e: MouseEvent, practitioner: SchedulePractitionerEntity): void;
@@ -172,6 +174,7 @@ export declare class ShiftSchedule extends LitElement {
         request?: SrShiftPlan;
         event?: PointerEvent;
     }): TemplateResult<1>;
+    shakePopover(): void;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
         practitioner: SchedulePractitionerEntity;
@@ -199,9 +202,11 @@ export declare class ShiftSchedule extends LitElement {
     convertDateToString(date: Date): string;
     private setTableEgdeLine;
     private moveUserToFirstArray;
-    private shouldAllowedWeekOffSelect?;
+    private shouldNotAllowedWeekOffSelect?;
     private scrollValueFirstDateMonth?;
+    isSameMonth(date1: string, date2: string): boolean;
     shouldScrollErrorTarget: boolean;
+    initialScroll: boolean;
     updated(changedProp: Map<string, unknown>): void;
     private setVacDayOff;
     private maxDayOffLength;

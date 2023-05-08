@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@cortex-ui/core@^0.0.253":
+"@cortex-ui/core@0.0.253":
   version "0.0.253"
   resolved "https://registry.yarnpkg.com/@cortex-ui/core/-/core-0.0.253.tgz#a57afcfaae38974439ad8f36b03e90817565247c"
   integrity sha512-642noN8XnnWD9NK/ipEtIIYsp03k5OAXPsr4BLVEVxfA/zdAzkM1KtI8AnZ7zH4u+Ng/VN56vkgr7Dhs2JKoVg==
