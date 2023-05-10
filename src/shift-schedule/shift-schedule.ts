@@ -44,6 +44,7 @@ import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import '@lit-labs/virtualizer';
 import { CXModal } from '../jsx';
+import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name'
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -211,7 +212,7 @@ export class ShiftSchedule extends LitElement {
     if (_changedProperties.has('currentMonthTitleDisplay')) return;
     if (_changedProperties.has('userHoverIndex')) return;
     if (_changedProperties.has('userSelectedIndex')) return;
-    
+
     if (this.tableWrapperRef.value) {
       const tableRect = this.tableWrapperRef.value.getBoundingClientRect();
       const width = tableRect.width;
@@ -296,8 +297,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -734,7 +735,7 @@ export class ShiftSchedule extends LitElement {
                             @mouseenter="${this.viewerRole === 'manager'
                               ? (e: MouseEvent) => this.managerHoverUser(indexUser, e, practitioner)
                               : null}"
-                            style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
+                            style="cursor:${this.requestSelected ? 'pointer' : 'default'};z-index:2"
                             min-w="260"
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
@@ -1764,8 +1765,9 @@ export class ShiftSchedule extends LitElement {
   private generateDayOffValue?: string[];
   saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity) {
     const disabledDates = this.disableDates
-      ? this.disableDates?.flatMap((res) => res.date)
+      ? Object.keys(this.disableDateArranged)
       : undefined;
+
     // prepare dayOff
     if (e.detail.endDate && this.requestSelected?.abbr === 'off') {
       const initialDayOFfExist =

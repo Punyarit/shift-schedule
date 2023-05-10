@@ -330,8 +330,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         if (this.currentPopoverRef) {
@@ -717,7 +717,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             @mouseenter="${this.viewerRole === 'manager'
                 ? (e) => this.managerHoverUser(indexUser, e, practitioner)
                 : null}"
-                            style="cursor:${this.requestSelected ? 'pointer' : 'default'}"
+                            style="cursor:${this.requestSelected ? 'pointer' : 'default'};z-index:2"
                             min-w="260"
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
@@ -1458,7 +1458,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     saveDatepicker(e, practitioner) {
         const disabledDates = this.disableDates
-            ? this.disableDates?.flatMap((res) => res.date)
+            ? Object.keys(this.disableDateArranged)
             : undefined;
         // prepare dayOff
         if (e.detail.endDate && this.requestSelected?.abbr === 'off') {
