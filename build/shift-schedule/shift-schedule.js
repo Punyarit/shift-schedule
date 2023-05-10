@@ -74,6 +74,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         this.holidayWithKeyMap = {};
         this.isRemoveMode = false;
         this.dividerTop = 0;
+        this.startFocusWithViewMode = false;
         this.saveShiftPlanDatePicker = (practitioner, dateString, ceillId, remark, type) => {
             if (!this.datepickerData?.startDate && !this.datepickerData?.endDate) {
                 this.datepickerData = {
@@ -253,6 +254,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             return;
         if (_changedProperties.has('userHoverIndex'))
             return;
+        if (_changedProperties.has('userSelectedIndex'))
+            return;
         if (this.tableWrapperRef.value) {
             const tableRect = this.tableWrapperRef.value.getBoundingClientRect();
             const width = tableRect.width;
@@ -327,8 +330,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         if (this.currentPopoverRef) {
@@ -342,6 +345,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     render() {
         return html `
       <style>
+        cx-shift-schedule {
+          width: 100%;
+          display: block;
+        }
         .error-day-request {
           border: 2px solid #f3655c !important;
         }
@@ -386,7 +393,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
 
         .lit-virtualizer {
-          overflow: overlay;
+          overflow-x: scroll;
+          overflow-y: overlay;
         }
 
         /*  */
@@ -428,7 +436,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
 
         .focus-divider {
+          position: relative;
+          z-index: 1;
           border-bottom: 2px solid var(--primary-500) !important;
+          transition: border-bottom 0.25s ease;
         }
 
         .user-border-focus {
@@ -693,6 +704,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                           ui="targetUser: ${targetUser ? 'order-first' : ''}"
                           @click="${() => {
                 if (this.mode === 'view') {
+                    if (!this.startFocusWithViewMode) {
+                        this.startFocusWithViewMode = true;
+                    }
+                    this.userSelectedIndex = indexUser;
                     this.dispatchEvent(new CustomEvent('focus-request', {
                         detail: { practitioner: practitioner },
                     }));
@@ -707,7 +722,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&
-                    this.requestSelected)
+                    this.requestSelected) ||
+                (this.mode === 'view' &&
+                    indexUser === this.userSelectedIndex &&
+                    this.startFocusWithViewMode)
                 ? 'focus-divider'
                 : ''}"
                             @click="${() => {
@@ -792,7 +810,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
                                 indexUser === this.userSelectedIndex &&
-                                this.requestSelected)
+                                this.requestSelected) ||
+                            (this.mode === 'view' &&
+                                indexUser === this.userSelectedIndex &&
+                                this.startFocusWithViewMode)
                             ? 'focus-divider'
                             : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
                                       <c-box
@@ -2731,6 +2752,10 @@ __decorate([
     state(),
     __metadata("design:type", String)
 ], ShiftSchedule.prototype, "currentMonthTitleDisplay", void 0);
+__decorate([
+    state(),
+    __metadata("design:type", Object)
+], ShiftSchedule.prototype, "startFocusWithViewMode", void 0);
 __decorate([
     state(),
     __metadata("design:type", Boolean)

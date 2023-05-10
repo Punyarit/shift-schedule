@@ -93,6 +93,7 @@ export declare class ShiftSchedule extends LitElement {
     shouldArrowLeftDisable?: boolean;
     shouldArrowRightDisable?: boolean;
     currentMonthTitleDisplay?: string;
+    startFocusWithViewMode: boolean;
     render(): TemplateResult<1>;
     managerHoverUser(indexUser: number, e: MouseEvent, practitioner: SchedulePractitionerEntity): void;
     sentRemoveEvent(): void;
