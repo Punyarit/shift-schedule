@@ -207,8 +207,15 @@ export class ShiftSchedule extends LitElement {
         new Date((this.scheduleData as SchedulingData)?.endDate!)
       );
     }
-
-    super.willUpdate(_changedProperties);
+    if (_changedProperties.has('shouldArrowLeftDisable')) return;
+    if (_changedProperties.has('currentMonthTitleDisplay')) return;
+    if (_changedProperties.has('userHoverIndex')) return;
+    if (this.tableWrapperRef.value) {
+      const tableRect = this.tableWrapperRef.value.getBoundingClientRect();
+      const width = tableRect.width;
+      this.style.setProperty('--table-width', `${width}px`);
+      super.willUpdate(_changedProperties);
+    }
   }
 
   dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions) {
@@ -370,7 +377,7 @@ export class ShiftSchedule extends LitElement {
         }
 
         .lit-virtualizer {
-          overflow: auto;
+          overflow: overlay;
         }
 
         /*  */
@@ -861,7 +868,7 @@ export class ShiftSchedule extends LitElement {
                                               indexUser
                                             )
                                           : semSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
+                                          ? this.renderDayOffPlanSaved(
                                               semSaved?.request?.[dateString],
                                               'sem',
                                               practitioner,
@@ -869,7 +876,7 @@ export class ShiftSchedule extends LitElement {
                                               indexUser
                                             )
                                           : offSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
+                                          ? this.renderDayOffPlanSaved(
                                               offSaved?.request?.[dateString],
                                               'off',
                                               practitioner,
@@ -877,7 +884,7 @@ export class ShiftSchedule extends LitElement {
                                               indexUser
                                             )
                                           : vacSaved?.request?.[dateString]
-                                          ? this.renderShiftPlanSaved(
+                                          ? this.renderDayOffPlanSaved(
                                               vacSaved?.request?.[dateString],
                                               'vac',
                                               practitioner,
@@ -1076,7 +1083,6 @@ export class ShiftSchedule extends LitElement {
     date?: Date,
     indexUser?: number
   ): TemplateResult {
-    console.log(practitioner, 'practitioner');
     return html`<c-box h-full w-full p-4 border-box slot="host">
       <c-box
         style="${(this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
@@ -1315,7 +1321,7 @@ export class ShiftSchedule extends LitElement {
     return this.requestTypes?.find((res) => res.abbr === abbr) as RequestType;
   }
 
-  renderShiftPlanHost(
+  renderDayOffHost(
     data: { dateString?: string; remark?: string; initial?: boolean },
     type: RequestType['abbr']
   ) {
@@ -1340,17 +1346,24 @@ export class ShiftSchedule extends LitElement {
         </c-box>`}`;
   }
 
-  renderShiftPlanSaved(
+  renderDayOffPlanSaved(
     data: { dateString?: string; remark?: string; initial?: boolean },
     type: RequestType['abbr'],
     practitioner: SchedulePractitionerEntity,
     date: Date,
-    indexUser: number
+    indexUser: number,
+    cancel?: string
   ) {
     const cellId = `sem-saved-shift-cell-${indexUser}`;
     const checkWeekOffDisabled =
       this.shouldNotAllowedWeekOffSelect && this.requestSelected?.abbr === 'woff';
-    return html`<c-box p-4 border-box h-full w-full slot="host" shift-type="${type}-saved">
+    return html`<c-box
+      p="${cancel ? '0' : '4'}"
+      border-box
+      h-full
+      w-full
+      slot="host"
+      shift-type="${type}-saved">
       <c-box
         id="${cellId}-${data.dateString}"
         style="pointer-events:${checkWeekOffDisabled ||
@@ -1372,7 +1385,7 @@ export class ShiftSchedule extends LitElement {
         h-full
         w-full
         round-6
-        p-6
+        p="${cancel ? '0' : '6'}"
         border-box
         @click="${this.isRemoveMode
           ? () => this.removeShiftDatePicker(data, type, practitioner)
@@ -1394,15 +1407,27 @@ export class ShiftSchedule extends LitElement {
                   cellId,
                   type,
                   event: e,
+                  indexUser,
+                  remark: data.remark,
                 })!,
-                this.renderShiftPlanHost(data, type)
+                this.renderDayOffHost(data, type)
               );
+
+              this.shiftDatepickerCache[type as any] = {
+                dateString: data.dateString as any,
+                remark: data.remark as any,
+                initial: false,
+                requestType: type as any,
+                practitioner,
+                date,
+                indexUser,
+              };
             }
           : () => {
               this.saveWoffRequest(date, practitioner, data.dateString!);
               this.requestUpdate();
             }}">
-        ${this.renderShiftPlanHost(data, type)}
+        ${this.renderDayOffHost(data, type)}
       </c-box>
     </c-box>`;
   }
@@ -1573,6 +1598,7 @@ export class ShiftSchedule extends LitElement {
       title: title[request.requestType.abbr as 'sem' | 'off' | 'vac'],
       type: request.requestType.abbr,
     };
+
     switch (request.requestType.abbr) {
       case 'sr':
         return html`
@@ -1648,17 +1674,6 @@ export class ShiftSchedule extends LitElement {
       case 'sem':
       case 'vac':
       case 'off':
-        this.shiftDatepickerCache[request.requestType.abbr] = {
-          dateString,
-          remark: request.remark,
-          initial: true,
-
-          requestType: request.requestType.abbr,
-          practitioner,
-          date,
-          indexUser,
-        };
-
         return html`
           <c-box
             shift-type="${request.requestType.abbr}-init"
@@ -1666,7 +1681,7 @@ export class ShiftSchedule extends LitElement {
             h-full
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
-              ? (e: PointerEvent) =>
+              ? (e: PointerEvent) => {
                   this.appendPopover(
                     request.requestType.abbr,
                     cellId,
@@ -1677,7 +1692,7 @@ export class ShiftSchedule extends LitElement {
                       practitioner,
                     },
                     this.getPopoverByRequest({ ...popoverObj, event: e })!,
-                    this.renderShiftPlanSaved(
+                    this.renderDayOffPlanSaved(
                       {
                         dateString,
                         remark: request.remark,
@@ -1688,12 +1703,23 @@ export class ShiftSchedule extends LitElement {
                       date,
                       indexUser
                     )
-                  )
+                  );
+
+                  this.shiftDatepickerCache[request.requestType.abbr] = {
+                    dateString,
+                    remark: request.remark,
+                    initial: true,
+                    requestType: request.requestType.abbr as any,
+                    practitioner,
+                    date,
+                    indexUser,
+                  };
+                }
               : () => {
                   this.saveWoffRequest(date, practitioner, dateString);
                   this.requestUpdate();
                 }}">
-            ${this.renderShiftPlanSaved(
+            ${this.renderDayOffPlanSaved(
               {
                 dateString,
                 remark: request.remark,
@@ -2092,13 +2118,14 @@ export class ShiftSchedule extends LitElement {
 
     if (ceillId) {
       const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
+
       setTimeout(() => {
         render(
-          this.renderShiftPlanHost(
+          this.renderDayOffHost(
             {
               dateString,
               initial: undefined,
-              remark,
+              remark: this.remarkCache,
             },
             this.requestSelected?.abbr!
           ),
@@ -2211,14 +2238,15 @@ export class ShiftSchedule extends LitElement {
                   >ยกเลิก</cx-button
                 >
                 <cx-button
-                  @click="${() =>
+                  @click="${() => {
                     this.saveShiftPlanDatePicker(
                       data.practitioner,
                       data.dateString,
                       data.cellId,
                       data.remark,
                       data.type
-                    )}"
+                    );
+                  }}"
                   .var="${{ width: 'size-0' } as CXButton.Var}"
                   >บันทึก</cx-button
                 >
@@ -2256,6 +2284,7 @@ export class ShiftSchedule extends LitElement {
                 if (input.value.length > 10) {
                   input.value = input.value.slice(0, 10);
                 }
+                this.remarkCache = input.value;
               }}"
               value="${shouldInitValue ? inputExistValue : ''}"
               ${ref(this.remarkRef)}
@@ -2267,6 +2296,8 @@ export class ShiftSchedule extends LitElement {
       </c-box>
     `;
   }
+
+  private remarkCache?: string;
 
   shakePopover() {
     const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
@@ -2427,7 +2458,14 @@ export class ShiftSchedule extends LitElement {
                   dateString,
                   indexUser,
                 },
-                this.getPopoverByRequest({ date, practitioner, cellId, dateString, event: e })!,
+                this.getPopoverByRequest({
+                  date,
+                  practitioner,
+                  cellId,
+                  dateString,
+                  event: e,
+                  indexUser,
+                })!,
 
                 this.renderEmptyBox(
                   date,
@@ -2653,7 +2691,7 @@ export class ShiftSchedule extends LitElement {
       case 'vac':
         setTimeout(() => {
           render(
-            this.renderShiftPlanSaved(
+            this.renderDayOffPlanSaved(
               {
                 dateString: this.shiftDatepickerCache[type].dateString,
                 remark: this.shiftDatepickerCache[type].remark,
@@ -2662,7 +2700,8 @@ export class ShiftSchedule extends LitElement {
               this.shiftDatepickerCache[type].requestType,
               this.shiftDatepickerCache[type].practitioner,
               this.shiftDatepickerCache[type].date,
-              this.shiftDatepickerCache[type].indexUser
+              this.shiftDatepickerCache[type].indexUser,
+              'cancel'
             ),
             boxTarget
           );
@@ -3214,12 +3253,14 @@ export class ShiftSchedule extends LitElement {
   shouldScrollErrorTarget = false;
   initialScroll = false;
   updated(changedProp: Map<string, unknown>) {
+    if (changedProp.has('userHoverIndex')) return;
     const tableWrapper = this.querySelector('.lit-virtualizer');
     const errorDayRequest = this.querySelector('.error-day-request');
 
     if (changedProp.has('errorDayRequest')) {
       this.shouldScrollErrorTarget = true;
     }
+
     if (errorDayRequest && this.shouldScrollErrorTarget) {
       const left = tableWrapper?.getBoundingClientRect().left;
       setTimeout(() => {
@@ -3286,10 +3327,6 @@ export class ShiftSchedule extends LitElement {
 
     //
     if (this.tableWrapperRef.value) {
-      const tableRect = this.tableWrapperRef.value.getBoundingClientRect();
-      const width = tableRect.width;
-      this.style.setProperty('--table-width', `${width}px`);
-
       const tableHeaderWrapper = this.querySelector('#table-header-wrapper');
       const litVirtualizer = this.querySelector('.lit-virtualizer');
 

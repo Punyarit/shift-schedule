@@ -121,16 +121,16 @@ export declare class ShiftSchedule extends LitElement {
         initial?: boolean;
     }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): void;
     findRequestType(abbr: string): RequestType;
-    renderShiftPlanHost(data: {
+    renderDayOffHost(data: {
         dateString?: string;
         remark?: string;
         initial?: boolean;
     }, type: RequestType['abbr']): TemplateResult<1>;
-    renderShiftPlanSaved(data: {
+    renderDayOffPlanSaved(data: {
         dateString?: string;
         remark?: string;
         initial?: boolean;
-    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1>;
+    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity, date: Date, indexUser: number, cancel?: string): TemplateResult<1>;
     removeInitialSr(practitioner: SchedulePractitionerEntity, dateString: string): void;
     goToMonth(type: 'next' | 'previous'): void;
     renderSrInitialHost(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, dateString: string): TemplateResult<1>;
@@ -174,6 +174,7 @@ export declare class ShiftSchedule extends LitElement {
         request?: SrShiftPlan;
         event?: PointerEvent;
     }): TemplateResult<1>;
+    private remarkCache?;
     shakePopover(): void;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
