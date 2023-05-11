@@ -216,17 +216,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const duplicates = arrayDate1Str.filter((date) => arrayDate2Str.includes(date));
             return duplicates;
         };
-        this.setTableEgdeLine = () => {
-            const element = this.tableWrapperRef.value;
-            element.firstElementChild?.clientWidth;
-            const hasScrollX = element.scrollWidth > element?.clientWidth;
-            if (hasScrollX) {
-                this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
-            }
-            else {
-                this.tableWrapperRef.value?.removeAttribute('ui');
-            }
-        };
         this.shouldScrollErrorTarget = false;
         this.initialScroll = false;
         this.maxDayOffLength = {};
@@ -439,7 +428,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           position: relative;
           z-index: 1;
           border-bottom: 2px solid var(--primary-500) !important;
-          transition: border-bottom 0.25s ease;
+          transition: border-bottom 0.15s ease;
         }
 
         .user-border-focus {
@@ -744,7 +733,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&
-                    this.requestSelected)
+                    this.requestSelected) || (this.mode === 'view' &&
+                indexUser === this.userSelectedIndex &&
+                this.startFocusWithViewMode)
                 ? 'user-border-focus'
                 : ''}">
                                 <c-box
@@ -1457,9 +1448,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
     }
     saveDatepicker(e, practitioner) {
-        const disabledDates = this.disableDates
-            ? Object.keys(this.disableDateArranged)
-            : undefined;
+        const disabledDates = this.disableDates ? Object.keys(this.disableDateArranged) : undefined;
         // prepare dayOff
         if (e.detail.endDate && this.requestSelected?.abbr === 'off') {
             const initialDayOFfExist = practitioner.schedulePractitionerRequest
@@ -2208,12 +2197,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     `;
     }
-    firstUpdated() {
-        window.addEventListener('resize', this.setTableEgdeLine);
-        setTimeout(() => {
-            this.setTableEgdeLine();
-        }, 250);
-    }
+    // firstUpdated(): void {
+    //   window.addEventListener('resize', this.setTableEgdeLine);
+    //   setTimeout(() => {
+    //     this.setTableEgdeLine();
+    //   }, 250);
+    // }
     resetRequestSelect() {
         this.requestSelected = undefined;
         this.isRemoveMode = false;
@@ -2298,6 +2287,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
+    // private setTableEgdeLine = () => {
+    //   const element = this.tableWrapperRef.value!;
+    //   const hasScrollX = element.scrollWidth > element?.clientWidth!;
+    //   if (hasScrollX) {
+    //     this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
+    //   } else {
+    //     this.tableWrapperRef.value?.removeAttribute('ui');
+    //   }
+    // };
     moveUserToFirstArray() {
         const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => {
             return obj.practitionerId === this.practitionerId;

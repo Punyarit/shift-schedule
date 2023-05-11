@@ -44,7 +44,7 @@ import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import '@lit-labs/virtualizer';
 import { CXModal } from '../jsx';
-import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name'
+import { CxDatepickerName } from '@cortex-ui/core/cx/components/datepicker/types/datepicker.name';
 
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
@@ -433,7 +433,7 @@ export class ShiftSchedule extends LitElement {
           position: relative;
           z-index: 1;
           border-bottom: 2px solid var(--primary-500) !important;
-          transition: border-bottom 0.25s ease;
+          transition: border-bottom 0.15s ease;
         }
 
         .user-border-focus {
@@ -764,7 +764,9 @@ export class ShiftSchedule extends LitElement {
                                 class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                                 (this.viewerRole === 'manager' &&
                                   indexUser === this.userSelectedIndex &&
-                                  this.requestSelected)
+                                  this.requestSelected) || (this.mode === 'view' &&
+                                  indexUser === this.userSelectedIndex &&
+                                  this.startFocusWithViewMode)
                                   ? 'user-border-focus'
                                   : ''}">
                                 <c-box
@@ -1764,9 +1766,7 @@ export class ShiftSchedule extends LitElement {
 
   private generateDayOffValue?: string[];
   saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity) {
-    const disabledDates = this.disableDates
-      ? Object.keys(this.disableDateArranged)
-      : undefined;
+    const disabledDates = this.disableDates ? Object.keys(this.disableDateArranged) : undefined;
 
     // prepare dayOff
     if (e.detail.endDate && this.requestSelected?.abbr === 'off') {
@@ -3092,12 +3092,12 @@ export class ShiftSchedule extends LitElement {
     `;
   }
 
-  firstUpdated(): void {
-    window.addEventListener('resize', this.setTableEgdeLine);
-    setTimeout(() => {
-      this.setTableEgdeLine();
-    }, 250);
-  }
+  // firstUpdated(): void {
+  //   window.addEventListener('resize', this.setTableEgdeLine);
+  //   setTimeout(() => {
+  //     this.setTableEgdeLine();
+  //   }, 250);
+  // }
 
   resetRequestSelect() {
     this.requestSelected = undefined;
@@ -3234,17 +3234,16 @@ export class ShiftSchedule extends LitElement {
     return `${year}-${month}-${day}`;
   }
 
-  private setTableEgdeLine = () => {
-    const element = this.tableWrapperRef.value!;
-    element.firstElementChild?.clientWidth;
-    const hasScrollX = element.scrollWidth > element?.clientWidth!;
+  // private setTableEgdeLine = () => {
+  //   const element = this.tableWrapperRef.value!;
+  //   const hasScrollX = element.scrollWidth > element?.clientWidth!;
 
-    if (hasScrollX) {
-      this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
-    } else {
-      this.tableWrapperRef.value?.removeAttribute('ui');
-    }
-  };
+  //   if (hasScrollX) {
+  //     this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
+  //   } else {
+  //     this.tableWrapperRef.value?.removeAttribute('ui');
+  //   }
+  // };
 
   private moveUserToFirstArray() {
     const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => {

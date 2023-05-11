@@ -194,7 +194,6 @@ export declare class ShiftSchedule extends LitElement {
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): void;
     renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string, indexUser?: number): TemplateResult<1>;
-    firstUpdated(): void;
     resetRequestSelect(): void;
     findDuplicationDate: (arrayDate1: (string | Date)[], arrayDate2: (string | Date)[]) => string[];
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
@@ -202,7 +201,6 @@ export declare class ShiftSchedule extends LitElement {
     };
     setColorRequestType(requestTime: DayPart): string;
     convertDateToString(date: Date): string;
-    private setTableEgdeLine;
     private moveUserToFirstArray;
     private shouldNotAllowedWeekOffSelect?;
     private scrollValueFirstDateMonth?;
