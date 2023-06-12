@@ -296,8 +296,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -580,10 +580,12 @@ export class ShiftSchedule extends LitElement {
                         this.shouldArrowLeftDisable ? null : this.goToMonth('previous')}"></c-box>
 
                     <c-box w-90 flex justify-center tx-12 tx-gray-600>
-                      ${this.dateFormat(this.currentMonthTitleDisplay, {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
+                      ${this.currentMonthTitleDisplay
+                        ? new Intl.DateTimeFormat('th-TH', {
+                            month: 'long',
+                            year: 'numeric',
+                          }).format(new Date(this.currentMonthTitleDisplay))
+                        : undefined}
                     </c-box>
 
                     <c-box
@@ -621,10 +623,12 @@ export class ShiftSchedule extends LitElement {
                                 <c-box
                                   ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                                     .tableLineUI}">
-                                  ${this.dateFormat(dateBet.currentMonth, {
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })}
+                                  ${dateBet.currentMonth
+                                    ? new Intl.DateTimeFormat('th-TH', {
+                                        month: 'short',
+                                        year: 'numeric',
+                                      }).format(new Date(dateBet.currentMonth))
+                                    : undefined}
                                 </c-box>
 
                                 <c-box flex>
@@ -659,9 +663,11 @@ export class ShiftSchedule extends LitElement {
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
                                         .weekDayUI}, ${isWeekend}">
                                       <c-box tx-12 tx-gray-500>
-                                        ${this.dateFormat(date, {
-                                          weekday: 'short',
-                                        })}
+                                        ${date
+                                          ? new Intl.DateTimeFormat('th-TH', {
+                                              weekday: 'short',
+                                            }).format(new Date(date))
+                                          : undefined}
                                       </c-box>
                                       <c-box
                                         tx-14
@@ -672,9 +678,11 @@ export class ShiftSchedule extends LitElement {
                                           : 'var(--gray-800)'}; font-weight: ${isHoliday
                                           ? '600'
                                           : '400'}">
-                                        ${this.dateFormat(date, {
-                                          day: 'numeric',
-                                        })}
+                                        ${date
+                                          ? new Intl.DateTimeFormat('th-TH', {
+                                              day: 'numeric',
+                                            }).format(new Date(date))
+                                          : undefined}
                                       </c-box>
                                     </c-box>`;
                                   })}
@@ -1818,13 +1826,11 @@ export class ShiftSchedule extends LitElement {
         practitioner.schedulePractitionerRequest
           ?.filter((res) => res?.requestType.abbr === 'vac')
           .map((res) => res?.requestDate) || [];
-      console.log('shift-schedule.js |initialDayOFfExist| = ', initialVacOFfExist);
       // const initialDayOFfExist: string[] = [];
       let vacOffSavedExist: string[] = Object.keys(
         this.shiftVacRequestSaved?.[practitioner.id]?.request || {}
       );
 
-     
       let vacOff: number;
 
       if (typeof this.vacDayOff[practitioner.practitioner.id] === 'number') {
@@ -1835,7 +1841,6 @@ export class ShiftSchedule extends LitElement {
         );
         vacOff = findVacation!.vacation;
       }
-      console.log('shift-schedule.js |vacOff| = ',vacOff);
       const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
       if (dayBetweenStartEnd > vacOff) {
         // const rangeDayOff = this.dateRangeIntersect(
@@ -1844,7 +1849,6 @@ export class ShiftSchedule extends LitElement {
         //   vacOffSavedExist
         // );
         // const dayOffUse = (rangeDayOff?.length || 0) + vacOff;
-        console.log('shift-schedule.js |vacOffSavedExist| = ', vacOffSavedExist)
         this.generateDayOffValue = this.generateDayOff(
           e.detail.startDate!,
           e.detail.endDate,
