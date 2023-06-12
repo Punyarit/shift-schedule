@@ -194,6 +194,7 @@ export declare class ShiftSchedule extends LitElement {
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): void;
     saveWoffRequest(date: Date, practitioner: SchedulePractitionerEntity, dateString: string): void;
     renderEmptyBox(date: Date, state?: 'display' | 'select', type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string, indexUser?: number): TemplateResult<1>;
+    countSameDates(dateA: string[], dateB: string[]): number;
     resetRequestSelect(): void;
     findDuplicationDate: (arrayDate1: (string | Date)[], arrayDate2: (string | Date)[]) => string[];
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
@@ -213,8 +214,9 @@ export declare class ShiftSchedule extends LitElement {
     private vacDayOff;
     private currentScrollX;
     getDateDisabled(holidays: any, startDate: any, endDate: any): {};
+    dateRangeIntersect(startDate: Date, endDate: Date, dateSameCheck: string[]): string[];
     formatDate(date: Date): string;
-    generateDayOff(startDate: Date, endDate: Date, dayOffExist: string[], dayOff: number, disabledDate?: string[]): string[];
+    generateDayOff(startDate: Date, endDate: Date, dayOffExist: string[], dayOff: number, disabledDate?: string[], initialDate?: string[]): string[];
     getHolidayObject(inputArray: HolidayObject[]): {
         [key: string]: HolidayObject;
     };

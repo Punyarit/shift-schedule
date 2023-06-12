@@ -113,26 +113,53 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     }));
                     break;
                 case 'off':
+                    const checkOffSaved = Object.keys(this.shiftOffRequestSaved[practitioner.id]?.request || {}).includes(dateString);
+                    const savedArr = Object.keys(this.shiftOffRequestSaved[practitioner.id]?.request || {});
+                    const savedOffCOunt = this.countSameDates(this.generateDayOffValue || [], savedArr);
+                    console.log('shift-schedule.js |savedOffCOunt| = ', savedOffCOunt);
+                    if (savedOffCOunt) {
+                        practitioner.practitioner.leave.dayOff += savedOffCOunt;
+                    }
                     if (!this.shiftOffRequestSaved[practitioner.id]) {
                         this.shiftOffRequestSaved[practitioner.id] = {};
                         this.shiftOffRequestSaved[practitioner.id].request = {};
                     }
+                    const cloneOffResultValue = structuredClone(this.shiftOffRequestSaved[practitioner.id].request);
                     this.shiftOffRequestSaved[practitioner.id] = {
                         request: {
-                            ...this.shiftOffRequestSaved[practitioner.id].request,
+                            ...cloneOffResultValue,
                             ...dataDate,
                         },
                         practitioner,
                     };
-                    if (this.generateDayOffValue) {
+                    const initialDayOFfExist = practitioner.schedulePractitionerRequest
+                        ?.filter((res) => res?.requestType.abbr === 'off')
+                        .map((res) => res?.requestDate) || [];
+                    if (!this.generateDayOffValue) {
+                        if (!initialDayOFfExist.includes(dateString) && !checkOffSaved) {
+                            practitioner.practitioner.leave.dayOff -= 1;
+                        }
+                    }
+                    else if (this.generateDayOffValue) {
+                        console.log('shift-schedule.js |practitioner.practitioner.leave.dayOff| = ', practitioner.practitioner.leave.dayOff);
+                        console.log('shift-schedule.js |this.generateDayOffValue| = ', this.generateDayOffValue);
+                        const initialCount = this.countSameDates(this.generateDayOffValue, initialDayOFfExist);
+                        if (initialCount) {
+                            practitioner.practitioner.leave.dayOff += initialCount;
+                        }
+                        practitioner.practitioner.leave.dayOff -= this.generateDayOffValue.length;
                         const filteredDateOff = this.filterDateDataUse(this.shiftOffRequestSaved[practitioner.id].request, this.generateDayOffValue);
-                        this.shiftOffRequestSaved[practitioner.id].request = filteredDateOff;
+                        this.shiftOffRequestSaved[practitioner.id].request = {
+                            ...cloneOffResultValue,
+                            ...filteredDateOff,
+                        };
                     }
                     else if (this.disableDates) {
                         const disabledDates = this.disableDates?.flatMap((res) => res.date);
                         const filteredDateOff = this.filterDateDataDisabled(this.shiftOffRequestSaved[practitioner.id].request, disabledDates);
                         this.shiftOffRequestSaved[practitioner.id].request = filteredDateOff;
                     }
+                    console.log('shift-schedule.js |practitioner.practitioner.leave.dayOff | = ', practitioner.practitioner.leave.dayOff);
                     this.dispatchEvent(new CustomEvent('save-off', {
                         detail: this.shiftOffRequestSaved,
                     }));
@@ -319,8 +346,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         if (this.currentPopoverRef) {
@@ -733,9 +760,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                 class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&
-                    this.requestSelected) || (this.mode === 'view' &&
-                indexUser === this.userSelectedIndex &&
-                this.startFocusWithViewMode)
+                    this.requestSelected) ||
+                (this.mode === 'view' &&
+                    indexUser === this.userSelectedIndex &&
+                    this.startFocusWithViewMode)
                 ? 'user-border-focus'
                 : ''}">
                                 <c-box
@@ -818,9 +846,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                           ${(this.requestSelected?.abbr === 'woff' &&
                             this.shouldNotAllowedWeekOffSelect) ||
                             (this.requestSelected?.abbr === 'off' &&
-                                (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                                        practitioner?.practitioner?.leave?.dayOff)) ||
+                                practitioner?.practitioner?.leave?.dayOff === 0) ||
                             (this.requestSelected?.abbr === 'vac' &&
                                 (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
@@ -895,6 +921,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }));
     }
     removeWoffSaved(dateString, practitioner, data) {
+        if (this.viewerRole === 'staff' && this.practitionerId !== practitioner?.practitionerId)
+            return;
         if (this.isRemoveMode) {
             if (data?.initial) {
                 const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner?.id);
@@ -962,10 +990,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return html `<c-box h-full w-full p-4 border-box slot="host">
       <c-box
         style="${(this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
-            (this.requestSelected?.abbr === 'off' &&
-                (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                    this.maxDayOffLength?.[(practitioner?.practitioner).id]?.dayOff >=
-                        practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
             (this.requestSelected?.abbr === 'vac' &&
                 (this.vacDayOff?.[(practitioner?.practitioner).id] === 0 ||
                     this.maxDayOffLength?.[(practitioner?.practitioner).id]?.vacation >=
@@ -991,6 +1016,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     removeSrPlan(dateString, practitioner, removeMode) {
         if (this.isRemoveMode || removeMode) {
+            if (this.viewerRole === 'staff' && this.practitionerId !== practitioner.practitionerId)
+                return;
             delete this.shiftSrRequestSaved[practitioner.id].request[dateString];
             this.removeRequestSelected = this.findRequestType('sr');
             this.sentRemoveEvent();
@@ -999,10 +1026,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     }
     renderSrSavedHost(dateString, practitioner, planEntries) {
         const checkMaxLength = (this.requestSelected?.abbr === 'woff' && this.shouldNotAllowedWeekOffSelect) ||
-            (this.requestSelected?.abbr === 'off' &&
-                (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                        practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
             (this.requestSelected?.abbr === 'vac' &&
                 (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
@@ -1088,6 +1112,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     `;
     }
     removeShiftDatePicker(data, type, practitioner) {
+        if (this.viewerRole === 'staff' && this.practitionerId !== practitioner.practitionerId)
+            return;
         if (data?.initial && this.isRemoveMode) {
             const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner.id);
             if (typeof practitionerIndex === 'number') {
@@ -1108,6 +1134,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                     }));
                     delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
                         ?.schedulePractitionerRequest?.[requestIndex];
+                    if (type === 'off') {
+                        practitioner.practitioner.leave.dayOff += 1;
+                    }
                     this.requestUpdate();
                 }
             }
@@ -1123,6 +1152,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 if (type === 'off') {
                     delete this.shiftOffRequestSaved[practitioner.id].request[data.dateString];
                     this.removeRequestSelected = this.findRequestType('off');
+                    practitioner.practitioner.leave.dayOff += 1;
                     this.sentRemoveEvent();
                     this.requestUpdate();
                 }
@@ -1172,10 +1202,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <c-box
         id="${cellId}-${data.dateString}"
         style="pointer-events:${checkWeekOffDisabled ||
-            (this.requestSelected?.abbr === 'off' &&
-                (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                    this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                        practitioner?.practitioner?.leave?.dayOff)) ||
+            (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
             (this.requestSelected?.abbr === 'vac' &&
                 (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                     this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
@@ -1230,6 +1257,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
     </c-box>`;
     }
     removeInitialSr(practitioner, dateString) {
+        if (this.viewerRole === 'staff' && practitioner.practitionerId !== this.practitionerId)
+            return;
         if (!this.isRemoveMode)
             return;
         const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex((res) => res.id === practitioner.id);
@@ -1454,15 +1483,37 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             const initialDayOFfExist = practitioner.schedulePractitionerRequest
                 ?.filter((res) => res?.requestType.abbr === 'off')
                 .map((res) => res?.requestDate) || [];
+            // const initialDayOFfExist: string[] = [];
             let dayOffSavedExist = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
             let dayOff = practitioner.practitioner.leave.dayOff;
+            console.log('shift-schedule.js |saveDatepicker dayOff| = ', dayOff);
             const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
             if (dayBetweenStartEnd > dayOff) {
-                let uniqueDayOffExist = [
-                    ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
-                ];
-                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
+                const rangeDayOff = this.dateRangeIntersect(e.detail.startDate, e.detail.endDate, dayOffSavedExist);
+                console.log('shift-schedule.js |rangeDayOff| = ', rangeDayOff);
+                const dayOffUse = (rangeDayOff?.length || 0) + dayOff;
+                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, dayOffSavedExist, dayOff, disabledDates, initialDayOFfExist);
+                console.log('shift-schedule.js |this.generateDayOffValue| = ', this.generateDayOffValue);
                 e.detail.endDate = new Date(this.generateDayOffValue[this.generateDayOffValue.length - 1]);
+            }
+            else {
+                this.generateDayOffValue = getDateBetweenArrayDate(e.detail.startDate, e.detail.endDate)
+                    .map((res) => this.formatDate(res))
+                    .filter((res) => {
+                    if (this.disableDates) {
+                        let isDateExist = false;
+                        for (const dateVal of Object.keys(this.disableDateArranged)) {
+                            if (dateVal === res) {
+                                isDateExist = true;
+                                break;
+                            }
+                        }
+                        return !isDateExist;
+                    }
+                    else {
+                        return true;
+                    }
+                });
             }
         }
         // prepare vacation off
@@ -1472,13 +1523,10 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 .map((res) => res?.requestDate) || [];
             let dayOffSavedExist = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
             const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
-            let dayOff = Math.abs(15 - findVacation.vacation);
+            let dayOff = findVacation.vacation;
             const dayBetweenStartEnd = this.daysBetween(e.detail.startDate, e.detail.endDate) + 1;
             if (dayBetweenStartEnd > dayOff) {
-                const uniqueDayOffExist = [
-                    ...new Set([...dayOffSavedExist, ...initialDayOFfExist]),
-                ];
-                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, uniqueDayOffExist, dayOff, disabledDates);
+                this.generateDayOffValue = this.generateDayOff(e.detail.startDate, e.detail.endDate, dayOffSavedExist, dayOff, disabledDates, initialDayOFfExist);
                 e.detail.endDate = new Date(this.generateDayOffValue[this.generateDayOffValue.length - 1]);
             }
         }
@@ -1708,10 +1756,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.shakePopover();
             return;
         }
-        if ((this.requestSelected?.abbr === 'off' &&
-            (data.practitioner.practitioner.leave.dayOff === 0 ||
-                this.maxDayOffLength?.[data.practitioner.practitioner.id]?.dayOff >=
-                    data.practitioner?.practitioner?.leave?.dayOff)) ||
+        if ((this.requestSelected?.abbr === 'off' && data.practitioner.practitioner.leave.dayOff === 0) ||
             (this.requestSelected?.abbr === 'vac' &&
                 (this.vacDayOff?.[data.practitioner.practitioner.id] === 0 ||
                     this.maxDayOffLength?.[data.practitioner.practitioner.id]?.vacation >=
@@ -1789,9 +1834,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             w-full
             h-full
             style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
-                    (practitioner?.practitioner?.leave?.dayOff === 0 ||
-                        this.maxDayOffLength?.[practitioner.practitioner.id]?.dayOff >=
-                            practitioner?.practitioner?.leave?.dayOff)) ||
+                    practitioner?.practitioner?.leave?.dayOff === 0) ||
                     (this.requestSelected?.abbr === 'vac' &&
                         (this.vacDayOff?.[practitioner.practitioner.id] === 0 ||
                             this.maxDayOffLength?.[practitioner.practitioner.id]?.vacation >=
@@ -2197,6 +2240,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       </c-box>
     `;
     }
+    countSameDates(dateA, dateB) {
+        let setA = new Set(dateA);
+        let setB = new Set(dateB);
+        let intersection = new Set([...setA].filter((x) => setB.has(x)));
+        return intersection.size;
+    }
     // firstUpdated(): void {
     //   window.addEventListener('resize', this.setTableEgdeLine);
     //   setTimeout(() => {
@@ -2495,7 +2544,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 initialOff.length + saveVac.length;
             // cache initial value
             const findVacation = practitioner.practitioner.vacations.find((res) => res.year === new Date(this.currentTime).getFullYear());
-            this.vacDayOff[practitioner.practitioner.id] = 15 - findVacation.vacation;
+            this.vacDayOff[practitioner.practitioner.id] = findVacation.vacation;
             this.requestUpdate();
         }
     }
@@ -2553,24 +2602,40 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         });
         return result;
     }
+    dateRangeIntersect(startDate, endDate, dateSameCheck) {
+        const result = [];
+        const start = startDate.getTime();
+        const end = endDate.getTime();
+        for (let dateStr of dateSameCheck) {
+            const currentTime = new Date(dateStr).getTime();
+            if (currentTime >= start && currentTime <= end) {
+                result.push(dateStr);
+            }
+        }
+        return result;
+    }
     formatDate(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-    generateDayOff(startDate, endDate, dayOffExist, dayOff, disabledDate) {
-        const existingDaysOff = new Set(dayOffExist);
+    generateDayOff(startDate, endDate, dayOffExist, dayOff, disabledDate, initialDate) {
+        const existingDaysOff = new Set([...dayOffExist, ...initialDate]);
         const disabledDays = new Set(disabledDate);
-        const availableDays = [...dayOffExist];
-        while (dayOff > availableDays.length) {
-            for (let currentDate = new Date(startDate.getTime()); currentDate <= endDate && dayOff > availableDays.length; currentDate.setDate(currentDate.getDate() + 1)) {
+        const initialDays = new Set(initialDate);
+        let availableDays = [...Array.from(initialDays)];
+        while (dayOff > availableDays.length - Array.from(initialDays).length) {
+            for (let currentDate = new Date(startDate.getTime()); currentDate <= endDate && dayOff > availableDays.length - Array.from(initialDays).length; currentDate.setDate(currentDate.getDate() + 1)) {
                 const dateString = currentDate.getFullYear().toString().padStart(4, '0') +
                     '-' +
                     (currentDate.getMonth() + 1).toString().padStart(2, '0') +
                     '-' +
                     currentDate.getDate().toString().padStart(2, '0');
-                if (!existingDaysOff.has(dateString) &&
+                if (existingDaysOff.has(dateString) && !availableDays.includes(dateString)) {
+                    availableDays.push(dateString);
+                }
+                else if (!existingDaysOff.has(dateString) &&
                     !disabledDays.has(dateString) &&
                     currentDate >= startDate &&
                     currentDate <= endDate) {
