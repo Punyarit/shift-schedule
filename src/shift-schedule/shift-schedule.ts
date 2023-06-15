@@ -296,8 +296,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -347,6 +347,26 @@ export class ShiftSchedule extends LitElement {
         }
         .remove-btn:hover {
           background-color: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
+        }
+
+        cx-shift-schedule .user-title {
+          display: flex;
+          column-gap: 6px;
+          padding: 12px;
+          box-sizing: border-box;
+        }
+
+        cx-shift-schedule .table-line {
+          border: 1px solid var(--gray-300);
+          box-sizing: border-box;
+        }
+
+        cx-shift-schedule .title-sticky {
+          position: sticky;
+          top: 0;
+          left: 0;
+          background: white;
+          z-index: 99;
         }
 
         .shake-efx-popover {
@@ -500,6 +520,21 @@ export class ShiftSchedule extends LitElement {
         }
         .remove-btn-active:active {
           background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
+        }
+
+        cx-shift-schedule .gender-box {
+          position: absolute;
+          right: 0;
+          top: 26px;
+          font-size: 10px;
+          width: 16px;
+          height: 16px;
+          color: white;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 50%;
+          z-index: 1;
         }
       </style>
       <c-box relative overflow-hidden>
@@ -697,11 +732,10 @@ export class ShiftSchedule extends LitElement {
                 </c-box>
               </c-box>
 
-              <c-box
-                inline-flex
-                flex-col
+              <div
                 id="week-month-user"
-                style="height:${this.maxHeight}; width:var(--table-width)">
+                style="height:${this
+                  .maxHeight}; width:var(--table-width); display:inline-flex; flex-flow:column;">
                 <div class="lit-virtualizer">
                   ${(this.scheduleData as SchedulingData)?.schedulePractitioner?.map(
                     (practitioner, indexUser) => {
@@ -721,10 +755,9 @@ export class ShiftSchedule extends LitElement {
                       );
                       const targetUser = practitioner?.practitionerId === this.practitionerId!;
                       return html`
-                        <c-box
-                          flex
-                          style="width: fit-content;"
-                          ui="targetUser: ${targetUser ? 'order-first' : ''}"
+                        <div
+                          class="${targetUser && this.viewerRole === 'staff' ? 'title-sticky' : ''}"
+                          style="width: fit-content;display:flex;"
                           @click="${() => {
                             if (this.mode === 'view') {
                               if (!this.startFocusWithViewMode) {
@@ -738,12 +771,13 @@ export class ShiftSchedule extends LitElement {
                               );
                             }
                           }}">
-                          <c-box
+                          <div
                             @mouseenter="${this.viewerRole === 'manager'
                               ? (e: MouseEvent) => this.managerHoverUser(indexUser, e, practitioner)
                               : null}"
-                            style="cursor:${this.requestSelected ? 'pointer' : 'default'};z-index:2"
-                            min-w="260"
+                            style="cursor:${this.requestSelected
+                              ? 'pointer'
+                              : 'default'};z-index:2;min-width:260px;"
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
                               indexUser === this.userSelectedIndex &&
@@ -752,7 +786,7 @@ export class ShiftSchedule extends LitElement {
                               indexUser === this.userSelectedIndex &&
                               this.startFocusWithViewMode)
                               ? 'focus-divider'
-                              : ''}"
+                              : ''} user-title table-line"
                             @click="${() => {
                               if (this.viewerRole === 'manager' && this.requestSelected) {
                                 this.userSelectedIndex = indexUser;
@@ -762,12 +796,10 @@ export class ShiftSchedule extends LitElement {
                                   })
                                 );
                               }
-                            }}"
-                            ui="${this.userTitle}, ${this.tableLineUI}, ${this.titleSticky}">
-                            <c-box relative top-0 left-0>
-                              <c-box
-                                round-full
-                                flex-center
+                            }}">
+                            <div style="position:relative; top:0; left:0">
+                              <div
+                                style="border-radius:50%; display:flex; justify-content:center; align-items:center;"
                                 class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                                 (this.viewerRole === 'manager' &&
                                   indexUser === this.userSelectedIndex &&
@@ -777,37 +809,38 @@ export class ShiftSchedule extends LitElement {
                                   this.startFocusWithViewMode)
                                   ? 'user-border-focus'
                                   : ''}">
-                                <c-box
-                                  round-full
-                                  flex-center
-                                  border="2 solid ${gender === 'M'
+                                <div
+                                  style="border-radius:50%; display:flex; justify-content:center; align-items:center; border: 2px solid var(--${gender ===
+                                  'M'
                                     ? 'primary-500'
-                                    : 'color-9-500'}">
+                                    : 'color-9-500'})">
                                   <img
                                     style="border-radius: 50%"
                                     width="32px"
                                     height="32px"
                                     src="${this.userImgDefault || ''}"
                                     alt="" />
-                                </c-box>
-                              </c-box>
+                                </div>
+                              </div>
 
-                              <c-box
-                                ui="${this.genderBox}"
-                                bg="${gender === 'M' ? 'primary-500' : 'color-9-500'}">
+                              <div
+                                class="gender-box"
+                                style="background: var(--${gender === 'M'
+                                  ? 'primary-500'
+                                  : 'color-9-500'});">
                                 ${genderType[gender as 'M' | 'F']}
-                              </c-box>
-                            </c-box>
+                              </div>
+                            </div>
 
-                            <c-box>
-                              <c-box tx-14> ${nameGiven} ${nameFamily}</c-box>
-                              <c-box tx-12>
+                            <div>
+                              <div style="font-size:14px;">${nameGiven} ${nameFamily}</div>
+                              <div style="font-size:12px;">
                                 <span style="text-transform: uppercase">
                                   ${practitionerRole.abbr} </span
-                                >, ${practitionerLevel.name}</c-box
-                              >
-                            </c-box>
-                          </c-box>
+                                >, ${practitionerLevel.name}
+                              </div>
+                            </div>
+                          </div>
 
                           ${this.dateBetween?.map((dateBet) => {
                             return html`
@@ -944,12 +977,12 @@ export class ShiftSchedule extends LitElement {
                               })}
                             `;
                           })}
-                        </c-box>
+                        </div>
                       `;
                     }
                   )}
                 </div>
-              </c-box>
+              </div>
             </c-box>
           </c-box>
         </c-box>
@@ -1785,11 +1818,13 @@ export class ShiftSchedule extends LitElement {
 
       const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
       if (dayBetweenStartEnd > dayOff) {
-        // const rangeDayOff = this.dateRangeIntersect(
-        //   e.detail.startDate!,
-        //   e.detail.endDate,
-        //   dayOffSavedExist
-        // );
+        const rangeDayOff = this.dateRangeIntersect(
+          e.detail.startDate!,
+          e.detail.endDate,
+          dayOffSavedExist
+        );
+        console.log('shift-schedule.js |dayOffSavedExist| = ', dayOffSavedExist);
+        console.log('shift-schedule.js |rangeDayOff| = ', rangeDayOff);
         // const dayOffUse = (rangeDayOff?.length || 0) + dayOff;
         this.generateDayOffValue = this.generateDayOff(
           e.detail.startDate!,
@@ -1926,13 +1961,24 @@ export class ShiftSchedule extends LitElement {
     }
   }
 
-  deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string) {
+  deleteInitialDatePicker(
+    practitioner: SchedulePractitionerEntity,
+    practitionerId: string,
+    dateBetween: Date[],
+    dateString?: string
+  ) {
     switch (this.requestSelected?.abbr!) {
       case 'sem':
         for (const date of dateBetween) {
           const dateBetString = this.convertDateToString(date);
           this.removeInitialSameData(practitionerId, dateBetString);
+          if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString!]) {
+            practitioner.practitioner.leave.dayOff += 1;
+          }
 
+          if (this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString!]) {
+            this.vacDayOff[practitioner.practitioner.id] += 1;
+          }
           delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString];
           delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString];
           delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateBetString];
@@ -1943,6 +1989,10 @@ export class ShiftSchedule extends LitElement {
       case 'vac':
         for (const date of dateBetween) {
           const dateBetString = this.convertDateToString(date);
+          if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString!]) {
+            practitioner.practitioner.leave.dayOff += 1;
+          }
+
           this.removeInitialSameData(practitionerId, dateBetString);
 
           delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString];
@@ -1957,6 +2007,10 @@ export class ShiftSchedule extends LitElement {
           const dateBetString = this.convertDateToString(date);
           this.removeInitialSameData(practitionerId, dateBetString);
 
+          if (this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString!]) {
+            this.vacDayOff[practitioner.practitioner.id] += 1;
+          }
+
           delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString];
           delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateBetString];
           delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateBetString];
@@ -1966,16 +2020,30 @@ export class ShiftSchedule extends LitElement {
 
       case 'woff':
         this.removeInitialSameData(practitionerId, dateString);
+        if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!]) {
+          practitioner.practitioner.leave.dayOff += 1;
+        }
+
+        if (this.shiftVacRequestSaved[practitionerId]?.request?.[dateString!]) {
+          this.vacDayOff[practitioner.practitioner.id] += 1;
+        }
 
         delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString!];
         delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString!];
         delete this.shiftSrRequestSaved[practitionerId]?.request?.[dateString!];
         delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!];
+
         break;
 
       case 'sr':
         this.removeInitialSameData(practitionerId, dateString!);
+        if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!]) {
+          practitioner.practitioner.leave.dayOff += 1;
+        }
 
+        if (this.shiftVacRequestSaved[practitionerId]?.request?.[dateString!]) {
+          this.vacDayOff[practitioner.practitioner.id] += 1;
+        }
         delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!];
         delete this.shiftVacRequestSaved[practitionerId]?.request?.[dateString!];
         delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateString!];
@@ -2255,7 +2323,7 @@ export class ShiftSchedule extends LitElement {
       default:
         break;
     }
-    this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
+    this.deleteInitialDatePicker(practitioner, practitioner.id, dateBetween, dateString);
 
     this.datepickerData = undefined;
     this.selectedDate = undefined;
@@ -3022,7 +3090,10 @@ export class ShiftSchedule extends LitElement {
     indexUser?: number
   ) {
     const dateString = this.convertDateToString(date);
-
+    if (!this.shiftSrRequestCache[dateString]) {
+      this.shakePopover();
+      return;
+    }
     if (!this.shiftSrRequestSaved[practitioner.id]) {
       this.shiftSrRequestSaved[practitioner.id] = {} as any;
       this.shiftSrRequestSaved[practitioner.id].request = {};
@@ -3069,7 +3140,7 @@ export class ShiftSchedule extends LitElement {
       this.datepickerData?.endDate!
     );
 
-    this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
+    this.deleteInitialDatePicker(practitioner, practitioner.id, dateBetween, dateString);
     this.requestUpdate();
     this.dispatchEvent(new CustomEvent('save-sr', { detail: this.shiftSrRequestSaved }));
 
@@ -3130,7 +3201,7 @@ export class ShiftSchedule extends LitElement {
       this.datepickerData?.endDate!
     );
 
-    this.deleteInitialDatePicker(practitioner.id, dateBetween, dateString);
+    this.deleteInitialDatePicker(practitioner, practitioner.id, dateBetween, dateString);
 
     this.dispatchEvent(
       new CustomEvent('focus-request', {
@@ -3715,38 +3786,31 @@ export class ShiftSchedule extends LitElement {
     endDate: Date,
     dayOffExist: string[],
     dayOff: number,
-    disabledDate?: string[],
-    initialDate?: string[]
+    disabledDate: string[] = [],
+    initialDate: string[] = []
   ): string[] {
-    const existingDaysOff: Set<string> = new Set([...dayOffExist, ...initialDate!]);
+    const existingDaysOff: Set<string> = new Set([...dayOffExist, ...initialDate]);
     const disabledDays: Set<string> = new Set(disabledDate);
-    const initialDays: Set<string> = new Set(initialDate);
 
-    let availableDays: string[] = [...Array.from(initialDays)];
+    let availableDays: string[] = [...Array.from(existingDaysOff)];
+    let newDaysOff: number = 0; // Counter for newly added days off
 
-    while (dayOff > availableDays.length - Array.from(initialDays).length) {
-      for (
-        let currentDate = new Date(startDate.getTime());
-        currentDate <= endDate && dayOff > availableDays.length - Array.from(initialDays).length;
-        currentDate.setDate(currentDate.getDate() + 1)
-      ) {
-        const dateString =
-          currentDate.getFullYear().toString().padStart(4, '0') +
-          '-' +
-          (currentDate.getMonth() + 1).toString().padStart(2, '0') +
-          '-' +
-          currentDate.getDate().toString().padStart(2, '0');
+    for (
+      let currentDate = new Date(startDate.getTime());
+      currentDate <= endDate;
+      currentDate.setDate(currentDate.getDate() + 1)
+    ) {
+      const dateString: string =
+        currentDate.getFullYear().toString().padStart(4, '0') +
+        '-' +
+        (currentDate.getMonth() + 1).toString().padStart(2, '0') +
+        '-' +
+        currentDate.getDate().toString().padStart(2, '0');
 
-        if (existingDaysOff.has(dateString) && !availableDays.includes(dateString)) {
+      if (!disabledDays.has(dateString)) {
+        if (!existingDaysOff.has(dateString) && newDaysOff < dayOff) {
           availableDays.push(dateString);
-        } else if (
-          !existingDaysOff.has(dateString) &&
-          !disabledDays.has(dateString) &&
-          currentDate >= startDate &&
-          currentDate <= endDate
-        ) {
-          availableDays.push(dateString);
-          existingDaysOff.add(dateString);
+          newDaysOff++; // Increment the newDaysOff only when we add a new day
         }
       }
     }

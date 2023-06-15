@@ -139,7 +139,7 @@ export declare class ShiftSchedule extends LitElement {
     private generateDayOffValue?;
     saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity): void;
     removeInitialSameData(practitionerId: string, dateString?: string): void;
-    deleteInitialDatePicker(practitionerId: string, dateBetween: Date[], dateString?: string): void;
+    deleteInitialDatePicker(practitioner: SchedulePractitionerEntity, practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
         date: Date;
         practitioner: SchedulePractitionerEntity;
