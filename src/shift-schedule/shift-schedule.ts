@@ -290,8 +290,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -360,7 +360,12 @@ export class ShiftSchedule extends LitElement {
           top: 0;
           left: 0;
           background: white;
-          z-index: 99;
+          z-index: 1;
+        }
+
+        .title-default {
+          position: relative;
+          z-index: 0;
         }
 
         .shake-efx-popover {
@@ -511,6 +516,8 @@ export class ShiftSchedule extends LitElement {
           column-gap: 24px;
           padding-left: 24px;
           padding-right: 24px;
+          row-gap: 12px;
+          flex-wrap: wrap;
         }
         .remove-btn-active:active {
           background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
@@ -535,7 +542,7 @@ export class ShiftSchedule extends LitElement {
         <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
         <c-box bg-white flex flex-col row-gap-24>
           ${this.mode === 'edit'
-            ? html` <c-box class="buttonGroupUI">
+            ? html` <div class="buttonGroupUI">
                 <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
                 ${this.renderRequestButton()}
                 <c-box inline h-40 w-1 bg-gray-400></c-box>
@@ -570,7 +577,7 @@ export class ShiftSchedule extends LitElement {
                     >ลบ</c-box
                   >
                 </c-box>
-              </c-box>`
+              </div>`
             : undefined}
 
           <c-box ${ref(this.tableWrapperRef)} ui="${this.tableLineUI}" style="border-radius:8px">
@@ -585,15 +592,7 @@ export class ShiftSchedule extends LitElement {
                 </c-box>
 
                 <c-box flex id="week-month-title">
-                  <c-box
-                    absolute
-                    style="${this.mode === 'edit' ? 'top:73px' : ''}"
-                    left="274"
-                    h-26
-                    pt-4
-                    flex
-                    items-center
-                    col-gap-6>
+                  <c-box absolute h-26 pt-4 flex items-center col-gap-6>
                     <c-box
                       ui="_: w-24 h-24 round-full flex-center"
                       ui-active="_1: ${this.shouldArrowLeftDisable ? 'bg-white' : 'bg-primary-100'}"
@@ -644,13 +643,16 @@ export class ShiftSchedule extends LitElement {
 
                         <c-box ui=${this.weekDayWRapperUI}>
                           ${dateBet.dateBetween.map((weekday, weekIndex) => {
+                            console.log(dateBet.currentMonth, 'dateBet.currentMonth');
                             return html`
                               <c-box flex flex-col>
                                 <c-box
                                   ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                                     .tableLineUI}">
                                   ${dateBet.currentMonth
-                                    ? dayjs(new Date(dateBet.currentMonth)).format('MMM BBBB')
+                                    ? dayjs(new Date(`${dateBet.currentMonth}-1`)).format(
+                                        'MMM BBBB'
+                                      )
                                     : undefined}
                                 </c-box>
 
@@ -736,7 +738,9 @@ export class ShiftSchedule extends LitElement {
                       const targetUser = practitioner?.practitionerId === this.practitionerId!;
                       return html`
                         <div
-                          class="${targetUser && this.viewerRole === 'staff' ? 'title-sticky' : ''}"
+                          class="${targetUser && this.viewerRole === 'staff'
+                            ? 'title-sticky'
+                            : 'title-default'}"
                           style="width: fit-content;display:flex;"
                           @click="${() => {
                             if (this.mode === 'view') {
@@ -1798,13 +1802,6 @@ export class ShiftSchedule extends LitElement {
 
       const dayBetweenStartEnd = this.daysBetween(e.detail.startDate!, e.detail.endDate) + 1;
       if (dayBetweenStartEnd > dayOff) {
-        const rangeDayOff = this.dateRangeIntersect(
-          e.detail.startDate!,
-          e.detail.endDate,
-          dayOffSavedExist
-        );
-        console.log('shift-schedule.js |dayOffSavedExist| = ', dayOffSavedExist);
-        console.log('shift-schedule.js |rangeDayOff| = ', rangeDayOff);
         // const dayOffUse = (rangeDayOff?.length || 0) + dayOff;
         this.generateDayOffValue = this.generateDayOff(
           e.detail.startDate!,
@@ -1902,7 +1899,11 @@ export class ShiftSchedule extends LitElement {
       .exec();
   }
 
-  removeInitialSameData(practitionerId: string, dateString?: string) {
+  removeInitialSameData(
+    practitioner: SchedulePractitionerEntity,
+    practitionerId: string,
+    dateString?: string
+  ) {
     const practitionerIndex = this.scheduleData?.schedulePractitioner?.findIndex(
       (res) => res.id === practitionerId
     );
@@ -1934,6 +1935,11 @@ export class ShiftSchedule extends LitElement {
             }
           }
         } else {
+          if (request?.requestType?.abbr === 'off') {
+            practitioner.practitioner.leave.dayOff += 1;
+          } else if (request?.requestType?.abbr === 'vac') {
+            this.vacDayOff[practitioner.practitioner.id] += 1;
+          }
           delete this.scheduleData?.schedulePractitioner?.[practitionerIndex]
             .schedulePractitionerRequest?.[requestIndex];
         }
@@ -1951,7 +1957,7 @@ export class ShiftSchedule extends LitElement {
       case 'sem':
         for (const date of dateBetween) {
           const dateBetString = this.convertDateToString(date);
-          this.removeInitialSameData(practitionerId, dateBetString);
+          this.removeInitialSameData(practitioner, practitionerId, dateBetString);
           if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString!]) {
             practitioner.practitioner.leave.dayOff += 1;
           }
@@ -1973,7 +1979,7 @@ export class ShiftSchedule extends LitElement {
             practitioner.practitioner.leave.dayOff += 1;
           }
 
-          this.removeInitialSameData(practitionerId, dateBetString);
+          this.removeInitialSameData(practitioner, practitionerId, dateBetString);
 
           delete this.shiftOffRequestSaved[practitionerId]?.request?.[dateBetString];
           delete this.shiftSemRequestSaved[practitionerId]?.request?.[dateBetString];
@@ -1985,7 +1991,7 @@ export class ShiftSchedule extends LitElement {
       case 'off':
         for (const date of dateBetween) {
           const dateBetString = this.convertDateToString(date);
-          this.removeInitialSameData(practitionerId, dateBetString);
+          this.removeInitialSameData(practitioner, practitionerId, dateBetString);
 
           if (this.shiftVacRequestSaved[practitionerId]?.request?.[dateBetString!]) {
             this.vacDayOff[practitioner.practitioner.id] += 1;
@@ -1999,7 +2005,7 @@ export class ShiftSchedule extends LitElement {
         break;
 
       case 'woff':
-        this.removeInitialSameData(practitionerId, dateString);
+        this.removeInitialSameData(practitioner, practitionerId, dateString);
         if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!]) {
           practitioner.practitioner.leave.dayOff += 1;
         }
@@ -2016,7 +2022,7 @@ export class ShiftSchedule extends LitElement {
         break;
 
       case 'sr':
-        this.removeInitialSameData(practitionerId, dateString!);
+        this.removeInitialSameData(practitioner, practitionerId, dateString!);
         if (this.shiftOffRequestSaved[practitionerId]?.request?.[dateString!]) {
           practitioner.practitioner.leave.dayOff += 1;
         }
@@ -2385,7 +2391,7 @@ export class ShiftSchedule extends LitElement {
     const shouldInitValue =
       inputTarget.getAttribute('shift-type') === `${this.requestSelected?.abbr}-saved`;
     const title: Record<string, string> = {
-      sem: 'ขออบรม, สัมนา, ไปราชการ',
+      sem: 'ขออบรม, สัมมนา, ไปราชการ',
       off: 'ขอลาหยุด',
       vac: 'ขอลาพักร้อน',
     };
@@ -3445,8 +3451,23 @@ export class ShiftSchedule extends LitElement {
 
   shouldScrollErrorTarget = false;
   initialScroll = false;
+
+  firstTableUpdated = false;
   updated(changedProp: Map<string, unknown>) {
     if (changedProp.has('userHoverIndex')) return;
+    this.updateTable(changedProp);
+
+    if (this.firstTableUpdated === false) {
+      setTimeout(() => {
+
+        this.updateTable(changedProp);
+        // 750 because error focus use 750ms delay to scroll
+        this.firstTableUpdated = true
+      }, 750);
+    }
+  }
+
+  private updateTable(changedProp: Map<string, unknown>) {
     const tableWrapper = this.querySelector('.lit-virtualizer');
     const errorDayRequest = this.querySelector('.error-day-request');
 
@@ -3454,6 +3475,7 @@ export class ShiftSchedule extends LitElement {
       this.shouldScrollErrorTarget = true;
     }
 
+    // handle error scroll to focus
     if (errorDayRequest && this.shouldScrollErrorTarget) {
       const left = tableWrapper?.getBoundingClientRect().left;
       setTimeout(() => {
@@ -3598,12 +3620,11 @@ export class ShiftSchedule extends LitElement {
       if (!this.monthTitleNav) {
         this.monthTitleNav = this.querySelector('.start-date-of-month');
 
-        if (this.monthTitleNav) {
-          this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
-        } else {
+        if (!this.monthTitleNav) {
           this.monthTitleNav = this.querySelector('.first-date-of-month');
-          this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
         }
+
+        this.currentMonthTitleDisplay = this.monthTitleNav?.dataset.firstDate;
       }
 
       setTimeout(() => {
@@ -3634,40 +3655,40 @@ export class ShiftSchedule extends LitElement {
     }
 
     //
-    const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
+    // const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
     // dayOff
-    if (practitioner && this.requestSelected?.abbr === 'off') {
-      const initialOff = (
-        practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
-      ).filter((res) => res.requestType.abbr === 'off');
-      const savedOff = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
+    // if (practitioner && this.requestSelected?.abbr === 'off') {
+    //   const initialOff = (
+    //     practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
+    //   ).filter((res) => res.requestType.abbr === 'off');
+    //   const savedOff = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
 
-      // this.mayDayOffLength = initialOff.length + savedOff.length;
-      if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
-        (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
-      }
+    //   // this.mayDayOffLength = initialOff.length + savedOff.length;
+    //   if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
+    //     (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
+    //   }
 
-      this.maxDayOffLength[(practitioner.practitioner as any).id].dayOff =
-        initialOff.length + savedOff.length;
-    }
-
+    //   this.maxDayOffLength[(practitioner.practitioner as any).id].dayOff =
+    //     initialOff.length + savedOff.length;
+    // }
+    console.log('shift-schedule.js |123| = ', 123);
     super.update(changedProp);
   }
 
   private setVacDayOff(practitioner: SchedulePractitionerEntity, allowedExecute?: boolean) {
     if (typeof this.vacDayOff[(practitioner.practitioner as Practitioner).id] === 'number') return;
     if ((practitioner && this.requestSelected?.abbr === 'vac') || allowedExecute) {
-      const initialOff = (
-        practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
-      ).filter((res) => res.requestType.abbr === 'vac');
-      const saveVac = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
+      // const initialOff = (
+      //   practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
+      // ).filter((res) => res.requestType.abbr === 'vac');
+      // const saveVac = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
       // this.mayDayOffLength = initialOff.length + savedOff.length;
-      if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
-        (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
-      }
+      // if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
+      //   (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
+      // }
 
-      this.maxDayOffLength[(practitioner.practitioner as any).id].vacation =
-        initialOff.length + saveVac.length;
+      // this.maxDayOffLength[(practitioner.practitioner as any).id].vacation =
+      //   initialOff.length + saveVac.length;
 
       // cache initial value
       const findVacation = (practitioner!.practitioner as Practitioner).vacations!.find(

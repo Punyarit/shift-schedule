@@ -138,7 +138,7 @@ export declare class ShiftSchedule extends LitElement {
     renderInitialRequest(request: ScheduleDataWithRender, practitioner: SchedulePractitionerEntity, date: Date, indexUser: number): TemplateResult<1> | undefined;
     private generateDayOffValue?;
     saveDatepicker(e: CXDatePicker.SelectDate.Range, practitioner: SchedulePractitionerEntity): void;
-    removeInitialSameData(practitionerId: string, dateString?: string): void;
+    removeInitialSameData(practitioner: SchedulePractitionerEntity, practitionerId: string, dateString?: string): void;
     deleteInitialDatePicker(practitioner: SchedulePractitionerEntity, practitionerId: string, dateBetween: Date[], dateString?: string): void;
     getPopoverByRequest(data: {
         date: Date;
@@ -208,7 +208,9 @@ export declare class ShiftSchedule extends LitElement {
     isSameMonth(date1: string, date2: string): boolean;
     shouldScrollErrorTarget: boolean;
     initialScroll: boolean;
+    firstTableUpdated: boolean;
     updated(changedProp: Map<string, unknown>): void;
+    private updateTable;
     private setVacDayOff;
     private maxDayOffLength;
     private vacDayOff;
