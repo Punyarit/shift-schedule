@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { LitElement, html, render } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { getDateBetweenArrayDate, } from '@cortex-ui/core/cx/helpers/functions/date/date-methods';
+import { getDateBetweenArrayDate } from '@cortex-ui/core/cx/helpers/functions/date/date-methods';
 import '@cortex-ui/core/cx/c-box';
 import '@cortex-ui/core/cx/modal';
 import '@cortex-ui/core/cx/theme';
@@ -24,6 +24,11 @@ import { createRef, ref } from 'lit/directives/ref.js';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
 import '@lit-labs/virtualizer';
+import dayjs from 'dayjs';
+import 'dayjs/locale/th';
+import buddhistEra from 'dayjs/plugin/buddhistEra';
+dayjs.locale('th');
+dayjs.extend(buddhistEra);
 let ShiftSchedule = class ShiftSchedule extends LitElement {
     constructor() {
         super(...arguments);
@@ -297,12 +302,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.style.setProperty('--table-width', `${width}px`);
             super.willUpdate(_changedProperties);
         }
-    }
-    dateFormat(date, options) {
-        if (!date)
-            return;
-        let newDate = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
-        return new Intl.DateTimeFormat('th-TH', options).format(newDate);
     }
     renderRequestButton() {
         return html `
@@ -657,10 +656,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
 
                     <c-box w-90 flex justify-center tx-12 tx-gray-600>
                       ${this.currentMonthTitleDisplay
-            ? new Intl.DateTimeFormat('th-TH', {
-                month: 'long',
-                year: 'numeric',
-            }).format(new Date(this.currentMonthTitleDisplay))
+            ? dayjs(new Date(this.currentMonthTitleDisplay)).format('MMMM BBBB')
             : undefined}
                     </c-box>
 
@@ -699,10 +695,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                   ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
                     .tableLineUI}">
                                   ${dateBet.currentMonth
-                    ? new Intl.DateTimeFormat('th-TH', {
-                        month: 'short',
-                        year: 'numeric',
-                    }).format(new Date(dateBet.currentMonth))
+                    ? dayjs(new Date(dateBet.currentMonth)).format('MMM BBBB')
                     : undefined}
                                 </c-box>
 
@@ -731,11 +724,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                                       ui="${isSunday}, ${this.tableLineUI}, ${this
                         .weekDayUI}, ${isWeekend}">
                                       <c-box tx-12 tx-gray-500>
-                                        ${date
-                        ? new Intl.DateTimeFormat('th-TH', {
-                            weekday: 'short',
-                        }).format(new Date(date))
-                        : undefined}
+                                        ${date ? dayjs(new Date(date)).format('dd') : undefined}
                                       </c-box>
                                       <c-box
                                         tx-14
@@ -746,11 +735,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                             : 'var(--gray-800)'}; font-weight: ${isHoliday
                         ? '600'
                         : '400'}">
-                                        ${date
-                        ? new Intl.DateTimeFormat('th-TH', {
-                            day: 'numeric',
-                        }).format(new Date(date))
-                        : undefined}
+                                        ${date ? dayjs(new Date(date)).format('D') : undefined}
                                       </c-box>
                                     </c-box>`;
                 })}
@@ -795,7 +780,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 : null}"
                             style="cursor:${this.requestSelected
                 ? 'pointer'
-                : 'default'};z-index:2;min-width:260px;"
+                : 'default'};z-index:2;min-width:260px;position:sticky; left:0; background:white"
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                 (this.viewerRole === 'manager' &&
                     indexUser === this.userSelectedIndex &&

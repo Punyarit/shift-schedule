@@ -10,6 +10,7 @@ import './components/request-button';
 import { DateBetweenData, DayPart, RequestType, ScheduleDataWithRender, SchedulePractitionerRequestEntity, SchedulingData, SrShiftPlan, SchedulePractitionerEntity, ScheduleShiftsEntity, DatePickerRequest, DisabledDate, DateObject as HolidayObject, ScheduleErrorDayRequest } from './schedule.types';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
 import '@lit-labs/virtualizer';
+import 'dayjs/locale/th';
 export declare class ShiftSchedule extends LitElement {
     private buttonGroupUI;
     private scheduleTitleUI;
@@ -80,7 +81,6 @@ export declare class ShiftSchedule extends LitElement {
     remarkRef: import("lit-html/directives/ref").Ref<HTMLInputElement>;
     private currentPopoverRef?;
     protected willUpdate(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
-    dateFormat(date: Date | number | string | undefined, options?: Intl.DateTimeFormatOptions): string | undefined;
     renderRequestButton(): TemplateResult<1>;
     selectRequest(type: RequestType): void;
     private disableDateArranged;

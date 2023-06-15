@@ -23,6 +23,7 @@
     "@lit-labs/react": "^1.1.1",
     "@lit-labs/virtualizer": "^1.0.1",
     "@types/react": "^18.0.27",
+    "dayjs": "^1.11.8",
     "lit": "^2.6.1"
   }
 }
