@@ -2,8 +2,6 @@ import { ColorTypes } from '@cortex-ui/core/cx/types/colors.type';
 import { LitElement } from 'lit';
 import { RequestType } from '../schedule.types';
 export declare class MyElement extends LitElement {
-    private btnWrapper;
-    private btnContent;
     text: string;
     icon: CXIcon.Set['src'];
     iconColor: ColorTypes;

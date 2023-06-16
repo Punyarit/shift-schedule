@@ -12,39 +12,62 @@ import { customElement, property } from 'lit/decorators.js';
 let MyElement = class MyElement extends LitElement {
     constructor() {
         super(...arguments);
-        this.btnWrapper = (color) => `btnWrapper: cursor-pointer flex items-center col-gap-8 round-24 border-2 border-${color} border-solid pr-24`;
-        this.btnContent = 'btnContent: round-full flex items-center justify-center';
         this.width = '44';
         this.height = '44';
     }
     render() {
         const isSelected = this.requestType.abbr === this.currentType?.abbr;
+        const borderColor = isSelected ? this.accentColor : this.iconBgColor;
+        const bgHover = isSelected ? this.accentColor : this.iconBgColor;
         return html `
       <style>
-        c-box[icon-prefix]::before {
+        cx-shift-schedule request-button c-box[icon-prefix]::before {
           transition: 0.2s ease;
         }
+
+        cx-shift-schedule request-button .btnContent {
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        cx-shift-schedule request-button .wrapper {
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          column-gap: 8px;
+          border-radius: 24px;
+          padding-right: 24px;
+          font-size: 16px;
+          font-family: var(--regular);
+          transition: all 0.2s ease;
+        }
+        [data-abbr='${this.requestType.abbr}']:hover {
+          background: var(--${bgHover}) !important;
+        }
       </style>
-      <c-box
-        class="wrapper"
-        tabindex="0"
-        tx="16 regular ${isSelected ? 'white' : this.accentColor}"
-        ui="${this.btnWrapper(isSelected ? this.accentColor : this.iconBgColor)}"
-        ui-hover="hov: bg-${isSelected ? this.accentColor : this.iconBgColor}"
-        transition="all 0.2s ease"
-        bg="${isSelected ? this.accentColor : 'white'}">
-        <c-box
+      <div
+        data-abbr="${this.requestType.abbr}"
+        style="color:${isSelected
+            ? 'white'
+            : this.accentColor}; border: 2px solid var(--${borderColor});background: ${isSelected
+            ? `var(--${this.accentColor})`
+            : 'white'}"
+        class="wrapper">
+        <div
           id="icon-head"
-          ui="${this.btnContent}"
-          min-w="${this.width}"
-          min-h="${this.height}"
-          bg="${isSelected ? this.accentColor : this.iconBgColor}">
+          class="btnContent"
+          style="min-width:${this.width}px; min-height:${this
+            .height}px; background:var(--${isSelected ? this.accentColor : this.iconBgColor});">
           <c-box icon-prefix="24 ${this.icon} ${isSelected ? 'white' : this.accentColor}"></c-box>
-        </c-box>
-        <c-box whitespace-pre tx="16 regular ${isSelected ? 'white' : this.accentColor}"
-          >${this.text}</c-box
-        >
-      </c-box>
+        </div>
+        <div
+          style="white-space: pre; font-size:16px; font-family:var(--regular); color:${isSelected
+            ? 'white'
+            : `var(--${this.accentColor})`} "
+          >${this.text}</div>
+      </div>
     `;
     }
     createRenderRoot() {

@@ -47,25 +47,11 @@ dayjs.locale('th');
 dayjs.extend(buddhistEra);
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
-  private buttonGroupUI = 'buttonGroupUI: flex items-center col-gap-24 px-24';
-  private scheduleTitleUI = 'scheduleTitleUI: inline-flex';
-  private tableLineUI = 'tableLineUI: border-1 border-solid border-gray-300 border-box';
-  private titleLeftTopUI = 'titleLeftTopUI: pl-12 flex flex-col pt-42 border-box';
-  private genderBox = `genderBox: absolute right-0 top-26 width tx-10 w-16 h-16 tx-white! flex justify-center items-center round-full z-1`;
-  private requestBox = 'requestBox: min-w-90 inline-flex flex-col';
-  private userTitle = 'userTitle: flex col-gap-6 p-12 border-box';
-  private weekDayUI = 'weekDayUI: py-6 min-w-90 pl-12 border-box';
-  private weekDayWRapperUI = 'weekDayWRapperUI: flex';
-  private monthEachUI = 'monthEachUI: tx-12 pl-12 py-6 border-right-solid';
-  private sundayBorderRightUI = 'sundayBorderRightUI: border-right-2! border-right-primary-500!';
-  private titleSticky = 'titleSticky: sticky top-0 left-0 bg-white';
-  private tableWrapperUI = 'tableWrapperUI: inline-flex flex-col';
   private iconTitleWrapper = (color: string) =>
     `iconTitleWrapper: inline-flex round-24 border-1 border-${color} border-solid items-center col-gap-6 pr-12`;
   private iconTitle = (color: string) =>
     `iconTitle: round-full w-32 h-32 bg-${color} flex justify-center items-center`;
 
-  private weekendBg = 'weekendBg: bg-pinky-25! w-full h-full';
 
   @property({ type: Object }) public currentTime = new Date();
 
@@ -290,8 +276,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -336,10 +322,77 @@ export class ShiftSchedule extends LitElement {
           width: 100%;
           display: block;
         }
-        .error-day-request {
+        cx-shift-schedule .tableWrapperUI {
+          display: inline-flex;
+          flex-flow: column;
+        }
+
+        cx-shift-schedule .titleSticky {
+          position: sticky;
+          top: 0;
+          left: 0;
+          background: white;
+        }
+        cx-shift-schedule .titleLeftTopUI {
+          padding-left: 12px;
+          display: flex;
+          flex-flow: column;
+          padding-top: 42px;
+          box-sizing: border-box;
+        }
+
+        cx-shift-schedule .remove-btn-wrapper {
+          display: inline-flex;
+          align-items: center;
+          column-gap: 8px;
+          border-radius: 44px;
+          width: 96px;
+          border: 2px solid var(--neutral-200);
+          cursor: pointer;
+          background: ${this.isRemoveMode ? 'var(--neutral-500)' : 'white'};
+        }
+
+        cx-shift-schedule .requestBox {
+          min-width: 90px;
+          display: inline-flex;
+          flex-flow: column;
+        }
+        cx-shift-schedule .monthEachUI {
+          font-size: 12px;
+          padding-left: 12px;
+          padding-top: 6px;
+          padding-bottom: 6px;
+          border-right-style: solid;
+        }
+
+        cx-shift-schedule .sundayBorderRightUI {
+          border-right-width: 2px !important;
+          border-right-color: var(--primary-500) !important;
+        }
+
+        cx-shift-schedule .tableLineUI {
+          border: 1px solid var(--gray-300);
+          box-sizing: border-box;
+        }
+
+        cx-shift-schedule .weekDayUI {
+          padding-top: 6px;
+          padding-bottom: 6px;
+          min-width: 90px;
+          padding-left: 12px;
+          box-sizing: border-box;
+        }
+
+        cx-shift-schedule .weekendBg {
+          background: var(--pinky-25) !important;
+          width: 100%;
+          height: 100%;
+        }
+
+        cx-shift-schedule .error-day-request {
           border: 2px solid #f3655c !important;
         }
-        .remove-btn:hover {
+        cx-shift-schedule .remove-btn:hover {
           background-color: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
         }
 
@@ -363,12 +416,12 @@ export class ShiftSchedule extends LitElement {
           z-index: 1;
         }
 
-        .title-default {
+        cx-shift-schedule .title-default {
           position: relative;
           z-index: 0;
         }
 
-        .shake-efx-popover {
+        cx-shift-schedule .shake-efx-popover {
           animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
           transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
@@ -398,48 +451,48 @@ export class ShiftSchedule extends LitElement {
           transition: all 0.2 ease !important;
         }
 
-        #table-header-wrapper::-webkit-scrollbar {
+        cx-shift-schedule #table-header-wrapper::-webkit-scrollbar {
           width: 0px;
           height: 0px;
           background: transparent;
         }
 
-        .lit-virtualizer {
+        cx-shift-schedule .lit-virtualizer {
           overflow-x: scroll;
           overflow-y: overlay;
         }
 
         /*  */
-        .lit-virtualizer::-webkit-scrollbar {
+        cx-shift-schedule .lit-virtualizer::-webkit-scrollbar {
           width: 6px;
         }
 
         /* Track */
-        .lit-virtualizer::-webkit-scrollbar-track {
+        cx-shift-schedule .lit-virtualizer::-webkit-scrollbar-track {
           background: #f1f1f1;
         }
 
         /* Handle */
-        .lit-virtualizer::-webkit-scrollbar-thumb {
+        cx-shift-schedule .lit-virtualizer::-webkit-scrollbar-thumb {
           background: #a1a1a1;
         }
 
         /* Handle on hover */
-        .lit-virtualizer::-webkit-scrollbar-thumb:hover {
+        cx-shift-schedule .lit-virtualizer::-webkit-scrollbar-thumb:hover {
           background: #696969;
         }
         /*  */
 
         :host {
-          --cbox-divider-width: 100%;
-          --cbox-divider-top: 0;
+          --hover-divider-width: 100%;
+          --hover-divider-top: 0;
         }
 
-        .element-visible {
+        cx-shift-schedule .element-visible {
           opacity: 1;
         }
 
-        .element-hidden {
+        cx-shift-schedule .element-hidden {
           opacity: 0.4;
         }
 
@@ -447,19 +500,19 @@ export class ShiftSchedule extends LitElement {
           color: var(--gray-800);
         }
 
-        .focus-divider {
+        cx-shift-schedule .focus-divider {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           border-bottom: 2px solid var(--primary-500) !important;
           transition: border-bottom 0.15s ease;
         }
 
-        .user-border-focus {
+        cx-shift-schedule .user-border-focus {
           transition: outline 0.15s ease;
           outline: 4px solid var(--color-5-200);
         }
 
-        input::placeholder {
+        cx-shift-schedule input::placeholder {
           font-family: Sarabun-Regular;
           font-size: 16px;
         }
@@ -467,7 +520,7 @@ export class ShiftSchedule extends LitElement {
           height: 18px;
         }
 
-        .bg-pinky {
+        cx-shift-schedule .bg-pinky {
           background: var(--pinky-25);
         }
 
@@ -475,15 +528,15 @@ export class ShiftSchedule extends LitElement {
           transition: all 0.25s ease;
         }
 
-        .hover-request {
+        cx-shift-schedule .hover-request {
           cursor: pointer;
         }
 
-        .srDayPart {
+        cx-shift-schedule .srDayPart {
           cursor: pointer;
         }
 
-        .diagonal-pattern {
+        cx-shift-schedule .diagonal-pattern {
           width: 100%;
           height: 100%;
           cursor: not-allowed;
@@ -496,12 +549,13 @@ export class ShiftSchedule extends LitElement {
           );
         }
 
-        .cbox-divider {
+        cx-shift-schedule .hover-divider {
           transition: all 0.125s ease;
-          width: var(--cbox-divider-width);
-          translate: 0 var(--cbox-divider-top);
+          width: var(--hover-divider-width);
+          translate: 0 var(--hover-divider-top);
           height: 2px;
           background-color: var(--primary-100);
+          position:absolute;
           z-index: 1;
         }
 
@@ -510,7 +564,7 @@ export class ShiftSchedule extends LitElement {
           border: 2px solid var(--gray-400) !important;
         }
 
-        .buttonGroupUI {
+        cx-shift-schedule .buttonGroupUI {
           display: flex;
           align-items: center;
           column-gap: 24px;
@@ -519,7 +573,7 @@ export class ShiftSchedule extends LitElement {
           row-gap: 12px;
           flex-wrap: wrap;
         }
-        .remove-btn-active:active {
+        cx-shift-schedule .remove-btn-active:active {
           background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}) !important;
         }
 
@@ -538,27 +592,17 @@ export class ShiftSchedule extends LitElement {
           z-index: 1;
         }
       </style>
-      <c-box relative overflow-hidden>
-        <c-box class="cbox-divider" absolute ${ref(this.dividerRef)}></c-box>
-        <c-box bg-white flex flex-col row-gap-24>
+      <div style="position:relative; overflow:hidden;">
+        <div class="hover-divider" ${ref(this.dividerRef)}></div>
+        <div style="background:white; display:flex; flex-flow:column; row-gap:24px;">
           ${this.mode === 'edit'
             ? html` <div class="buttonGroupUI">
                 <c-box whitespace-pre> เลือกรูปแบบคำขอเวร </c-box>
                 ${this.renderRequestButton()}
                 <c-box inline h-40 w-1 bg-gray-400></c-box>
-                <c-box
+                <div
                   @click="${this.setRemoveMode}"
-                  inline-flex
-                  items-center
-                  col-gap-8
-                  round-44
-                  w-96
-                  border-solid
-                  border-1
-                  cursor-pointer
-                  class="remove-btn remove-btn-active"
-                  style="border-color: var(--neutral-200)"
-                  bg="${this.isRemoveMode ? 'neutral-500' : 'white'}">
+                  class="remove-btn remove-btn-active remove-btn-wrapper">
                   <c-box
                     flex-center
                     icon-prefix="16 delete-tag-custom ${this.isRemoveMode
@@ -567,34 +611,30 @@ export class ShiftSchedule extends LitElement {
                     w-44
                     h-44
                     round-full
-                    bg="${this.isRemoveMode ? 'neutral-500' : 'neutral-200'}">
+                    style="background: var(--${this.isRemoveMode ? 'neutral-500' : 'neutral-200'})">
                   </c-box>
-                  <c-box
-                    transition="all 0.2s ease"
-                    style="color:${this.isRemoveMode ? 'white!' : 'neutral-500'}"
-                    ui="_:${this.isRemoveMode ? 'tx-white' : 'tx-gray-800'}"
-                    ,
-                    >ลบ</c-box
-                  >
-                </c-box>
+                  <div
+                    style="color:${this.isRemoveMode
+                      ? 'white'
+                      : 'neutral-500'};transition: 0.2s ease">
+                    ลบ
+                  </div>
+                </div>
               </div>`
             : undefined}
 
-          <c-box ${ref(this.tableWrapperRef)} ui="${this.tableLineUI}" style="border-radius:8px">
-            <c-box ui="${this.tableWrapperUI}" style="width: var(--table-width)">
-              <c-box ui="${this.scheduleTitleUI}" overflow-x-auto id="table-header-wrapper">
+          <div class="tableLineUI" ${ref(this.tableWrapperRef)} style="border-radius:8px">
+            <div class="tableWrapperUI" style="width: var(--table-width)">
+              <div style="display:inline-flex;overflow-x:auto" id="table-header-wrapper">
                 <!-- FIXME: should titleSticky below -->
-                <c-box
-                  UI="${this.tableLineUI}, ${this.titleLeftTopUI}, ${this.titleSticky} "
-                  min-w="260">
+                <div class="tableLineUI titleLeftTopUI titleSticky" style="min-width:260px;">
                   <c-box semiBold>รายชื่อเจ้าหน้าที่</c-box>
                   <c-box>ทั้งหมด ${this.scheduleData?.schedulePractitioner?.length} คน</c-box>
-                </c-box>
+                </div>
 
                 <c-box flex id="week-month-title">
                   <c-box absolute h-26 pt-4 flex items-center col-gap-6>
                     <c-box
-                      ui="_: w-24 h-24 round-full flex-center"
                       ui-active="_1: ${this.shouldArrowLeftDisable ? 'bg-white' : 'bg-primary-100'}"
                       icon-suffix="8 angle-left-u ${this.shouldArrowLeftDisable
                         ? 'gray-400'
@@ -603,7 +643,7 @@ export class ShiftSchedule extends LitElement {
                       cursor-pointer
                       style="${this.shouldArrowLeftDisable
                         ? 'cursor: not-allowed'
-                        : 'cursor: pointer'}"
+                        : 'cursor: pointer'}; width:24px; height:24px; border-radius:50%; display:flex; justify-content:center; align-items:center;"
                       @click="${() =>
                         this.shouldArrowLeftDisable ? null : this.goToMonth('previous')}"></c-box>
 
@@ -641,16 +681,13 @@ export class ShiftSchedule extends LitElement {
                           <c-box h-30></c-box>
                         </c-box>
 
-                        <c-box ui=${this.weekDayWRapperUI}>
+                        <div style="display:flex">
                           ${dateBet.dateBetween.map((weekday, weekIndex) => {
-                            console.log(dateBet.currentMonth, 'dateBet.currentMonth');
                             return html`
                               <c-box flex flex-col>
-                                <c-box
-                                  ui="${this.monthEachUI}, ${this.sundayBorderRightUI}, ${this
-                                    .tableLineUI}">
+                                <c-box class="monthEachUI sundayBorderRightUI tableLineUI">
                                   ${dateBet.currentMonth
-                                    ? dayjs(new Date(`${dateBet.currentMonth}-1`)).format(
+                                    ? dayjs(new Date(`${dateBet.currentMonth}-01`)).format(
                                         'MMM BBBB'
                                       )
                                     : undefined}
@@ -659,14 +696,14 @@ export class ShiftSchedule extends LitElement {
                                 <c-box flex>
                                   ${weekday.map((date, dateIndex) => {
                                     const isSunday =
-                                      date.getDay() === 0 ? this.sundayBorderRightUI : '';
+                                      date.getDay() === 0 ? 'sundayBorderRightUI' : '';
 
                                     const isHoliday =
                                       this.holidayWithKeyMap?.[this.convertDateToString(date)];
 
-                                    const isWeekend =
+                                    const isWeekendBg =
                                       isHoliday || date.getDay() === 0 || date.getDay() === 6
-                                        ? this.weekendBg
+                                        ? 'weekendBg'
                                         : '';
 
                                     const timezoneOffset =
@@ -684,9 +721,7 @@ export class ShiftSchedule extends LitElement {
                                         ? 'first-date-of-month'
                                         : this.dateBetween?.[0].dateBetween[0][0].getDate() !== 1
                                         ? 'start-date-of-month'
-                                        : ''}"
-                                      ui="${isSunday}, ${this.tableLineUI}, ${this
-                                        .weekDayUI}, ${isWeekend}">
+                                        : ''} ${isSunday} tableLineUI weekDayUI ${isWeekendBg}">
                                       <c-box tx-12 tx-gray-500>
                                         ${date ? dayjs(new Date(date)).format('dd') : undefined}
                                       </c-box>
@@ -694,7 +729,7 @@ export class ShiftSchedule extends LitElement {
                                         tx-14
                                         style="color:${isHoliday
                                           ? 'var(--color-9-500)'
-                                          : isWeekend
+                                          : isWeekendBg
                                           ? 'var(--gray-500)'
                                           : 'var(--gray-800)'}; font-weight: ${isHoliday
                                           ? '600'
@@ -707,12 +742,12 @@ export class ShiftSchedule extends LitElement {
                               </c-box>
                             `;
                           })}
-                        </c-box>
+                        </div>
                       </c-box>
                     `;
                   })}
                 </c-box>
-              </c-box>
+              </div>
 
               <div
                 id="week-month-user"
@@ -832,8 +867,8 @@ export class ShiftSchedule extends LitElement {
                                 return html`
                                   ${week.map((day) => {
                                     day.setHours(0, 0, 0, 0);
-                                    const borderRight =
-                                      day.getDay() === 0 ? this.sundayBorderRightUI : '';
+                                    const sundayborderRightUI =
+                                      day.getDay() === 0 ? 'sundayBorderRightUI' : '';
 
                                     const isHoliday =
                                       this.holidayWithKeyMap?.[this.convertDateToString(day)];
@@ -861,15 +896,14 @@ export class ShiftSchedule extends LitElement {
                                       practitioner.practitionerId ===
                                         this.errorDayRequest[0]?.practitionerId;
 
-                                    return html` <c-box
+                                    return html` <div
                                       @mouseenter="${this.viewerRole === 'manager'
                                         ? (e: MouseEvent) =>
                                             this.managerHoverUser(indexUser, e, practitioner)
                                         : null}"
-                                      ui="${this.tableLineUI}, ${this.requestBox}, ${borderRight}"
-                                      class="${isErrorDayRequest ? 'error-day-request' : ''} ${(this
-                                        .viewerRole === 'staff' &&
-                                        indexUser === 0) ||
+                                      class="${sundayborderRightUI} tableLineUI requestBox ${isErrorDayRequest
+                                        ? 'error-day-request'
+                                        : ''} ${(this.viewerRole === 'staff' && indexUser === 0) ||
                                       (this.viewerRole === 'manager' &&
                                         indexUser === this.userSelectedIndex &&
                                         this.requestSelected) ||
@@ -878,14 +912,12 @@ export class ShiftSchedule extends LitElement {
                                         this.startFocusWithViewMode)
                                         ? 'focus-divider'
                                         : ''} ${isWeekend || isHoliday ? 'bg-pinky' : ''}">
-                                      <c-box
-                                        w-full
-                                        h-full
+                                      <div
                                         style="opacity:${(this.viewerRole === 'staff' &&
                                           indexUser === 0) ||
                                         this.viewerRole === 'manager'
                                           ? '1'
-                                          : '0.6'}; max-width:88px; word-break:break-all;
+                                          : '0.6'}; max-width:88px; word-break:break-all; width:100%; height:100%;
                                           ${(this.requestSelected?.abbr === 'woff' &&
                                           this.shouldNotAllowedWeekOffSelect) ||
                                         (this.requestSelected?.abbr === 'off' &&
@@ -954,8 +986,8 @@ export class ShiftSchedule extends LitElement {
                                               indexUser
                                             )
                                           : undefined}
-                                      </c-box>
-                                    </c-box>`;
+                                      </div>
+                                    </div>`;
                                   })}
                                 `;
                               })}
@@ -967,10 +999,10 @@ export class ShiftSchedule extends LitElement {
                   )}
                 </div>
               </div>
-            </c-box>
-          </c-box>
-        </c-box>
-      </c-box>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -984,10 +1016,10 @@ export class ShiftSchedule extends LitElement {
       const tableRect = weekMonthUser?.getBoundingClientRect();
       if (this.dividerRef.value) {
         this.dividerRef.value.style.setProperty(
-          '--cbox-divider-top',
+          '--hover-divider-top',
           `${Math.floor(targetRect.bottom - hostRect.top)}px`
         );
-        this.dividerRef.value.style.setProperty('--cbox-divider-width', `${tableRect?.width}px`);
+        this.dividerRef.value.style.setProperty('--hover-divider-width', `${tableRect?.width}px`);
       }
     }
 
@@ -2808,6 +2840,9 @@ export class ShiftSchedule extends LitElement {
   addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string) {
     const [dayPart, plan] = requestPlan.shiftName.split('') as ['m' | 'a' | 'n', string];
     // 📌 long hand =  if (!this.shiftRequest[dayPart]) this.shiftRequest[dayPart] = {};
+
+    this.shiftSrRequestCache ||= {};
+
     this.shiftSrRequestCache[dateString] ||= {} as SrShiftPlan;
     this.shiftSrRequestCache[dateString][dayPart] ||= {};
 
@@ -2827,6 +2862,10 @@ export class ShiftSchedule extends LitElement {
     } else {
       this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
     }
+    console.log(
+      'shift-schedule.js | this.shiftSrRequestCache| addSrShiftRequest= ',
+      this.shiftSrRequestCache
+    );
   }
 
   groupShiftsByLetter(arr: any) {
@@ -2967,6 +3006,7 @@ export class ShiftSchedule extends LitElement {
                       .set="${{ type: 'secondary' } as CXButton.Set}"
                       @click="${() => {
                         this.closePopover();
+
                         if (cellId) {
                           const boxTarget = this.querySelector(
                             `#${cellId}-${dateString}`
@@ -3037,6 +3077,7 @@ export class ShiftSchedule extends LitElement {
                 .set="${{ type: 'secondary' } as CXButton.Set}"
                 @click="${() => {
                   this.closePopover();
+
                   if (cellId) {
                     const boxTarget = this.querySelector(`#${cellId}-${dateString}`) as HTMLElement;
 
@@ -3076,6 +3117,10 @@ export class ShiftSchedule extends LitElement {
     indexUser?: number
   ) {
     const dateString = this.convertDateToString(date);
+    console.log(
+      'shift-schedule.js |this.shiftSrRequestCache| saveSrRequestPlan = ',
+      this.shiftSrRequestCache
+    );
     if (!this.shiftSrRequestCache[dateString]) {
       this.shakePopover();
       return;
@@ -3146,6 +3191,7 @@ export class ShiftSchedule extends LitElement {
     this.currentPopoverRef = undefined;
     this.generateDayOffValue = undefined;
     this.datepickerData = undefined;
+    this.shiftSrRequestCache = {};
   }
 
   selectDateRequest(
@@ -3409,17 +3455,6 @@ export class ShiftSchedule extends LitElement {
     return `${year}-${month}-${day}`;
   }
 
-  // private setTableEgdeLine = () => {
-  //   const element = this.tableWrapperRef.value!;
-  //   const hasScrollX = element.scrollWidth > element?.clientWidth!;
-
-  //   if (hasScrollX) {
-  //     this.tableWrapperRef.value?.setAttribute('ui', this.tableLineUI);
-  //   } else {
-  //     this.tableWrapperRef.value?.removeAttribute('ui');
-  //   }
-  // };
-
   private moveUserToFirstArray() {
     const index = this.scheduleData?.schedulePractitioner?.findIndex((obj) => {
       return obj.practitionerId === this.practitionerId;
@@ -3458,12 +3493,14 @@ export class ShiftSchedule extends LitElement {
     this.updateTable(changedProp);
 
     if (this.firstTableUpdated === false) {
-      setTimeout(() => {
-
-        this.updateTable(changedProp);
-        // 750 because error focus use 750ms delay to scroll
-        this.firstTableUpdated = true
-      }, 750);
+      const clearTimer = setInterval(() => {
+        if (!this.currentMonthTitleDisplay) {
+          this.updateTable(changedProp);
+        } else {
+          clearInterval(clearTimer);
+          this.firstTableUpdated = true;
+        }
+      }, 500);
     }
   }
 
@@ -3654,24 +3691,6 @@ export class ShiftSchedule extends LitElement {
       }, 250);
     }
 
-    //
-    // const practitioner = this.scheduleData?.schedulePractitioner?.[this.userSelectedIndex];
-    // dayOff
-    // if (practitioner && this.requestSelected?.abbr === 'off') {
-    //   const initialOff = (
-    //     practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
-    //   ).filter((res) => res.requestType.abbr === 'off');
-    //   const savedOff = Object.keys(this.shiftOffRequestSaved?.[practitioner.id]?.request || {});
-
-    //   // this.mayDayOffLength = initialOff.length + savedOff.length;
-    //   if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
-    //     (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
-    //   }
-
-    //   this.maxDayOffLength[(practitioner.practitioner as any).id].dayOff =
-    //     initialOff.length + savedOff.length;
-    // }
-    console.log('shift-schedule.js |123| = ', 123);
     super.update(changedProp);
   }
 
@@ -3840,7 +3859,9 @@ export class ShiftSchedule extends LitElement {
 
     let currentDate = new Date(startDate);
     while (currentDate <= endDate) {
-      const currentMonth = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
+      const currentMonth = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}`;
       const currentWeekday = currentDate.getDay();
       if (currentWeekday === 1) {
         const currentWeek: Date[] = [new Date(currentDate)];

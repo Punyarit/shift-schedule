@@ -12,22 +12,8 @@ import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-c
 import '@lit-labs/virtualizer';
 import 'dayjs/locale/th';
 export declare class ShiftSchedule extends LitElement {
-    private buttonGroupUI;
-    private scheduleTitleUI;
-    private tableLineUI;
-    private titleLeftTopUI;
-    private genderBox;
-    private requestBox;
-    private userTitle;
-    private weekDayUI;
-    private weekDayWRapperUI;
-    private monthEachUI;
-    private sundayBorderRightUI;
-    private titleSticky;
-    private tableWrapperUI;
     private iconTitleWrapper;
     private iconTitle;
-    private weekendBg;
     currentTime: Date;
     viewerRole: 'manager' | 'staff';
     mode: 'view' | 'edit';
