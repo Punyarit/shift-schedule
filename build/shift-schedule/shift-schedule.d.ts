@@ -12,7 +12,6 @@ import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-c
 import '@lit-labs/virtualizer';
 import 'dayjs/locale/th';
 export declare class ShiftSchedule extends LitElement {
-    private iconTitleWrapper;
     private iconTitle;
     currentTime: Date;
     viewerRole: 'manager' | 'staff';

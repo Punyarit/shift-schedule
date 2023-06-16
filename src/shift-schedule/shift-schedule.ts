@@ -47,8 +47,6 @@ dayjs.locale('th');
 dayjs.extend(buddhistEra);
 @customElement('cx-shift-schedule')
 export class ShiftSchedule extends LitElement {
-  private iconTitleWrapper = (color: string) =>
-    `iconTitleWrapper: inline-flex round-24 border-1 border-${color} border-solid items-center col-gap-6 pr-12`;
   private iconTitle = (color: string) =>
     `iconTitle: round-full w-32 h-32 bg-${color} flex justify-center items-center`;
 
@@ -315,12 +313,38 @@ export class ShiftSchedule extends LitElement {
   @state()
   startFocusWithViewMode = false;
 
+
   render() {
     return html`
       <style>
         cx-shift-schedule {
           width: 100%;
           display: block;
+        }
+
+
+        .cx-shift-schedule__iconTitle {
+border-radius: 50%;
+width:32px;
+height:32px;
+background: var(--primary-100);
+display:flex;
+justify-content:center;
+align-items:center;
+
+        }
+
+        .cx-shift-schedule__titleSrWrapper {
+          margin-top:12px; display:flex; align-items:center; display:flex; justify-content:space-between; column-gap:12px;
+        }
+
+        .cx-shift-schedule__iconTitleWrapper {
+          display:inline-flex;
+          border-radius:24px;
+          border:1px solid var(--primary-200);
+          align-items:center;
+          column-gap:6px;
+          padding-right:12px;
         }
         cx-shift-schedule .tableWrapperUI {
           display: inline-flex;
@@ -421,7 +445,7 @@ export class ShiftSchedule extends LitElement {
           z-index: 0;
         }
 
-        cx-shift-schedule .shake-efx-popover {
+       .shake-efx-popover {
           animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
           transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
@@ -524,9 +548,6 @@ export class ShiftSchedule extends LitElement {
           background: var(--pinky-25);
         }
 
-        c-box[_ui='targetUser'] {
-          transition: all 0.25s ease;
-        }
 
         cx-shift-schedule .hover-request {
           cursor: pointer;
@@ -550,13 +571,23 @@ export class ShiftSchedule extends LitElement {
         }
 
         cx-shift-schedule .hover-divider {
-          transition: all 0.125s ease;
+          transition: all 0.2s ease;
           width: var(--hover-divider-width);
           translate: 0 var(--hover-divider-top);
           height: 2px;
-          background-color: var(--primary-100);
+          margin-top:2px;
+          background-color: #d6e8fd;
           position:absolute;
           z-index: 1;
+        }
+
+         .cx-shift-schedule__srPlanWrapper {
+          display:flex;
+          column-gap:6px;
+          align-items:center;
+          height:fit-content;
+          margin-top:2px;
+          min-width:80px;
         }
 
         c-box[input-box].remark-input {
@@ -654,7 +685,6 @@ export class ShiftSchedule extends LitElement {
                     </c-box>
 
                     <c-box
-                      ui="_: w-24 h-24 round-full flex-center"
                       ui-active="_1: ${this.shouldArrowRightDisable
                         ? 'bg-white'
                         : 'bg-primary-100'}"
@@ -665,7 +695,7 @@ export class ShiftSchedule extends LitElement {
                       cursor-pointer
                       style="${this.shouldArrowRightDisable
                         ? 'cursor: not-allowed'
-                        : 'cursor: pointer'}"
+                        : 'cursor: pointer'}; width:24px; height:24px; border-radius:50%; display:flex; justify-content:center; align-items:center;"
                       @click="${() =>
                         this.shouldArrowRightDisable ? null : this.goToMonth('next')}"></c-box>
                   </c-box>
@@ -776,7 +806,7 @@ export class ShiftSchedule extends LitElement {
                           class="${targetUser && this.viewerRole === 'staff'
                             ? 'title-sticky'
                             : 'title-default'}"
-                          style="width: fit-content;display:flex;"
+                          style="width: fit-content;display:flex; transition: all 0.25s ease;"
                           @click="${() => {
                             if (this.mode === 'view') {
                               if (!this.startFocusWithViewMode) {
@@ -2434,11 +2464,12 @@ export class ShiftSchedule extends LitElement {
         <c-box content>
           <!-- title -->
           <c-box>
-            <c-box ui="${this.iconTitleWrapper(iconSoftColor)}">
+            <c-box class="cx-shift-schedule__iconTitleWrapper" style="border:1px solid var(--${iconSoftColor})!important" >
               <c-box
+              class="cx-shift-schedule__iconTitle"
                 icon-prefix="16 ${requestTypeStyles[this.requestSelected?.abbr!]
                   .iconSrc} ${accentColor}"
-                ui="${this.iconTitle(iconSoftColor)}"></c-box>
+                style="background:var(--${iconSoftColor}) !important"></c-box>
               <c-box tx-14> ${title[this.requestSelected?.abbr!]} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
@@ -2531,7 +2562,7 @@ export class ShiftSchedule extends LitElement {
   private remarkCache?: string;
 
   shakePopover() {
-    const popoverCheck = ModalSingleton.modalRef.querySelector('c-box[popover-check]');
+    const popoverCheck = ModalSingleton.modalRef.querySelector<HTMLElement>('c-box[popover-check]')
     popoverCheck?.classList.add('shake-efx-popover');
     setTimeout(() => {
       popoverCheck?.classList.remove('shake-efx-popover');
@@ -2758,7 +2789,7 @@ export class ShiftSchedule extends LitElement {
 
     return shouldRender.length
       ? html` <c-box flex col-gap-24>
-          <c-box ui="srPlanWrapper:flex col-gap-6 items-center h-fit mt-2 min-w-80">
+          <div class="cx-shift-schedule__srPlanWrapper">
             <c-box
               bg="${dayPortValue[dayPart].bgColor}"
               p-2
@@ -2770,7 +2801,7 @@ export class ShiftSchedule extends LitElement {
               icon-prefix="${dayPortValue[dayPart].size} ${dayPortValue[dayPart]
                 .src} ${dayPortValue[dayPart].iconColor}"></c-box>
             <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
-          </c-box>
+          </div>
           <c-box w-full>
             <c-box flex col-gap-6 justify-between>
               ${filteredShift?.map((requestPlan) => {
@@ -2862,10 +2893,6 @@ export class ShiftSchedule extends LitElement {
     } else {
       this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
     }
-    console.log(
-      'shift-schedule.js | this.shiftSrRequestCache| addSrShiftRequest= ',
-      this.shiftSrRequestCache
-    );
   }
 
   groupShiftsByLetter(arr: any) {
@@ -2992,13 +3019,13 @@ export class ShiftSchedule extends LitElement {
             <c-box content>
               <!-- title -->
               <c-box>
-                <c-box ui="${this.iconTitleWrapper('primary-200')}">
+                <c-box class="cx-shift-schedule__iconTitleWrapper">
                   <c-box
                     icon-prefix="16 emoji-wink-custom primary-500"
-                    ui="${this.iconTitle('primary-100')}"></c-box>
+                    class="cx-shift-schedule__iconTitle"></c-box>
                   <c-box tx-14> ขอเข้าเวร </c-box>
                 </c-box>
-                <c-box ui="titleSrWrapper:mt-12 flex items-center flex justify-between col-gap-12">
+                <c-box class="cx-shift-schedule__titleSrWrapper">
                   <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการ</c-box>
                   <c-box>
                     <cx-button
@@ -3117,10 +3144,6 @@ export class ShiftSchedule extends LitElement {
     indexUser?: number
   ) {
     const dateString = this.convertDateToString(date);
-    console.log(
-      'shift-schedule.js |this.shiftSrRequestCache| saveSrRequestPlan = ',
-      this.shiftSrRequestCache
-    );
     if (!this.shiftSrRequestCache[dateString]) {
       this.shakePopover();
       return;
