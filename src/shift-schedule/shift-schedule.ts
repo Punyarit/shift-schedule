@@ -806,7 +806,7 @@ align-items:center;
                           class="${targetUser && this.viewerRole === 'staff'
                             ? 'title-sticky'
                             : 'title-default'}"
-                          style="width: fit-content;display:flex; transition: all 0.25s ease;"
+                          style="width: fit-content;display:flex;"
                           @click="${() => {
                             if (this.mode === 'view') {
                               if (!this.startFocusWithViewMode) {
@@ -826,7 +826,7 @@ align-items:center;
                               : null}"
                             style="cursor:${this.requestSelected
                               ? 'pointer'
-                              : 'default'};z-index:2;min-width:260px;position:sticky; left:0; background:white"
+                              : 'default'};z-index:3;min-width:260px;position:sticky; left:0; background:white"
                             class="${(this.viewerRole === 'staff' && indexUser === 0) ||
                             (this.viewerRole === 'manager' &&
                               indexUser === this.userSelectedIndex &&
@@ -3033,6 +3033,7 @@ align-items:center;
                       .set="${{ type: 'secondary' } as CXButton.Set}"
                       @click="${() => {
                         this.closePopover();
+                        this.shiftSrRequestCache = {};
 
                         if (cellId) {
                           const boxTarget = this.querySelector(
@@ -3214,7 +3215,6 @@ align-items:center;
     this.currentPopoverRef = undefined;
     this.generateDayOffValue = undefined;
     this.datepickerData = undefined;
-    this.shiftSrRequestCache = {};
   }
 
   selectDateRequest(
