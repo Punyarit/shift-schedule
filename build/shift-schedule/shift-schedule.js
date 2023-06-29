@@ -221,15 +221,21 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.closePopover();
             if (ceillId) {
                 const boxTarget = this.querySelector(`#${ceillId}-${dateString}`);
+                const renderDayOffHost = this.renderDayOffHost({
+                    dateString,
+                    initial: undefined,
+                    remark: this.remarkCache[`${dateString}-${practitioner.practitioner.id}`],
+                }, this.requestSelected?.abbr);
+                console.log('shift-schedule.js |boxTarget| = ', boxTarget);
                 setTimeout(() => {
-                    render(this.renderDayOffHost({
-                        dateString,
-                        initial: undefined,
-                        remark: this.remarkCache,
-                    }, this.requestSelected?.abbr), boxTarget);
+                    setTimeout(() => {
+                        boxTarget.children[1] && boxTarget?.children[1]?.remove();
+                    }, 0);
+                    render(renderDayOffHost, boxTarget);
                 }, 0);
             }
         };
+        this.remarkCache = {};
         this.findDuplicationDate = (arrayDate1, arrayDate2) => {
             // Convert all dates to strings
             const arrayDate1Str = arrayDate1.map((date) => {
@@ -370,29 +376,32 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           display: block;
         }
 
-
         .cx-shift-schedule__iconTitle {
-border-radius: 50%;
-width:32px;
-height:32px;
-background: var(--primary-100);
-display:flex;
-justify-content:center;
-align-items:center;
-
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          background: var(--primary-100);
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
 
         .cx-shift-schedule__titleSrWrapper {
-          margin-top:12px; display:flex; align-items:center; display:flex; justify-content:space-between; column-gap:12px;
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          display: flex;
+          justify-content: space-between;
+          column-gap: 12px;
         }
 
         .cx-shift-schedule__iconTitleWrapper {
-          display:inline-flex;
-          border-radius:24px;
-          border:1px solid var(--primary-200);
-          align-items:center;
-          column-gap:6px;
-          padding-right:12px;
+          display: inline-flex;
+          border-radius: 24px;
+          border: 1px solid var(--primary-200);
+          align-items: center;
+          column-gap: 6px;
+          padding-right: 12px;
         }
         cx-shift-schedule .tableWrapperUI {
           display: inline-flex;
@@ -493,7 +502,7 @@ align-items:center;
           z-index: 0;
         }
 
-       .shake-efx-popover {
+        .shake-efx-popover {
           animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both !important;
           transform: translate3d(0, 0, 0);
           backface-visibility: hidden;
@@ -596,7 +605,6 @@ align-items:center;
           background: var(--pinky-25);
         }
 
-
         cx-shift-schedule .hover-request {
           cursor: pointer;
         }
@@ -623,19 +631,19 @@ align-items:center;
           width: var(--hover-divider-width);
           translate: 0 var(--hover-divider-top);
           height: 2px;
-          margin-top:2px;
+          margin-top: 2px;
           background-color: #d6e8fd;
-          position:absolute;
+          position: absolute;
           z-index: 1;
         }
 
-         .cx-shift-schedule__srPlanWrapper {
-          display:flex;
-          column-gap:6px;
-          align-items:center;
-          height:fit-content;
-          margin-top:2px;
-          min-width:80px;
+        .cx-shift-schedule__srPlanWrapper {
+          display: flex;
+          column-gap: 6px;
+          align-items: center;
+          height: fit-content;
+          margin-top: 2px;
+          min-width: 80px;
         }
 
         c-box[input-box].remark-input {
@@ -1833,9 +1841,11 @@ align-items:center;
         <c-box content>
           <!-- title -->
           <c-box>
-            <c-box class="cx-shift-schedule__iconTitleWrapper" style="border:1px solid var(--${iconSoftColor})!important" >
+            <c-box
+              class="cx-shift-schedule__iconTitleWrapper"
+              style="border:1px solid var(--${iconSoftColor})!important">
               <c-box
-              class="cx-shift-schedule__iconTitle"
+                class="cx-shift-schedule__iconTitle"
                 icon-prefix="16 ${requestTypeStyles[this.requestSelected?.abbr]
             .iconSrc} ${accentColor}"
                 style="background:var(--${iconSoftColor}) !important"></c-box>
@@ -1896,7 +1906,8 @@ align-items:center;
             if (input.value.length > 10) {
                 input.value = input.value.slice(0, 10);
             }
-            this.remarkCache = input.value;
+            this.remarkCache[`${data.dateString}-${data.practitioner.practitioner.id}`] =
+                input.value;
         }}"
               value="${shouldInitValue ? inputExistValue : ''}"
               ${ref(this.remarkRef)}
@@ -1924,8 +1935,9 @@ align-items:center;
         }
         if ((this.requestSelected?.abbr === 'off' && data.practitioner.practitioner.leave.dayOff === 0) ||
             (this.requestSelected?.abbr === 'vac' &&
-                this.vacDayOff?.[data.practitioner.practitioner.id] === 0))
+                this.vacDayOff?.[data.practitioner.practitioner.id] === 0)) {
             return;
+        }
         this.userSelectedIndex = data.indexUser;
         if (this.mode === 'edit') {
             this.dispatchEvent(new CustomEvent('focus-request', {

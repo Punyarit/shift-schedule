@@ -160,7 +160,7 @@ export declare class ShiftSchedule extends LitElement {
         request?: SrShiftPlan;
         event?: PointerEvent;
     }): TemplateResult<1>;
-    private remarkCache?;
+    private remarkCache;
     shakePopover(): void;
     appendPopover(type: RequestType['abbr'], cellId: string, data: {
         date: Date;
