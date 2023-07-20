@@ -137,6 +137,7 @@ export declare class ShiftSchedule extends LitElement {
         indexUser?: number;
         event?: PointerEvent;
     }): TemplateResult<1> | undefined;
+    saveShiftPlanDatePickerDisabledButton: boolean;
     saveShiftPlanDatePicker: (practitioner: SchedulePractitionerEntity, dateString: string, ceillId: string, remark: string, type: RequestType['abbr']) => void;
     filterDateDataDisabled(dateData: {
         [key: string]: any;
@@ -174,6 +175,7 @@ export declare class ShiftSchedule extends LitElement {
     groupShiftsByLetter(arr: any): any;
     renderContentBack(type: RequestType['abbr'], date: Date, dateString: string, practitioner: SchedulePractitionerEntity, boxTarget: HTMLElement, indexUser?: number, renderType?: 'init' | 'saved', request?: SrShiftPlan): void;
     renderSrPopover(date: Date, practitioner: SchedulePractitionerEntity, request?: SrShiftPlan, cellId?: string, indexUser?: number, event?: PointerEvent): TemplateResult<1>;
+    saveSrRequestPlanDisabled: boolean;
     saveSrRequestPlan(date: Date, practitioner: SchedulePractitionerEntity, cellId?: string, indexUser?: number): void;
     closePopover(): void;
     selectDateRequest(date: Date, type?: RequestType['abbr'], practitioner?: SchedulePractitionerEntity, dateString?: string): void;

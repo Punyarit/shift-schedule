@@ -211,7 +211,7 @@ export class ShiftSchedule extends LitElement {
           @click="${() => this.selectRequest(type as RequestType)}"
           .currentType="${this.requestSelected}"
           .requestType="${type}"
-          text="${type.abbr === 'sem' ? 'อบรม, สัมนา, ไปราชการ' : type.name}"
+          text="${type.abbr === 'sem' ? 'อบรม, สัมมนา, ไปราชการ' : type.name}"
           icon="${iconSrc}"
           iconBgColor="${iconBgColor}"
           accentColor="${accentColor}"></request-button>`;
@@ -273,8 +273,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -678,9 +678,19 @@ export class ShiftSchedule extends LitElement {
                       @click="${() =>
                         this.shouldArrowLeftDisable ? null : this.goToMonth('previous')}"></c-box>
 
-                    <c-box w-90 flex justify-center tx-12 tx-gray-600>
+                    <c-box
+                      w-90
+                      flex
+                      justify-center
+                      tx-12
+                      tx-gray-600
+                      class="currentMonthTitleDisplay">
                       ${this.currentMonthTitleDisplay
-                        ? dayjs(new Date(this.currentMonthTitleDisplay!)).format('MMMM BBBB')
+                        ? html`<span
+                            >${dayjs(new Date(this.currentMonthTitleDisplay!)).format(
+                              'MMMM BBBB'
+                            )}</span
+                          > `
                         : undefined}
                     </c-box>
 
@@ -861,7 +871,7 @@ export class ShiftSchedule extends LitElement {
                                 <div
                                   style="border-radius:50%; display:flex; justify-content:center; align-items:center; border: 2px solid var(--${gender ===
                                   'M'
-                                    ? 'primary-500'
+                                    ? 'color-6-400'
                                     : 'color-9-500'})">
                                   <img
                                     style="border-radius: 50%"
@@ -875,7 +885,7 @@ export class ShiftSchedule extends LitElement {
                               <div
                                 class="gender-box"
                                 style="background: var(--${gender === 'M'
-                                  ? 'primary-500'
+                                  ? 'color-6-400'
                                   : 'color-9-500'});">
                                 ${genderType[gender as 'M' | 'F']}
                               </div>
@@ -1689,7 +1699,7 @@ export class ShiftSchedule extends LitElement {
     const dateString = this.convertDateToString(date);
     const cellId = `initial-data-shift-cell-${indexUser}`;
     const title = {
-      sem: 'ขออบรม, สัมนา, ไปราชการ',
+      sem: 'ขออบรม, สัมมนา, ไปราชการ',
       off: 'ขอลาหยุด',
       vac: 'ขอลาพักร้อน',
     } as const;
@@ -2145,6 +2155,7 @@ export class ShiftSchedule extends LitElement {
     }
   }
 
+  saveShiftPlanDatePickerDisabledButton = false;
   saveShiftPlanDatePicker = (
     practitioner: SchedulePractitionerEntity,
     dateString: string,
@@ -2152,6 +2163,10 @@ export class ShiftSchedule extends LitElement {
     remark: string,
     type: RequestType['abbr']
   ) => {
+    if (this.saveShiftPlanDatePickerDisabledButton) return;
+    setTimeout(() => {
+      this.saveShiftPlanDatePickerDisabledButton = false;
+    }, 1000);
     if (!this.datepickerData?.startDate && !this.datepickerData?.endDate) {
       this.datepickerData = {
         startDate: new Date(dateString),
@@ -2388,7 +2403,6 @@ export class ShiftSchedule extends LitElement {
         },
         this.requestSelected?.abbr!
       );
-      console.log('shift-schedule.js |boxTarget| = ', boxTarget);
 
       setTimeout(() => {
         setTimeout(() => {
@@ -2397,6 +2411,8 @@ export class ShiftSchedule extends LitElement {
         render(renderDayOffHost, boxTarget);
       }, 0);
     }
+
+    this.saveShiftPlanDatePickerDisabledButton = true;
   };
   filterDateDataDisabled(
     dateData: {
@@ -2453,8 +2469,11 @@ export class ShiftSchedule extends LitElement {
   }) {
     const inputTarget = data.event?.target as HTMLElement;
     const inputExistValue = inputTarget.textContent?.trim();
-    const shouldInitValue =
-      inputTarget.getAttribute('shift-type') === `${this.requestSelected?.abbr}-saved`;
+
+    const [_shiftType] = inputTarget.id.split('-');
+    const shiftType = inputTarget.getAttribute('shift-type') || `${_shiftType}-saved`;
+    const shouldInitValue = shiftType === `${this.requestSelected?.abbr}-saved`;
+
     const title: Record<string, string> = {
       sem: 'ขออบรม, สัมมนา, ไปราชการ',
       off: 'ขอลาหยุด',
@@ -2462,6 +2481,7 @@ export class ShiftSchedule extends LitElement {
     };
     const iconSoftColor = requestTypeStyles[this.requestSelected?.abbr!].iconBgColor;
     const accentColor = requestTypeStyles[this.requestSelected?.abbr!].accentColor;
+
     return html`
       <c-box slot="popover" popover-check>
         <c-box content>
@@ -2475,10 +2495,10 @@ export class ShiftSchedule extends LitElement {
                 icon-prefix="16 ${requestTypeStyles[this.requestSelected?.abbr!]
                   .iconSrc} ${accentColor}"
                 style="background:var(--${iconSoftColor}) !important"></c-box>
-              <c-box tx-14> ${title[this.requestSelected?.abbr!]} </c-box>
+              <c-box tx-14 tx-gray-600> ${title[this.requestSelected?.abbr!]} </c-box>
             </c-box>
             <c-box mt-12 flex items-center flex justify-between>
-              <c-box tx-16 semiBold tx-gray-700>เลือกเวรที่ต้องการขอ</c-box>
+              <c-box tx-16 semiBold tx-gray-600>เลือกเวรที่ต้องการขอ</c-box>
               <c-box flex col-gap-6>
                 <cx-button
                   .var="${{ width: 'size-0' } as CXButton.Var}"
@@ -3145,12 +3165,19 @@ export class ShiftSchedule extends LitElement {
         `;
   }
 
+  saveSrRequestPlanDisabled = false;
   saveSrRequestPlan(
     date: Date,
     practitioner: SchedulePractitionerEntity,
     cellId?: string,
     indexUser?: number
   ) {
+
+    if (this.saveSrRequestPlanDisabled) return;
+    setTimeout(() => {
+      this.saveSrRequestPlanDisabled = false;
+    }, 1000);
+
     const dateString = this.convertDateToString(date);
     if (!this.shiftSrRequestCache[dateString]) {
       this.shakePopover();
@@ -3215,6 +3242,8 @@ export class ShiftSchedule extends LitElement {
     this.selectedDate = undefined;
 
     this.closePopover();
+
+    this.saveSrRequestPlanDisabled = true
   }
 
   closePopover() {
@@ -3519,19 +3548,19 @@ export class ShiftSchedule extends LitElement {
 
   firstTableUpdated = false;
   updated(changedProp: Map<string, unknown>) {
-    if (changedProp.has('userHoverIndex')) return;
-    this.updateTable(changedProp);
-
     if (this.firstTableUpdated === false) {
       const clearTimer = setInterval(() => {
-        if (!this.currentMonthTitleDisplay) {
-          this.updateTable(changedProp);
-        } else {
+        const currentMonthTitleDisplayElement = this.querySelector('.currentMonthTitleDisplay');
+        if (currentMonthTitleDisplayElement?.children[0]?.tagName === 'SPAN') {
           clearInterval(clearTimer);
           this.firstTableUpdated = true;
+        } else {
+          this.updateTable(changedProp);
         }
       }, 500);
     }
+    if (changedProp.has('userHoverIndex')) return;
+    this.updateTable(changedProp);
   }
 
   private updateTable(changedProp: Map<string, unknown>) {
@@ -3633,7 +3662,7 @@ export class ShiftSchedule extends LitElement {
               })
               ?.sort((a, b) => a.scrollValue - b.scrollValue)
               .map((res, index) => ({ ...res, index }))
-          );
+          ) as any;
         }, 250);
       }
       if (tableHeaderWrapper && litVirtualizer && this.initialScroll === false) {
