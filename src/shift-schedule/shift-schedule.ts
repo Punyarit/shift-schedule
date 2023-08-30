@@ -1274,6 +1274,7 @@ export class ShiftSchedule extends LitElement {
           return indexMap[a[0]] - indexMap[b[0]];
         })
         ?.map(([dayPart, plans]) => {
+          const planValues = Object.values(plans)
           return html`
             <c-box p-4 border-box flex flex-col row-gap-4>
               <c-box
@@ -1281,13 +1282,15 @@ export class ShiftSchedule extends LitElement {
                 p-4
                 border-box
                 round-6
-                h-44
+                style="min-height:44px"
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
                   <c-box class="icon-daypart-sr" flex flex-col>
-                    <c-box flex col-gap-4 tx-12 mt-4
-                      >${Object.values(plans).map((plan) => {
-                        return html`<c-box inline>${plan.shiftName}</c-box>`;
+                    <c-box flex flex-col row-gap-4 tx-12
+                      >${planValues.map((plan, index) => {
+                     const isLast = index === planValues.length - 1
+                     const shouldComma = planValues.length > 1 && !isLast
+                        return html`<c-box block style="margin-top:${index > 0 ? '3px' : '0'}">${plan.shiftName}${shouldComma ? ',' : ''}</c-box>`;
                       })}</c-box
                     >
                   </c-box>
@@ -1685,14 +1688,14 @@ export class ShiftSchedule extends LitElement {
         })
         .map(([dayPart, shiftPlan]) => {
           const plansEntries = Object.entries(shiftPlan);
+          console.log('shift-schedule.js |plansEntries| = ', plansEntries)
           return html`
             <c-box p-4 border-box flex flex-col row-gap-4 border-box>
               <c-box
-                border-box
                 p-4
                 border-box
                 round-6
-                h-44
+                style="min-height:44px"
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <div
                   style="cursor:${this.requestSelected || this.isRemoveMode
@@ -1700,9 +1703,13 @@ export class ShiftSchedule extends LitElement {
                     : ''}; width:100%; height:100%">
                   <c-box>
                     <c-box class="icon-daypart-sr" flex flex-col>
-                      <c-box flex col-gap-4 tx-12
+                      <c-box flex flex-col row-gap-4 tx-12
                         >${plansEntries.map(
-                          ([shiftName]) => html`<c-box inline tx-12>${shiftName}</c-box> `
+                          ([shiftName],index) =>{
+                            const isLast = index === plansEntries.length - 1
+                            const shouldComma = plansEntries.length > 1 && !isLast
+                            return  html`<c-box block tx-12 style="margin-top:${index > 0 ? '3px' : '0'}">${shiftName}${shouldComma ? ',' : ''}</c-box>`
+                          }
                         )}</c-box
                       >
                     </c-box>
