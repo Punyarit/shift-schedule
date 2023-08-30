@@ -15,6 +15,12 @@ export declare class ShiftSchedule extends LitElement {
     private iconTitle;
     currentTime: Date;
     viewerRole: 'manager' | 'staff';
+    timePeriod: 'early' | 'late';
+    shiftSlot: {
+        id: string;
+        name: string;
+    }[];
+    private shiftSlotSort;
     mode: 'view' | 'edit';
     disableDates: DisabledDate[];
     practitionerId?: string;
@@ -111,7 +117,7 @@ export declare class ShiftSchedule extends LitElement {
         dateString?: string;
         remark?: string;
         initial?: boolean;
-    }, type: RequestType['abbr']): TemplateResult<1>;
+    }, type: RequestType['abbr'], practitioner: SchedulePractitionerEntity): TemplateResult<1>;
     renderDayOffPlanSaved(data: {
         dateString?: string;
         remark?: string;
@@ -170,7 +176,7 @@ export declare class ShiftSchedule extends LitElement {
         indexUser: number;
     }, popoverContent: TemplateResult, popoverHost: TemplateResult): void;
     renderEmptyDateForSelect(date: Date, practitioner: SchedulePractitionerEntity, dateString: string, indexUser: number, request?: SrShiftPlan): TemplateResult<1> | undefined;
-    renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, initialSr?: Record<number, ScheduleShiftsEntity>): TemplateResult<1> | undefined;
+    renderShipSrRequest(shifts: ScheduleShiftsEntity[], dayPart: DayPart, dateString: string, practitioner: SchedulePractitionerEntity, initialSr?: Record<string, ScheduleShiftsEntity>): TemplateResult<1> | undefined;
     addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string): void;
     groupShiftsByLetter(arr: any): any;
     renderContentBack(type: RequestType['abbr'], date: Date, dateString: string, practitioner: SchedulePractitionerEntity, boxTarget: HTMLElement, indexUser?: number, renderType?: 'init' | 'saved', request?: SrShiftPlan): void;

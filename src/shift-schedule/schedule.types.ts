@@ -132,9 +132,9 @@ export type ScheduleDataWithRender = SchedulePractitionerRequestEntity & {
 export type ArrangedRequest = SrShiftPlan;
 
 export type SrShiftPlan = {
-  m: Record<number, ScheduleShiftsEntity>;
-  a: Record<number, ScheduleShiftsEntity>;
-  n: Record<number, ScheduleShiftsEntity>;
+  m: Record<string, ScheduleShiftsEntity>;
+  a: Record<string, ScheduleShiftsEntity>;
+  n: Record<string, ScheduleShiftsEntity>;
 };
 
 export type DatePickerShiftPlan = {

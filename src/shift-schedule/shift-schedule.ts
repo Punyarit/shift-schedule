@@ -56,6 +56,14 @@ export class ShiftSchedule extends LitElement {
   viewerRole: 'manager' | 'staff' = 'staff';
 
   @property({ type: String })
+  timePeriod: 'early' | 'late' = 'late';
+
+  @property({ type: Object })
+  public shiftSlot: { id: string; name: string }[] = [];
+
+  private shiftSlotSort = {} as Record<string, string>;
+
+  @property({ type: String })
   mode: 'view' | 'edit' = 'view';
 
   @property({ type: Object })
@@ -182,6 +190,12 @@ export class ShiftSchedule extends LitElement {
   protected willUpdate(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
+    if (this.shiftSlot.length && !Object.keys(this.shiftSlotSort).length) {
+      for (const slot of this.shiftSlot) {
+        this.shiftSlotSort[slot.id] = slot.name.toLowerCase();
+      }
+    }
+
     if (_changedProperties.has('scheduleData')) {
       this.moveUserToFirstArray();
 
@@ -810,6 +824,7 @@ export class ShiftSchedule extends LitElement {
                       const requestData = this.convertRequestDatesToObject(
                         request as SchedulePractitionerRequestEntity[]
                       );
+
                       const targetUser = practitioner?.practitionerId === this.practitionerId!;
                       return html`
                         <div
@@ -1253,7 +1268,8 @@ export class ShiftSchedule extends LitElement {
       slot="host">
       ${planEntries
         ?.sort((a, b) => {
-          const indexMap = { m: 0, a: 1, n: 2 };
+          const indexMap =
+            this.timePeriod === 'early' ? { m: 0, a: 1, n: 2 } : { m: 1, a: 2, n: 0 };
           // @ts-ignore
           return indexMap[a[0]] - indexMap[b[0]];
         })
@@ -1268,16 +1284,10 @@ export class ShiftSchedule extends LitElement {
                 h-44
                 bg="${this.setColorRequestType(dayPart as DayPart)}">
                 <c-box>
-                  <c-box
-                    class="icon-daypart-sr"
-                    icon-prefix="${dayPortValue[dayPart as DayPart].size} ${dayPortValue[
-                      dayPart as DayPart
-                    ].src} ${dayPortValue[dayPart as DayPart].iconColor}"
-                    flex
-                    flex-col>
+                  <c-box class="icon-daypart-sr" flex flex-col>
                     <c-box flex col-gap-4 tx-12 mt-4
-                      >${Object.keys(plans).map((plan) => {
-                        return html`<c-box inline>${plan}</c-box>`;
+                      >${Object.values(plans).map((plan) => {
+                        return html`<c-box inline>${plan.shiftName}</c-box>`;
                       })}</c-box
                     >
                   </c-box>
@@ -1303,7 +1313,6 @@ export class ShiftSchedule extends LitElement {
     indexUser: number
   ) {
     const planEntries = Object.entries(planRequest?.request?.[dateString]?.shiftPlan || {});
-
     const shiftPlan = this.shiftSrRequestSaved?.[practitioner.id]?.request?.[dateString]?.shiftPlan;
     const cellId = `sr-saved-shift-cell-${indexUser}`;
     const date = new Date(dateString);
@@ -1443,9 +1452,14 @@ export class ShiftSchedule extends LitElement {
 
   renderDayOffHost(
     data: { dateString?: string; remark?: string; initial?: boolean },
-    type: RequestType['abbr']
+    type: RequestType['abbr'],
+    practitioner: SchedulePractitionerEntity
   ) {
-    return html`${data?.remark
+    const remarkCacheId = `${this.requestSelected?.abbr}-${data.dateString}-${practitioner.practitioner.id}`;
+
+    this.remarkCache[remarkCacheId] = data.remark || '';
+
+    return html`${this.remarkCache[remarkCacheId]
       ? html`<c-box
           slot="host"
           shift-type="${type}-saved"
@@ -1453,7 +1467,7 @@ export class ShiftSchedule extends LitElement {
           flex-col
           tx-12
           icon-prefix="16 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
-          ${data.remark}
+          ${this.remarkCache[remarkCacheId]}
         </c-box>`
       : html`<c-box
           slot="host"
@@ -1505,7 +1519,18 @@ export class ShiftSchedule extends LitElement {
         @click="${this.isRemoveMode
           ? () => this.removeShiftDatePicker(data, type, practitioner)
           : this.requestSelected?.abbr !== 'woff'
-          ? (e: PointerEvent) => {
+          ? async (e: PointerEvent) => {
+              const elementTarget =
+                (e.target as HTMLElement).querySelector('[shift-type]') ||
+                (e.target as HTMLElement);
+
+              const [shift] = elementTarget.getAttribute('shift-type')?.split('-')!;
+              if (shift === this.requestSelected?.abbr) {
+                const remarkCacheId = `${this.requestSelected?.abbr}-${data.dateString}-${practitioner.practitioner.id}`;
+                this.remarkCache[remarkCacheId] =
+                  (elementTarget as HTMLElement)?.textContent?.trim() || '';
+              }
+
               this.appendPopover(
                 type!,
                 cellId,
@@ -1525,7 +1550,7 @@ export class ShiftSchedule extends LitElement {
                   indexUser,
                   remark: data.remark,
                 })!,
-                this.renderDayOffHost(data, type)
+                this.renderDayOffHost(data, type, practitioner)
               );
 
               this.shiftDatepickerCache[type as any] = {
@@ -1542,7 +1567,7 @@ export class ShiftSchedule extends LitElement {
               this.saveWoffRequest(date, practitioner, data.dateString!);
               this.requestUpdate();
             }}">
-        ${this.renderDayOffHost(data, type)}
+        ${this.renderDayOffHost(data, type, practitioner)}
       </c-box>
     </c-box>`;
   }
@@ -1651,41 +1676,42 @@ export class ShiftSchedule extends LitElement {
       slot="host"
       cursor="${this.requestSelected || this.isRemoveMode ? 'pointer' : 'default'}"
       @click="${this.isRemoveMode ? () => this.removeInitialSr(practitioner, dateString) : null}">
-      ${Object.entries(request.arrangedRequest!).map(([dayPart, plans]) => {
-        const plansEntries = Object.entries(plans);
-        return html`
-          <c-box p-4 border-box flex flex-col row-gap-4 border-box>
-            <c-box
-              border-box
-              p-4
-              border-box
-              round-6
-              h-44
-              bg="${this.setColorRequestType(dayPart as DayPart)}">
-              <div
-                style="cursor:${this.requestSelected || this.isRemoveMode
-                  ? 'pointer'
-                  : ''}; width:100%; height:100%">
-                <c-box>
-                  <c-box
-                    class="icon-daypart-sr"
-                    icon-prefix="${dayPortValue[dayPart as DayPart].size} ${dayPortValue[
-                      dayPart as DayPart
-                    ].src} ${dayPortValue[dayPart as DayPart].iconColor}"
-                    flex
-                    flex-col>
-                    <c-box
-                      >${plansEntries.map(
-                        ([plan]) => html`<c-box inline tx-12>${plan}</c-box> `
-                      )}</c-box
-                    >
+      ${Object.entries(request.arrangedRequest!)
+        .sort((a, b) => {
+          const indexMap =
+            this.timePeriod === 'early' ? { m: 0, a: 1, n: 2 } : { m: 1, a: 2, n: 0 };
+          // @ts-ignore
+          return indexMap[a[0]] - indexMap[b[0]];
+        })
+        .map(([dayPart, shiftPlan]) => {
+          const plansEntries = Object.entries(shiftPlan);
+          return html`
+            <c-box p-4 border-box flex flex-col row-gap-4 border-box>
+              <c-box
+                border-box
+                p-4
+                border-box
+                round-6
+                h-44
+                bg="${this.setColorRequestType(dayPart as DayPart)}">
+                <div
+                  style="cursor:${this.requestSelected || this.isRemoveMode
+                    ? 'pointer'
+                    : ''}; width:100%; height:100%">
+                  <c-box>
+                    <c-box class="icon-daypart-sr" flex flex-col>
+                      <c-box flex col-gap-4 tx-12
+                        >${plansEntries.map(
+                          ([shiftName]) => html`<c-box inline tx-12>${shiftName}</c-box> `
+                        )}</c-box
+                      >
+                    </c-box>
                   </c-box>
-                </c-box>
-              </div>
+                </div>
+              </c-box>
             </c-box>
-          </c-box>
-        `;
-      })}
+          `;
+        })}
     </c-box>`;
   }
 
@@ -2394,21 +2420,25 @@ export class ShiftSchedule extends LitElement {
     this.closePopover();
 
     if (ceillId) {
+      // boxTarget must stay outside settimeout if it inside settimeout it will be null;
       const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
-      const renderDayOffHost = this.renderDayOffHost(
-        {
-          dateString,
-          initial: undefined,
-          remark: this.remarkCache[`${dateString}-${practitioner.practitioner.id}`],
-        },
-        this.requestSelected?.abbr!
-      );
-
       setTimeout(() => {
+        const remarkCacheId = `${this.requestSelected?.abbr}-${dateString}-${practitioner.practitioner.id}`;
+        const renderDayOffHost = this.renderDayOffHost(
+          {
+            dateString,
+            initial: undefined,
+            remark: this.remarkCache[remarkCacheId],
+          },
+          this.requestSelected?.abbr!,
+          practitioner
+        );
         setTimeout(() => {
-          boxTarget.children[1] && boxTarget?.children[1]?.remove();
+          if (boxTarget?.children[1]) {
+            boxTarget?.children[1]?.remove();
+          }
+          render(renderDayOffHost, boxTarget);
         }, 0);
-        render(renderDayOffHost, boxTarget);
       }, 0);
     }
 
@@ -2467,13 +2497,6 @@ export class ShiftSchedule extends LitElement {
     request?: SrShiftPlan;
     event?: PointerEvent;
   }) {
-    const inputTarget = data.event?.target as HTMLElement;
-    const inputExistValue = inputTarget.textContent?.trim();
-
-    const [_shiftType] = inputTarget.id.split('-');
-    const shiftType = inputTarget.getAttribute('shift-type') || `${_shiftType}-saved`;
-    const shouldInitValue = shiftType === `${this.requestSelected?.abbr}-saved`;
-
     const title: Record<string, string> = {
       sem: 'ขออบรม, สัมมนา, ไปราชการ',
       off: 'ขอลาหยุด',
@@ -2481,6 +2504,8 @@ export class ShiftSchedule extends LitElement {
     };
     const iconSoftColor = requestTypeStyles[this.requestSelected?.abbr!].iconBgColor;
     const accentColor = requestTypeStyles[this.requestSelected?.abbr!].accentColor;
+    const shouldInitInputValue = data.type === this.requestSelected?.abbr;
+    const remarkCacheId = `${this.requestSelected?.abbr}-${data.dateString}-${data.practitioner.practitioner.id}`;
 
     return html`
       <c-box slot="popover" popover-check>
@@ -2571,10 +2596,9 @@ export class ShiftSchedule extends LitElement {
                 if (input.value.length > 10) {
                   input.value = input.value.slice(0, 10);
                 }
-                this.remarkCache[`${data.dateString}-${data.practitioner.practitioner.id}`] =
-                  input.value;
+                this.remarkCache[remarkCacheId] = input.value;
               }}"
-              value="${shouldInitValue ? inputExistValue : ''}"
+              value="${shouldInitInputValue ? this.remarkCache[remarkCacheId] || '' : ''}"
               ${ref(this.remarkRef)}
               type="text"
               style="border:none;outline:none;width:200px"
@@ -2586,7 +2610,6 @@ export class ShiftSchedule extends LitElement {
   }
 
   private remarkCache = {} as Record<string, string>;
-
   shakePopover() {
     const popoverCheck = ModalSingleton.modalRef.querySelector<HTMLElement>('c-box[popover-check]');
     popoverCheck?.classList.add('shake-efx-popover');
@@ -2789,7 +2812,7 @@ export class ShiftSchedule extends LitElement {
     dayPart: DayPart,
     dateString: string,
     practitioner: SchedulePractitionerEntity,
-    initialSr?: Record<number, ScheduleShiftsEntity>
+    initialSr?: Record<string, ScheduleShiftsEntity>
   ) {
     const shouldRender = shifts.flatMap((res) =>
       res.scheduleStaffings?.filter(
@@ -2816,30 +2839,17 @@ export class ShiftSchedule extends LitElement {
 
     return shouldRender.length
       ? html` <c-box flex col-gap-24>
-          <div class="cx-shift-schedule__srPlanWrapper">
-            <c-box
-              bg="${dayPortValue[dayPart].bgColor}"
-              p-2
-              w-24
-              h-24
-              border-box
-              flex-center
-              round-8
-              icon-prefix="${dayPortValue[dayPart].size} ${dayPortValue[dayPart]
-                .src} ${dayPortValue[dayPart].iconColor}"></c-box>
-            <c-box tx-14>${dayPortValue[dayPart].text}</c-box>
-          </div>
           <c-box w-full>
             <c-box flex col-gap-6 justify-between>
-              ${filteredShift?.map((requestPlan) => {
-                const [dayPart, plan] = requestPlan.shiftName.split('');
-                const hasInitialSr = initialSr?.[+plan];
+              ${filteredShift?.map((requestPlan, indexs) => {
+                const shiftDayPart = this.shiftSlotSort[requestPlan.shiftSlotId];
 
-                const bgColor = dayPortValue[dayPart as DayPart].bgColor;
-                const mediumColor = dayPortValue[dayPart as DayPart].mediumColor;
+                const hasInitialSr = initialSr?.[requestPlan.shiftName];
+                const bgColor = dayPortValue[shiftDayPart as DayPart].bgColor;
+                const mediumColor = dayPortValue[shiftDayPart as DayPart].mediumColor;
 
-                return requestPlan?.scheduleStaffings?.length
-                  ? html` <c-box flex items-center flex-col>
+                return true
+                  ? html` <c-box flex items-center flex-col style="width:100%">
                       <c-box
                         @click="${(e: PointerEvent) => {
                           this.addSrShiftRequest(requestPlan, dateString);
@@ -2869,7 +2879,6 @@ export class ShiftSchedule extends LitElement {
                         shadow-hover="shadow-3"
                         ui-active="_1:bg-${mediumColor}!"
                         transition="all 0.2s ease"
-                        w-80
                         h-30
                         bg="${hasInitialSr ? bgColor : 'primary-25'}"
                         round-8
@@ -2879,8 +2888,10 @@ export class ShiftSchedule extends LitElement {
                         cursor-pointer
                         tx-14
                         bold
-                        style="color:var(--${hasInitialSr ? 'color-4-700' : 'gray-500'})"
-                        >${plan}</c-box
+                        style="color:var(--${hasInitialSr
+                          ? 'color-4-700'
+                          : 'gray-500'});width:100%;"
+                        >${requestPlan.shiftName}</c-box
                       >
                       <c-box tx-12
                         >${requestPlan.startTime.slice(0, -3)} -
@@ -2896,16 +2907,16 @@ export class ShiftSchedule extends LitElement {
   }
 
   addSrShiftRequest(requestPlan: ScheduleShiftsEntity, dateString: string) {
-    const [dayPart, plan] = requestPlan.shiftName.split('') as ['m' | 'a' | 'n', string];
+    const plan = requestPlan.shiftName;
+    const dayPart = this.shiftSlotSort[requestPlan.shiftSlotId] as 'a' | 'm' | 'n';
     // 📌 long hand =  if (!this.shiftRequest[dayPart]) this.shiftRequest[dayPart] = {};
-
     this.shiftSrRequestCache ||= {};
 
     this.shiftSrRequestCache[dateString] ||= {} as SrShiftPlan;
     this.shiftSrRequestCache[dateString][dayPart] ||= {};
 
-    if (this.shiftSrRequestCache[dateString][dayPart][+plan]) {
-      delete this.shiftSrRequestCache[dateString][dayPart][+plan];
+    if (this.shiftSrRequestCache[dateString][dayPart][plan]) {
+      delete this.shiftSrRequestCache[dateString][dayPart][plan];
 
       if (Object.keys(this.shiftSrRequestCache[dateString][dayPart]).length === 0) {
         delete this.shiftSrRequestCache[dateString][dayPart];
@@ -2918,18 +2929,18 @@ export class ShiftSchedule extends LitElement {
         }
       }
     } else {
-      this.shiftSrRequestCache[dateString][dayPart][+plan] = requestPlan;
+      this.shiftSrRequestCache[dateString][dayPart][plan] = requestPlan;
     }
   }
 
   groupShiftsByLetter(arr: any) {
     const result = {} as any;
     for (const shift of arr) {
-      const letter = shift.shiftName.charAt(0);
-      if (!result[letter]) {
-        result[letter] = [];
+      const slotName = this.shiftSlotSort[shift.shiftSlotId];
+      if (!result[slotName]) {
+        result[slotName] = [];
       }
-      result[letter].push(shift);
+      result[slotName].push(shift);
     }
     return result;
   }
@@ -3016,6 +3027,7 @@ export class ShiftSchedule extends LitElement {
 
     const dateString = this.convertDateToString(date);
 
+    // @ts-ignore
     this.shiftSrShipCache = structuredClone(request);
 
     if (request) {
@@ -3068,10 +3080,8 @@ export class ShiftSchedule extends LitElement {
                           ) as HTMLElement;
 
                           const targetElement = event?.target as HTMLElement;
-                          const shiftType = targetElement.closest(
-                            'c-box[shift-type]'
-                          ) as HTMLElement;
-                          const requestHostType = shiftType.getAttribute('shift-type');
+                          const shift = targetElement.closest('c-box[shift-type]') as HTMLElement;
+                          const requestHostType = shift.getAttribute('shift-type');
 
                           if (cellId) {
                             const [requestType, renderType] = requestHostType?.split('-') as [
@@ -3104,20 +3114,21 @@ export class ShiftSchedule extends LitElement {
               </c-box>
 
               <!-- selected request -->
-              <c-box mt-12 flex flex-col row-gap-24>
-                <!-- morning -->
-                ${(['m', 'a', 'n'] as const).map(
-                  (dayPart) =>
-                    html`${shiftGroup[dayPart]
-                      ? this.renderShipSrRequest(
-                          shiftGroup[dayPart],
-                          dayPart,
-                          dateString,
-                          practitioner,
-                          request?.[dayPart]
-                        )
-                      : undefined}`
-                )}
+              <c-box mt-12 flex flex-col row-gap-16>
+                <!-- new improvement -->
+                ${(
+                  (this.timePeriod === 'early' ? ['m', 'a', 'n'] : ['n', 'm', 'a']) as DayPart[]
+                ).map((dayPart) => {
+                  return html`${shiftGroup[dayPart]
+                    ? this.renderShipSrRequest(
+                        shiftGroup[dayPart],
+                        dayPart,
+                        dateString,
+                        practitioner,
+                        request?.[dayPart]
+                      )
+                    : undefined}`;
+                })}
               </c-box>
             </c-box>
           </c-box>
@@ -3137,8 +3148,8 @@ export class ShiftSchedule extends LitElement {
                     const boxTarget = this.querySelector(`#${cellId}-${dateString}`) as HTMLElement;
 
                     const targetElement = event?.target as HTMLElement;
-                    const shiftType = targetElement.closest('c-box[shift-type]') as HTMLElement;
-                    const requestHostType = shiftType.getAttribute('shift-type');
+                    const shift = targetElement.closest('c-box[shift-type]') as HTMLElement;
+                    const requestHostType = shift.getAttribute('shift-type');
 
                     if (cellId) {
                       const [requestType, renderType] = requestHostType?.split('-') as [
@@ -3172,7 +3183,6 @@ export class ShiftSchedule extends LitElement {
     cellId?: string,
     indexUser?: number
   ) {
-
     if (this.saveSrRequestPlanDisabled) return;
     setTimeout(() => {
       this.saveSrRequestPlanDisabled = false;
@@ -3243,7 +3253,7 @@ export class ShiftSchedule extends LitElement {
 
     this.closePopover();
 
-    this.saveSrRequestPlanDisabled = true
+    this.saveSrRequestPlanDisabled = true;
   }
 
   closePopover() {
@@ -3469,7 +3479,12 @@ export class ShiftSchedule extends LitElement {
             break;
 
           case 'sr':
-            const [dayPart, requestPart] = requestShift?.split('') as [DayPart, string];
+            // @ts-ignore
+            const scheduleShifts = this.scheduleData?.scheduleShifts?.find(
+              (res: ScheduleShiftsEntity) => res.shiftName === requestShift
+            ) as ScheduleShiftsEntity;
+
+            const dayPart = this.shiftSlotSort[scheduleShifts.shiftSlotId] as 'a' | 'm' | 'n';
             if (!result[requestDate]) {
               result[requestDate] = { arrangedRequest: {} as ArrangedRequest, ...item };
             }
@@ -3477,11 +3492,9 @@ export class ShiftSchedule extends LitElement {
               result[requestDate]!.arrangedRequest![dayPart] = {};
             }
 
-            result[requestDate]!.arrangedRequest![dayPart][+requestPart] =
+            result[requestDate]!.arrangedRequest![dayPart][scheduleShifts.shiftName] =
               // @ts-ignore
-              this.scheduleData?.scheduleShifts?.find(
-                (res: ScheduleShiftsEntity) => res.shiftName === requestShift
-              );
+              scheduleShifts;
 
             // assign other properties to the result object
             result[requestDate] = { ...result[requestDate] };
