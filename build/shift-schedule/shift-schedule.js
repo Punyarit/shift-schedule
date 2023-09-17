@@ -19,7 +19,7 @@ import '@cortex-ui/core/cx/datepicker';
 import '@cortex-ui/core/cx/popover';
 import './components/request-button';
 import { debounce } from '@cortex-ui/core/cx/helpers/debounceTimer';
-import { requestTypeStyles, dayPortValue, genderType, shiftPlanIcon, } from './schedule.types';
+import { requestTypeStyles, dayPortValueEarly, genderType, shiftPlanIcon, dayPortValueLate, } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ModalCaller } from '@cortex-ui/core/cx/helpers/ModalCaller';
 import { ModalSingleton } from '@cortex-ui/core/cx/components/modal/singleton/modal.singleton';
@@ -1200,7 +1200,9 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                       >${planValues.map((plan, index) => {
                 const isLast = index === planValues.length - 1;
                 const shouldComma = planValues.length > 1 && !isLast;
-                return html `<c-box block style="margin-top:${index > 0 ? '3px' : '0'}">${plan.shiftName}${shouldComma ? ',' : ''}</c-box>`;
+                return html `<c-box block style="margin-top:${index > 0 ? '3px' : '0'}"
+                          >${plan.shiftName}${shouldComma ? ',' : ''}</c-box
+                        >`;
             })}</c-box
                     >
                   </c-box>
@@ -1494,7 +1496,6 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         })
             .map(([dayPart, shiftPlan]) => {
             const plansEntries = Object.entries(shiftPlan);
-            console.log('shift-schedule.js |plansEntries| = ', plansEntries);
             return html `
             <c-box p-4 border-box flex flex-col row-gap-4 border-box>
               <c-box
@@ -1513,7 +1514,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         >${plansEntries.map(([shiftName], index) => {
                 const isLast = index === plansEntries.length - 1;
                 const shouldComma = plansEntries.length > 1 && !isLast;
-                return html `<c-box block tx-12 style="margin-top:${index > 0 ? '3px' : '0'}">${shiftName}${shouldComma ? ',' : ''}</c-box>`;
+                return html `<c-box
+                            block
+                            tx-12
+                            style="margin-top:${index > 0 ? '3px' : '0'}"
+                            >${shiftName}${shouldComma ? ',' : ''}</c-box
+                          >`;
             })}</c-box
                       >
                     </c-box>
@@ -2108,8 +2114,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
               ${filteredShift?.map((requestPlan, indexs) => {
                 const shiftDayPart = this.shiftSlotSort[requestPlan.shiftSlotId];
                 const hasInitialSr = initialSr?.[requestPlan.shiftName];
-                const bgColor = dayPortValue[shiftDayPart].bgColor;
-                const mediumColor = dayPortValue[shiftDayPart].mediumColor;
+                const bgColor = this.timePeriod === 'early'
+                    ? dayPortValueEarly[shiftDayPart].bgColor
+                    : dayPortValueLate[shiftDayPart].bgColor;
+                const mediumColor = this.timePeriod === 'late'
+                    ? dayPortValueEarly[shiftDayPart].mediumColor
+                    : dayPortValueLate[shiftDayPart].mediumColor;
                 return true
                     ? html ` <c-box flex items-center flex-col style="width:100%">
                       <c-box
@@ -2540,15 +2550,28 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         }
         return result;
     }
-    setColorRequestType(requestTime) {
+    earlyColor(requestTime) {
         switch (requestTime) {
+            case 'm':
+                return 'color-4-100';
             case 'a':
                 return 'color-12-100';
             case 'n':
                 return 'color-7-100';
-            case 'm':
-                return 'color-4-100';
         }
+    }
+    lateColor(requestTime) {
+        switch (requestTime) {
+            case 'n':
+                return 'color-4-100';
+            case 'm':
+                return 'color-12-100';
+            case 'a':
+                return 'color-7-100';
+        }
+    }
+    setColorRequestType(requestTime) {
+        return this.timePeriod === 'early' ? this.earlyColor(requestTime) : this.lateColor(requestTime);
     }
     convertDateToString(date) {
         const year = date.getFullYear();

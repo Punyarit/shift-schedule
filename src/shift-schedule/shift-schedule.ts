@@ -28,12 +28,13 @@ import {
   ScheduleRequestIndex,
   DatePickerRequest,
   DisabledDate,
-  dayPortValue,
+  dayPortValueEarly,
   genderType,
   shiftPlanIcon,
   DateObject as HolidayObject,
   Practitioner,
   ScheduleErrorDayRequest,
+  dayPortValueLate,
 } from './schedule.types';
 import { createRef, ref } from 'lit/directives/ref.js';
 import { ScheduleRequestDetailResponse, ScheduleRequestType } from './schedule-client.typess';
@@ -1274,7 +1275,7 @@ export class ShiftSchedule extends LitElement {
           return indexMap[a[0]] - indexMap[b[0]];
         })
         ?.map(([dayPart, plans]) => {
-          const planValues = Object.values(plans)
+          const planValues = Object.values(plans);
           return html`
             <c-box p-4 border-box flex flex-col row-gap-4>
               <c-box
@@ -1288,9 +1289,11 @@ export class ShiftSchedule extends LitElement {
                   <c-box class="icon-daypart-sr" flex flex-col>
                     <c-box flex flex-col row-gap-4 tx-12
                       >${planValues.map((plan, index) => {
-                     const isLast = index === planValues.length - 1
-                     const shouldComma = planValues.length > 1 && !isLast
-                        return html`<c-box block style="margin-top:${index > 0 ? '3px' : '0'}">${plan.shiftName}${shouldComma ? ',' : ''}</c-box>`;
+                        const isLast = index === planValues.length - 1;
+                        const shouldComma = planValues.length > 1 && !isLast;
+                        return html`<c-box block style="margin-top:${index > 0 ? '3px' : '0'}"
+                          >${plan.shiftName}${shouldComma ? ',' : ''}</c-box
+                        >`;
                       })}</c-box
                     >
                   </c-box>
@@ -1688,7 +1691,6 @@ export class ShiftSchedule extends LitElement {
         })
         .map(([dayPart, shiftPlan]) => {
           const plansEntries = Object.entries(shiftPlan);
-          console.log('shift-schedule.js |plansEntries| = ', plansEntries)
           return html`
             <c-box p-4 border-box flex flex-col row-gap-4 border-box>
               <c-box
@@ -1704,13 +1706,16 @@ export class ShiftSchedule extends LitElement {
                   <c-box>
                     <c-box class="icon-daypart-sr" flex flex-col>
                       <c-box flex flex-col row-gap-4 tx-12
-                        >${plansEntries.map(
-                          ([shiftName],index) =>{
-                            const isLast = index === plansEntries.length - 1
-                            const shouldComma = plansEntries.length > 1 && !isLast
-                            return  html`<c-box block tx-12 style="margin-top:${index > 0 ? '3px' : '0'}">${shiftName}${shouldComma ? ',' : ''}</c-box>`
-                          }
-                        )}</c-box
+                        >${plansEntries.map(([shiftName], index) => {
+                          const isLast = index === plansEntries.length - 1;
+                          const shouldComma = plansEntries.length > 1 && !isLast;
+                          return html`<c-box
+                            block
+                            tx-12
+                            style="margin-top:${index > 0 ? '3px' : '0'}"
+                            >${shiftName}${shouldComma ? ',' : ''}</c-box
+                          >`;
+                        })}</c-box
                       >
                     </c-box>
                   </c-box>
@@ -2852,8 +2857,15 @@ export class ShiftSchedule extends LitElement {
                 const shiftDayPart = this.shiftSlotSort[requestPlan.shiftSlotId];
 
                 const hasInitialSr = initialSr?.[requestPlan.shiftName];
-                const bgColor = dayPortValue[shiftDayPart as DayPart].bgColor;
-                const mediumColor = dayPortValue[shiftDayPart as DayPart].mediumColor;
+                const bgColor =
+                  this.timePeriod === 'early'
+                    ? dayPortValueEarly[shiftDayPart as DayPart].bgColor
+                    : dayPortValueLate[shiftDayPart as DayPart].bgColor;
+
+                const mediumColor =
+                  this.timePeriod === 'late'
+                    ? dayPortValueEarly[shiftDayPart as DayPart].mediumColor
+                    : dayPortValueLate[shiftDayPart as DayPart].mediumColor;
 
                 return true
                   ? html` <c-box flex items-center flex-col style="width:100%">
@@ -3516,15 +3528,34 @@ export class ShiftSchedule extends LitElement {
     return result;
   }
 
-  setColorRequestType(requestTime: DayPart): string {
+  earlyColor(requestTime: DayPart) {
     switch (requestTime) {
-      case 'a':
-        return 'color-12-100';
-      case 'n':
-        return 'color-7-100';
       case 'm':
         return 'color-4-100';
+
+      case 'a':
+        return 'color-12-100';
+
+      case 'n':
+        return 'color-7-100';
     }
+  }
+
+  lateColor(requestTime: DayPart) {
+    switch (requestTime) {
+      case 'n':
+        return 'color-4-100';
+
+      case 'm':
+        return 'color-12-100';
+
+      case 'a':
+        return 'color-7-100';
+    }
+  }
+
+  setColorRequestType(requestTime: DayPart): string {
+    return this.timePeriod === 'early' ? this.earlyColor(requestTime) : this.lateColor(requestTime);
   }
 
   convertDateToString(date: Date): string {

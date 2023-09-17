@@ -132,7 +132,17 @@ export type DateObject = {
     date: string;
     name: string;
 };
-export declare const dayPortValue: {
+export declare const dayPortValueEarly: {
+    m: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+        size: string;
+    };
     a: {
         src: string;
         text: string;
@@ -153,7 +163,29 @@ export declare const dayPortValue: {
         lowColor: string;
         size: string;
     };
+};
+export declare const dayPortValueLate: {
+    n: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+        size: string;
+    };
     m: {
+        src: string;
+        text: string;
+        bgColor: string;
+        mediumColor: string;
+        iconColor: string;
+        softColor: string;
+        lowColor: string;
+        size: string;
+    };
+    a: {
         src: string;
         text: string;
         bgColor: string;

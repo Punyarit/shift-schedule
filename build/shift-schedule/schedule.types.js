@@ -25,7 +25,17 @@ export const requestTypeStyles = {
         iconBgColor: 'gray-300',
     },
 };
-export const dayPortValue = {
+export const dayPortValueEarly = {
+    m: {
+        src: 'cloud-sun-u',
+        text: 'เช้า',
+        bgColor: 'color-4-100',
+        mediumColor: 'primary-200',
+        iconColor: 'color-4-500',
+        softColor: 'primary-50',
+        lowColor: 'primary-25',
+        size: '16',
+    },
     a: {
         src: 'sunset-u',
         text: 'บ่าย',
@@ -46,13 +56,35 @@ export const dayPortValue = {
         lowColor: 'primary-25',
         size: '14',
     },
-    m: {
-        src: 'cloud-sun-u',
-        text: 'เช้า',
+};
+export const dayPortValueLate = {
+    n: {
+        src: 'moon-u',
+        text: 'ดึก',
         bgColor: 'color-4-100',
         mediumColor: 'primary-200',
         iconColor: 'color-4-500',
         softColor: 'primary-50',
+        lowColor: 'primary-25',
+        size: '14',
+    },
+    m: {
+        src: 'cloud-sun-u',
+        text: 'เช้า',
+        bgColor: 'warning-100',
+        mediumColor: 'warning-200',
+        iconColor: 'color-12-500',
+        softColor: 'warning-50',
+        lowColor: 'warning-25',
+        size: '16',
+    },
+    a: {
+        src: 'sunset-u',
+        text: 'บ่าย',
+        bgColor: 'color-7-100',
+        mediumColor: 'primary-200',
+        iconColor: 'color-7-500',
+        softColor: 'color-7-100',
         lowColor: 'primary-25',
         size: '16',
     },
