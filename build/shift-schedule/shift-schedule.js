@@ -238,12 +238,12 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                         initial: undefined,
                         remark: this.remarkCache[remarkCacheId],
                     }, this.requestSelected?.abbr, practitioner);
+                    render(renderDayOffHost, boxTarget);
                     setTimeout(() => {
                         if (boxTarget?.children[1]) {
                             boxTarget?.children[1]?.remove();
                         }
-                        render(renderDayOffHost, boxTarget);
-                    }, 0);
+                    }, 5);
                 }, 0);
             }
             this.saveShiftPlanDatePickerDisabledButton = true;
@@ -375,8 +375,8 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         for (const { css, variable } of cssVariables) {
             this.style.setProperty(`--${variable}`, css);
         }
-        // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-        // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+        this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+        this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
     }
     setRemoveMode() {
         if (this.currentPopoverRef) {
@@ -1314,8 +1314,19 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         return this.requestTypes?.find((res) => res.abbr === abbr);
     }
     renderDayOffHost(data, type, practitioner) {
-        const remarkCacheId = `${this.requestSelected?.abbr}-${data.dateString}-${practitioner.practitioner.id}`;
+        const dayOffWithID = `${data.dateString}-${practitioner.practitioner.id}`;
+        const remarkCacheId = `${type}-${dayOffWithID}`;
         this.remarkCache[remarkCacheId] = data.remark || '';
+        for (const key of Object.keys(this.remarkCache)) {
+            const [dayOffType, ...dayOffID] = key.split('-');
+            if (dayOffID.join('-') === `${dayOffWithID}`) {
+                if (type !== dayOffType) {
+                    delete this.remarkCache[key];
+                }
+            }
+        }
+        const icon = shiftPlanIcon?.[type];
+        const icColor = requestTypeStyles?.[type]?.accentColor;
         return html `${this.remarkCache[remarkCacheId]
             ? html `<c-box
           slot="host"
@@ -1323,7 +1334,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           flex
           flex-col
           tx-12
-          icon-prefix="16 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
+          icon-prefix="16 ${icon} ${icColor}">
           ${this.remarkCache[remarkCacheId]}
         </c-box>`
             : html `<c-box
@@ -1333,7 +1344,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           justify-center
           items-center
           h-full
-          icon-prefix="26 ${shiftPlanIcon?.[type]} ${requestTypeStyles?.[type]?.accentColor}">
+          icon-prefix="26 ${icon} ${icColor}">
         </c-box>`}`;
     }
     renderDayOffPlanSaved(data, type, practitioner, date, indexUser, cancel) {
@@ -2113,6 +2124,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             <c-box flex col-gap-6 justify-between>
               ${filteredShift?.map((requestPlan, indexs) => {
                 const shiftDayPart = this.shiftSlotSort[requestPlan.shiftSlotId];
+                const shouldRenderSr = requestPlan?.scheduleStaffings?.length > 0;
                 const hasInitialSr = initialSr?.[requestPlan.shiftName];
                 const bgColor = this.timePeriod === 'early'
                     ? dayPortValueEarly[shiftDayPart].bgColor
@@ -2120,7 +2132,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 const mediumColor = this.timePeriod === 'late'
                     ? dayPortValueEarly[shiftDayPart].mediumColor
                     : dayPortValueLate[shiftDayPart].mediumColor;
-                return true
+                return shouldRenderSr
                     ? html ` <c-box flex items-center flex-col style="width:100%">
                       <c-box
                         @click="${(e) => {
