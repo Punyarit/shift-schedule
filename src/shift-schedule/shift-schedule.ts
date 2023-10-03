@@ -288,8 +288,8 @@ export class ShiftSchedule extends LitElement {
     for (const { css, variable } of cssVariables) {
       this.style.setProperty(`--${variable}`, css);
     }
-    this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
-    this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
+    // this.scheduleData = await (await fetch('http://localhost:3000/data')).json();
+    // this.requestTypes = await (await fetch('http://localhost:3000/types')).json();
   }
 
   private setRemoveMode() {
@@ -1167,6 +1167,7 @@ export class ShiftSchedule extends LitElement {
       <c-box
         w-full
         h-full
+        data-date-id="${dateString || ''}"
         id="${cellId}-${dateString}"
         @click="${this.requestSelected?.abbr !== 'woff'
           ? (e: PointerEvent) => {
@@ -1328,6 +1329,7 @@ export class ShiftSchedule extends LitElement {
         w-full
         h-full
         id="${cellId}-${dateString}"
+        data-date-id="${dateString}"
         @click="${this.requestSelected?.abbr !== 'woff'
           ? (e: PointerEvent) => {
               planEntries.length
@@ -1461,7 +1463,7 @@ export class ShiftSchedule extends LitElement {
     type: RequestType['abbr'],
     practitioner: SchedulePractitionerEntity
   ) {
-    const dayOffWithID = `${data.dateString}-${practitioner.practitioner.id}`
+    const dayOffWithID = `${data.dateString}-${practitioner.practitioner.id}`;
     const remarkCacheId = `${type}-${dayOffWithID}`;
 
     this.remarkCache[remarkCacheId] = data.remark || '';
@@ -1515,6 +1517,7 @@ export class ShiftSchedule extends LitElement {
       slot="host"
       shift-type="${type}-saved">
       <c-box
+        data-date-id="${data.dateString || ''}"
         id="${cellId}-${data.dateString}"
         style="pointer-events:${checkWeekOffDisabled ||
         (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
@@ -1769,6 +1772,7 @@ export class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
+            data-date-id="${dateString}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
               ? (e: PointerEvent) => {
@@ -1799,6 +1803,7 @@ export class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
+            data-date-id="${dateString || ''}"
             id="${cellId}-${dateString}"
             shift-type="woff-init"
             @click="${this.requestSelected?.abbr !== 'woff'
@@ -1843,6 +1848,7 @@ export class ShiftSchedule extends LitElement {
             shift-type="${request.requestType.abbr}-init"
             w-full
             h-full
+            data-date-id="${dateString}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
               ? (e: PointerEvent) => {
@@ -2437,13 +2443,25 @@ export class ShiftSchedule extends LitElement {
 
     this.deleteInitialDatePicker(practitioner, practitioner.id, dateBetween, dateString);
 
-    this.datepickerData = undefined;
     this.selectedDate = undefined;
     this.closePopover();
 
     if (ceillId) {
+      const dateBetween = this.getDateBetween(
+        this.datepickerData.startDate!,
+        this.datepickerData.endDate!
+      )
+        .flatMap((res) => res.dateBetween)
+        .flat()
+        .map((res) => this.formatDate(res));
+
+      const boxTargets = [] as (HTMLElement | null)[];
+      dateBetween.forEach((res) => {
+        boxTargets.push(this.querySelector(`[data-date-id='${res}']`));
+      });
       // boxTarget must stay outside settimeout if it inside settimeout it will be null;
-      const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
+      // const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
+
       setTimeout(() => {
         const remarkCacheId = `${this.requestSelected?.abbr}-${dateString}-${practitioner.practitioner.id}`;
         const renderDayOffHost = this.renderDayOffHost(
@@ -2456,12 +2474,17 @@ export class ShiftSchedule extends LitElement {
           practitioner
         );
 
-        render(renderDayOffHost, boxTarget);
-        setTimeout(() => {
-          if (boxTarget?.children[1]) {
-            boxTarget?.children[1]?.remove();
+        boxTargets.forEach((res) => {
+          if (res) {
+            render(renderDayOffHost, res);
+            if (res?.children[1]) {
+              setTimeout(() => {
+                res?.children[1]?.remove();
+              }, 10);
+            }
           }
-        }, 5);
+        });
+        this.datepickerData = undefined;
       }, 0);
     }
 
@@ -2718,6 +2741,7 @@ export class ShiftSchedule extends LitElement {
       case 'sr':
         return html`
           <c-box
+            data-date-id="${dateString}"
             id="${cellId}-${dateString}"
             w-full
             h-full
@@ -2766,6 +2790,7 @@ export class ShiftSchedule extends LitElement {
         return html`
           <c-box
             id="${cellId}-${dateString}"
+            data-date-id="${dateString}"
             w-full
             h-full
             style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
@@ -3289,7 +3314,9 @@ export class ShiftSchedule extends LitElement {
     ModalCaller.popover().clear();
     this.currentPopoverRef = undefined;
     this.generateDayOffValue = undefined;
-    this.datepickerData = undefined;
+    setTimeout(() => {
+      this.datepickerData = undefined;
+    }, 250);
   }
 
   selectDateRequest(
