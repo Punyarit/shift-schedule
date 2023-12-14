@@ -132,9 +132,6 @@ export class ShiftSchedule extends LitElement {
     };
   };
 
-  // FIXME: hard code maxVacation 15* may add this prop in the future.
-  // @property({ type: Number }) public maxVacation = 15;
-
   @property({ type: String })
   userImgDefault?: string;
 
@@ -305,7 +302,7 @@ export class ShiftSchedule extends LitElement {
 
   private holidayWithKeyMap: {
     [date: string]: HolidayObject;
-  } = {};      
+  } = {};
 
   @state()
   isRemoveMode = false;
@@ -822,7 +819,7 @@ export class ShiftSchedule extends LitElement {
                         schedulePractitionerRequest: request,
                       } = practitioner;
                       const requestData = this.convertRequestDatesToObject(
-                        (request as SchedulePractitionerRequestEntity[])
+                        request as SchedulePractitionerRequestEntity[]
                       );
 
                       const targetUser = practitioner?.practitionerId === this.practitionerId!;
@@ -2447,7 +2444,7 @@ export class ShiftSchedule extends LitElement {
 
     if (ceillId) {
       const ceillIdSplit = ceillId.split('-');
-      const indexUser = ceillIdSplit[ceillIdSplit.length - 1][0]
+      const indexUser = ceillIdSplit[ceillIdSplit.length - 1][0];
       const dateBetween = this.getDateBetween(
         this.datepickerData.startDate!,
         this.datepickerData.endDate!
@@ -3843,18 +3840,6 @@ export class ShiftSchedule extends LitElement {
   private setVacDayOff(practitioner: SchedulePractitionerEntity, allowedExecute?: boolean) {
     if (typeof this.vacDayOff[(practitioner.practitioner as Practitioner).id] === 'number') return;
     if ((practitioner && this.requestSelected?.abbr === 'vac') || allowedExecute) {
-      // const initialOff = (
-      //   practitioner.schedulePractitionerRequest as SchedulePractitionerRequestEntity[]
-      // ).filter((res) => res.requestType.abbr === 'vac');
-      // const saveVac = Object.keys(this.shiftVacRequestSaved?.[practitioner.id]?.request || {});
-      // this.mayDayOffLength = initialOff.length + savedOff.length;
-      // if (!this.maxDayOffLength?.[(practitioner.practitioner as any).id]) {
-      //   (this.maxDayOffLength as any)[(practitioner.practitioner as any).id] = {};
-      // }
-
-      // this.maxDayOffLength[(practitioner.practitioner as any).id].vacation =
-      //   initialOff.length + saveVac.length;
-
       // cache initial value
       const findVacation = (practitioner!.practitioner as Practitioner).vacations!.find(
         (res) => res!.year === new Date(this.currentTime).getFullYear()
@@ -3863,8 +3848,6 @@ export class ShiftSchedule extends LitElement {
       this.requestUpdate();
     }
   }
-
-  private maxDayOffLength: Record<string, Record<'dayOff' | 'vacation', number>> = {};
 
   private vacDayOff: { [practitionerId: string]: number } = {};
 
