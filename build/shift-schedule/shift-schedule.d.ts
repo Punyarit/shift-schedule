@@ -193,8 +193,8 @@ export declare class ShiftSchedule extends LitElement {
     convertRequestDatesToObject(requests: SchedulePractitionerRequestEntity[]): {
         [key: string]: ScheduleDataWithRender;
     };
-    earlyColor(requestTime: DayPart): "color-4-100" | "color-7-100" | "color-12-100";
-    lateColor(requestTime: DayPart): "color-4-100" | "color-7-100" | "color-12-100";
+    earlyColor(requestTime: DayPart): "color-12-100" | "color-4-100" | "color-7-100";
+    lateColor(requestTime: DayPart): "color-12-100" | "color-4-100" | "color-7-100";
     setColorRequestType(requestTime: DayPart): string;
     convertDateToString(date: Date): string;
     private moveUserToFirstArray;

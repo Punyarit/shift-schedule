@@ -228,13 +228,15 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             this.selectedDate = undefined;
             this.closePopover();
             if (ceillId) {
+                const ceillIdSplit = ceillId.split('-');
+                const indexUser = ceillIdSplit[ceillIdSplit.length - 1][0];
                 const dateBetween = this.getDateBetween(this.datepickerData.startDate, this.datepickerData.endDate)
                     .flatMap((res) => res.dateBetween)
                     .flat()
                     .map((res) => this.formatDate(res));
                 const boxTargets = [];
                 dateBetween.forEach((res) => {
-                    boxTargets.push(this.querySelector(`[data-date-id='${res}']`));
+                    boxTargets.push(this.querySelector(`[data-date-id='${res}-${indexUser}']`));
                 });
                 // boxTarget must stay outside settimeout if it inside settimeout it will be null;
                 // const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
@@ -870,6 +872,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 <div class="lit-virtualizer">
                   ${this.scheduleData?.schedulePractitioner?.map((practitioner, indexUser) => {
             const { practitioner: { gender, nameFamily, nameGiven, practitionerLevel, practitionerRole, }, schedulePractitionerRequest: request, } = practitioner;
+            // TODO: bug table not display
             const requestData = this.convertRequestDatesToObject(request);
             const targetUser = practitioner?.practitionerId === this.practitionerId;
             return html `
@@ -1119,7 +1122,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       <c-box
         w-full
         h-full
-        data-date-id="${dateString || ''}"
+        data-date-id="${dateString}-${indexUser}"
         id="${cellId}-${dateString}"
         @click="${this.requestSelected?.abbr !== 'woff'
             ? (e) => {
@@ -1236,7 +1239,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
         w-full
         h-full
         id="${cellId}-${dateString}"
-        data-date-id="${dateString}"
+        data-date-id="${dateString}-${indexUser}"
         @click="${this.requestSelected?.abbr !== 'woff'
             ? (e) => {
                 planEntries.length
@@ -1372,7 +1375,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
       slot="host"
       shift-type="${type}-saved">
       <c-box
-        data-date-id="${data.dateString || ''}"
+        data-date-id="${data.dateString}-${indexUser}"
         id="${cellId}-${data.dateString}"
         style="pointer-events:${checkWeekOffDisabled ||
             (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
@@ -1582,7 +1585,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
                     ? (e) => {
@@ -1605,7 +1608,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            data-date-id="${dateString || ''}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             shift-type="woff-init"
             @click="${this.requestSelected?.abbr !== 'woff'
@@ -1629,7 +1632,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             shift-type="${request.requestType.abbr}-init"
             w-full
             h-full
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
                     ? (e) => {
@@ -2056,7 +2059,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
             case 'sr':
                 return html `
           <c-box
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             w-full
             h-full
@@ -2083,7 +2086,7 @@ let ShiftSchedule = class ShiftSchedule extends LitElement {
                 return html `
           <c-box
             id="${cellId}-${dateString}"
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             w-full
             h-full
             style="pointer-events:${(this.requestSelected?.abbr === 'off' &&

@@ -305,7 +305,7 @@ export class ShiftSchedule extends LitElement {
 
   private holidayWithKeyMap: {
     [date: string]: HolidayObject;
-  } = {};
+  } = {};      
 
   @state()
   isRemoveMode = false;
@@ -821,9 +821,8 @@ export class ShiftSchedule extends LitElement {
                         },
                         schedulePractitionerRequest: request,
                       } = practitioner;
-
                       const requestData = this.convertRequestDatesToObject(
-                        request as SchedulePractitionerRequestEntity[]
+                        (request as SchedulePractitionerRequestEntity[])
                       );
 
                       const targetUser = practitioner?.practitionerId === this.practitionerId!;
@@ -1167,7 +1166,7 @@ export class ShiftSchedule extends LitElement {
       <c-box
         w-full
         h-full
-        data-date-id="${dateString || ''}"
+        data-date-id="${dateString}-${indexUser}"
         id="${cellId}-${dateString}"
         @click="${this.requestSelected?.abbr !== 'woff'
           ? (e: PointerEvent) => {
@@ -1329,7 +1328,7 @@ export class ShiftSchedule extends LitElement {
         w-full
         h-full
         id="${cellId}-${dateString}"
-        data-date-id="${dateString}"
+        data-date-id="${dateString}-${indexUser}"
         @click="${this.requestSelected?.abbr !== 'woff'
           ? (e: PointerEvent) => {
               planEntries.length
@@ -1517,7 +1516,7 @@ export class ShiftSchedule extends LitElement {
       slot="host"
       shift-type="${type}-saved">
       <c-box
-        data-date-id="${data.dateString || ''}"
+        data-date-id="${data.dateString}-${indexUser}"
         id="${cellId}-${data.dateString}"
         style="pointer-events:${checkWeekOffDisabled ||
         (this.requestSelected?.abbr === 'off' && practitioner?.practitioner?.leave?.dayOff === 0) ||
@@ -1772,7 +1771,7 @@ export class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
               ? (e: PointerEvent) => {
@@ -1803,7 +1802,7 @@ export class ShiftSchedule extends LitElement {
           <c-box
             w-full
             h-full
-            data-date-id="${dateString || ''}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             shift-type="woff-init"
             @click="${this.requestSelected?.abbr !== 'woff'
@@ -1848,7 +1847,7 @@ export class ShiftSchedule extends LitElement {
             shift-type="${request.requestType.abbr}-init"
             w-full
             h-full
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             @click="${this.requestSelected?.abbr !== 'woff'
               ? (e: PointerEvent) => {
@@ -2447,6 +2446,8 @@ export class ShiftSchedule extends LitElement {
     this.closePopover();
 
     if (ceillId) {
+      const ceillIdSplit = ceillId.split('-');
+      const indexUser = ceillIdSplit[ceillIdSplit.length - 1][0]
       const dateBetween = this.getDateBetween(
         this.datepickerData.startDate!,
         this.datepickerData.endDate!
@@ -2457,7 +2458,7 @@ export class ShiftSchedule extends LitElement {
 
       const boxTargets = [] as (HTMLElement | null)[];
       dateBetween.forEach((res) => {
-        boxTargets.push(this.querySelector(`[data-date-id='${res}']`));
+        boxTargets.push(this.querySelector(`[data-date-id='${res}-${indexUser}']`));
       });
       // boxTarget must stay outside settimeout if it inside settimeout it will be null;
       // const boxTarget = this.querySelector(`#${ceillId}-${dateString}`) as HTMLElement;
@@ -2741,7 +2742,7 @@ export class ShiftSchedule extends LitElement {
       case 'sr':
         return html`
           <c-box
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             id="${cellId}-${dateString}"
             w-full
             h-full
@@ -2790,7 +2791,7 @@ export class ShiftSchedule extends LitElement {
         return html`
           <c-box
             id="${cellId}-${dateString}"
-            data-date-id="${dateString}"
+            data-date-id="${dateString}-${indexUser}"
             w-full
             h-full
             style="pointer-events:${(this.requestSelected?.abbr === 'off' &&
@@ -3517,7 +3518,6 @@ export class ShiftSchedule extends LitElement {
     const result: {
       [key: string]: ScheduleDataWithRender;
     } = {};
-
     if (requests.length) {
       requests?.forEach((item) => {
         const { requestDate, requestShift } = item;
